@@ -5,7 +5,9 @@
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "elec.serve": "cross-env IS_ELECTRON=true vue-cli-service serve",
+    "elec.build": "cross-env IS_ELECTRON=true vue-cli-service build"
   },
   "main": "main.js",
   "dependencies": {

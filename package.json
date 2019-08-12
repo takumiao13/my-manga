@@ -2,8 +2,12 @@
   "name": "my-manga",
   "version": "0.7.0",
   "description": "view your local comics",
+  "main": "./main.js",
   "scripts": {
-    "serve": "cross-env NODE_ENV=development ./node_modules/.bin/nodemon ./bin/my-manga.js serve"
+    "serve": "cross-env NODE_ENV=development ./node_modules/.bin/nodemon ./bin/my-manga.js serve",
+    "elec.serve": "cross-env NODE_ENV=development electron .",
+    "elec.build": "electron-builder build --win --x64",
+    "elec.build.dir": "electron-builder build --win --x64 --dir"
   },
   "bin": {
     "my-manga": "./bin/my-manga.js"
@@ -37,6 +41,7 @@
     "chalk": "^2.4.2",
     "commander": "^2.20.0",
     "default-gateway": "^5.0.2",
+    "electron-log": "^3.0.6",
     "fs-extra": "^8.1.0",
     "image-size": "^0.7.4",
     "koa": "^2.7.0",
@@ -53,6 +58,7 @@
   },
   "devDependencies": {
     "cross-env": "^5.2.0",
+    "electron": "^5.0.9",
     "nodemon": "^1.19.1"
   }
 }
