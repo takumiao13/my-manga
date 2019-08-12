@@ -1,0 +1,46 @@
+@import "../../../node_modules/bootstrap/scss/bootstrap.scss";
+@import "./simple-slider.scss";
+@import "./themes/default.scss";
+@import "./base-theme.scss";
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+}
+
+.loading-mask {
+  position: absolute;
+  //background-color: rgba($white, .5);
+  margin: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transition: opacity .3s;
+
+  .loading-spinner {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+// reset some style
+.list-group-item-action:focus {
+  outline: none;
+}
+
+.btn {
+  cursor: pointer;
+
+  &:focus {
+    box-shadow: none;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}

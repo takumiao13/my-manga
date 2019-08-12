@@ -1,0 +1,125 @@
+
+#app {
+  background: $app-bg !important;
+  color: $app-color !important;
+
+  .topbar {
+    background: $app-primary !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,.1);
+  }
+}
+
+#sidebar {
+  background: $app-sidebar-bg !important;
+
+  .topbar {
+    background: $app-sidebar-bg !important;
+    border-bottom: .5px solid $app-border-color !important;
+  }
+}
+
+.list-group .list-group-item {
+  border-color: $app-border-color;
+}
+
+.main-explorer {
+  .manga-area > .row,
+  .gallery-area > .row {
+    background: $app-primary !important;
+    border-color: $app-border-color;
+
+    .cover {
+      img {
+        background: $app-cover-bg;
+        border: .5px solid $app-border-color;
+      }
+    }
+  }
+
+  .folder-area .list-group,
+  .chapter-area .list-group {
+    .list-group-item {
+      &.active {
+        color: $app-color;
+        background: $app-lighter-bg;
+        border-color: $app-border-color;
+      }
+    }
+  }
+}
+
+.location {
+  background: $app-primary;
+
+  > ul {
+    > li {
+      &:hover {
+        background: $app-border-color;
+      }
+    }
+
+    .breadcrumb-separator {
+      color: $app-color;
+    }
+  }
+}
+
+.list-nested  {
+  .list-group {
+    .list-group-item {
+      &.active {
+        background: $app-lighter-bg;
+        color: $app-color;
+      }
+
+      &:hover {
+        background: $app-bg;
+      }
+    }
+  }
+}
+
+.repo-name {
+  background: $app-lighter-bg;
+}
+
+#metadata {
+  .cover {
+    box-shadow: 1px 2px 3px rgba($app-shadow-color, .3);
+  }
+  
+  .description {
+    color: $app-muted-color;
+  }
+}
+
+::-webkit-scrollbar-thumb {
+  background: $app-scrollbar-thumb;
+}
+
+::-webkit-scrollbar-track {
+  background: $app-scrollbar-track;
+}
+
+
+// may be need not support themes
+#viewer {
+  background: $black !important;
+  color: $white !important;
+
+  .viewer-topbar,
+  .viewer-toolbar > .navbar {
+    background: rgba($black, .8) !important;
+  }
+}
+
+.qrcode-container {
+  color: $black;
+  background: rgba($white, .3);
+
+  .qrcode {
+    background: $white;
+    box-shadow: 0 0 5px $black;
+    border: 1px solid #ddd;
+  }
+}

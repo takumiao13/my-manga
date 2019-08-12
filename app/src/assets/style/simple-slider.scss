@@ -1,0 +1,187 @@
+// Variables
+// ==
+$simple-slider-transition:      background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out !default;
+
+$simple-slider-thumb-width:                   2rem !default;
+$simple-slider-thumb-height:                  $simple-slider-thumb-width !default;
+$simple-slider-thumb-bg:                     #eee !default;
+$simple-slider-thumb-border:                  .25rem solid rgba(#000, .8) !default; 
+$simple-slider-thumb-border-radius:           1rem !default;
+$simple-slider-thumb-box-shadow:              none !default;
+$simple-slider-thumb-focus-box-shadow:        none !default; //0 0 0 1px #fff, 0 0 0 .2rem rgba($simple-slider-thumb-bg, .5)!default;
+$simple-slider-thumb-focus-box-shadow-width:  0 !default; //.2rem !default; // For focus box shadow issue in IE/Edge
+$simple-slider-thumb-active-bg:               $simple-slider-thumb-bg !default;
+$simple-slider-thumb-disabled-bg:             #adb5bd !default;
+
+$simple-slider-track-width:          100% !default;
+$simple-slider-track-height:         .25rem !default;
+$simple-slider-track-cursor:         pointer !default;
+$simple-slider-track-bg:             #eee !default;
+$simple-slider-track-border-radius:  1rem !default;
+$simple-slider-track-box-shadow:     inset 0 .25rem .25rem rgba(#333, .1) !default;
+$simple-slider-track-fill-bg:        #007bff !default;
+
+
+// Mixins
+// ==
+@mixin box-shadow($shadow...) {
+  $result: ();
+
+  @if (length($shadow) == 1) {
+    // We can pass `@include box-shadow(none);`
+    $result: $shadow;
+  } @else {
+    // Filter to avoid invalid properties for example `box-shadow: none, 1px 1px black;`
+    @for $i from 1 through length($shadow) {
+      @if nth($shadow, $i) != "none" {
+        $result: append($result, nth($shadow, $i), "comma");
+      }
+    }
+  }
+  @if (length($result) > 0) {
+    box-shadow: $result;
+  }
+}
+
+// Simple Slider
+// ==
+.simple-slider {
+  width: 100%;
+  height: calc(#{$simple-slider-thumb-height} + #{$simple-slider-thumb-focus-box-shadow-width * 2});
+  padding: 0; // Need to reset padding
+  background-color: transparent;
+  appearance: none;
+  -webkit-appearance: none;
+
+  &:focus {
+    outline: none;
+
+    // Pseudo-elements must be split across multiple rulesets to have an effect.
+    // No box-shadow() mixin for focus accessibility.
+    &::-webkit-slider-thumb { box-shadow: $simple-slider-thumb-focus-box-shadow; }
+    &::-moz-range-thumb     { box-shadow: $simple-slider-thumb-focus-box-shadow; }
+    &::-ms-thumb            { box-shadow: $simple-slider-thumb-focus-box-shadow; }
+  }
+
+  &::-moz-focus-outer {
+    border: 0;
+  }
+
+  &::-webkit-slider-thumb {
+    width: $simple-slider-thumb-width;
+    height: $simple-slider-thumb-height;
+    margin-top: ($simple-slider-track-height - $simple-slider-thumb-height) / 2; // Webkit specific
+    background-color: $simple-slider-thumb-bg;
+    border: $simple-slider-thumb-border;
+    border-radius: $simple-slider-thumb-border-radius;
+    @include box-shadow($simple-slider-thumb-box-shadow);
+    transition: $simple-slider-transition;
+    appearance: none;
+    -webkit-appearance: none;
+
+    &:active {
+      background: $simple-slider-thumb-active-bg;
+    }
+  }
+
+  &::-webkit-slider-runnable-track {
+    width: $simple-slider-track-width;
+    height: $simple-slider-track-height;
+    color: transparent; // Why?
+    cursor: $simple-slider-track-cursor;
+    background-color: $simple-slider-track-bg;
+    border-color: transparent;
+    border-radius: $simple-slider-track-border-radius;
+    @include box-shadow($simple-slider-track-box-shadow);
+  }
+
+  &::-moz-range-thumb {
+    width: $simple-slider-thumb-width;
+    height: $simple-slider-thumb-height;
+    background-color: $simple-slider-thumb-bg;
+    border: $simple-slider-thumb-border;
+    border-radius: $simple-slider-thumb-border-radius;
+    @include box-shadow($simple-slider-thumb-box-shadow);
+    transition: $simple-slider-transition;
+    appearance: none;
+    -webkit-appearance: none;
+
+    &:active {
+      background-color: $simple-slider-thumb-active-bg;
+    }
+  }
+
+  &::-moz-range-track {
+    width: $simple-slider-track-width;
+    height: $simple-slider-track-height;
+    color: transparent;
+    cursor: $simple-slider-track-cursor;
+    background-color: $simple-slider-track-bg;
+    border-color: transparent; // Firefox specific?
+    border-radius: $simple-slider-track-border-radius;
+    @include box-shadow($simple-slider-track-box-shadow);
+  }
+
+  &::-ms-thumb {
+    width: $simple-slider-thumb-width;
+    height: $simple-slider-thumb-height;
+    margin-top: 0; // Edge specific
+    margin-right: $simple-slider-thumb-focus-box-shadow-width; // Workaround that overflowed box-shadow is hidden.
+    margin-left: $simple-slider-thumb-focus-box-shadow-width;  // Workaround that overflowed box-shadow is hidden.
+    background-color: $simple-slider-thumb-bg;
+    border: $simple-slider-thumb-border;
+    border-radius: $simple-slider-thumb-border-radius;
+    @include box-shadow($simple-slider-thumb-box-shadow);
+    transition: $simple-slider-transition;
+    appearance: none;
+    -webkit-appearance: none;
+
+    &:active {
+      background: $simple-slider-thumb-active-bg;
+    }
+  }
+
+  &::-ms-track {
+    width: $simple-slider-track-width;
+    height: $simple-slider-track-height;
+    color: transparent;
+    cursor: $simple-slider-track-cursor;
+    background-color: transparent;
+    border-color: transparent;
+    border-width: $simple-slider-thumb-height / 2;
+    @include box-shadow($simple-slider-track-box-shadow);
+  }
+
+  &::-ms-fill-lower {
+    background-color: $simple-slider-track-bg;
+    border-radius: $simple-slider-track-border-radius;
+  }
+
+  &::-ms-fill-upper {
+    margin-right: 15px; // arbitrary?
+    background-color: $simple-slider-track-bg;
+    border-radius: $simple-slider-track-border-radius;
+  }
+
+  &:disabled {
+    &::-webkit-slider-thumb {
+      background-color: $simple-slider-thumb-disabled-bg;
+    }
+
+    &::-webkit-slider-runnable-track {
+      cursor: default;
+    }
+
+    &::-moz-range-thumb {
+      background-color: $simple-slider-thumb-disabled-bg;
+    }
+
+    &::-moz-range-track {
+      cursor: default;
+    }
+
+    &::-ms-thumb {
+      background-color: $simple-slider-thumb-disabled-bg;
+    }
+  }
+}
