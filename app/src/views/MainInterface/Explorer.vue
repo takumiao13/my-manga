@@ -119,9 +119,11 @@ export default {
     },
 
     handleBack() {
-      this.$router.navigate({
-        name: 'explorer'
-      });
+      if (this.$router.history.current.fullPath !== '/manga') {
+        this.$router.push({ name: 'explorer' });
+      }
+      
+      this.$store.dispatch(appTypes.TOGGLE_SIDEBAR, { open: false });
     }
   }
 }

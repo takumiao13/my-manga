@@ -13,13 +13,11 @@ import Repository from '@/views/Repository';
 VueRouter.prototype._routerHistory = []; // sync browser history
 VueRouter.prototype.navigate = function(to) {
 	const route = this.match(to);
-	console.log('navigate', to, route);
 	const index = this._routerHistory.indexOf(historyName(route));
 
 	if (index > -1) {
 		this._backdelta = this._routerHistory.length - index;
 		this.go(-this._backdelta);
-		console.log('back delta', index, this._backdelta);
 	} else {
 		this.push(to);
 	}
@@ -122,7 +120,7 @@ router.beforeEach(function(to, from, next) {
 		to.meta.isBack = router._isBack;
 		delete router._isBack;
 
-	} else if (history.length && history.indexOf(historyName(to)) === (history.length - 1)) {
+	} else if (history.length && historyName(to) === last(history)) {
 		history.splice(history.length - 1, 1);
 		to.meta.isBack = true;
 	

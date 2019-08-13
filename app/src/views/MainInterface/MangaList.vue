@@ -227,7 +227,6 @@ export default {
     },
 
     toggleLocationCollapsed: debounce(function(scrollTop, prevScrollTop) {
-      console.log(scrollTop, prevScrollTop);
       if (isUndef(prevScrollTop) || scrollTop > prevScrollTop) {
         this.isCollapsed = true;
       } else {
@@ -262,8 +261,6 @@ export default {
         this.toggleLocationCollapsed(scrollTop, this._prevScrollTop);
       }
       this._prevScrollTop = scrollTop;
-
-      
     },
 
     handleNavigate($event, location) {
@@ -323,7 +320,7 @@ export default {
 @import '../../assets/style/base';
 
 .location {
-  transition-duration: .5s;
+  transition-duration: .36s;
 
   &.collapsed {
     margin-top: -28.8px;
