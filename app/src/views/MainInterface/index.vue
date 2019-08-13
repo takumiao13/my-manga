@@ -90,20 +90,19 @@ export default {
   position: fixed;
   top: 0;
   left: 0;
-  bottom: auto;
-  right: auto;
   z-index: 1040;
   background: $black;
 
-  @include transition(opacity 0.3s, width 0.1s 0.5s, height 0.1s 0.5s);
+  @include transition(opacity .3s,);
 }
 
 .sidebar-open {
-  overflow: hidden; // hide body scroll
+  overflow: hidden !important; // hide body scroll
+  
   /* fix android oveflow bug */
   width: 100%;
   height: 100%;
-  position: fixed;
+  position: relative;
 
   #sidebar {
     transform: translateX(0);
@@ -111,10 +110,8 @@ export default {
 
   .backdrop {
     opacity: .3;
-    bottom: 0;
-    right: 0;
-
-    @include transition(opacity .3s);
+    width: 100vw;
+    height: 100vh;
 
     @include media-breakpoint-up(md) {
       opacity: 0;

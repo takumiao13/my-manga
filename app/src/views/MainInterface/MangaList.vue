@@ -1,7 +1,7 @@
 <template>
   <div class="main-explorer">
     <div class="topbar">
-      <navbar class="bg-white" :title="title" :left-btns="leftBtns" />
+      <navbar :class="{'no-shadow': breadcrumb.length > 1}" :title="title" :left-btns="leftBtns" />
       <breadcrumb
         :class="{ collapsed: isCollapsed }"
         v-show="breadcrumb.length > 1" 
@@ -233,7 +233,7 @@ export default {
         this.isCollapsed = false;
       }
     }, 500, {
-      maxWait: 1000,
+      maxWait: 1500,
       leading: true,
       trailing: false
     }),
@@ -255,7 +255,7 @@ export default {
 
     handleScroll($event) {
       const scrollTop = getScrollTop();
-      if (scrollTop < 30 && this.isCollapsed) {
+      if (scrollTop < 160) {
         this.isCollapsed = false;
       } else {
         this.toggleLocationCollapsed(scrollTop, this._prevScrollTop);
@@ -320,10 +320,10 @@ export default {
 @import '../../assets/style/base';
 
 .location {
-  transition-duration: .36s;
+  transition-duration: .3s;
 
   &.collapsed {
-    margin-top: -28.8px;
+    transform: translateY(-100%);
   }
 }
 

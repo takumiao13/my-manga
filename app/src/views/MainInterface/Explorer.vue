@@ -1,7 +1,9 @@
 <template>
   <div class="explorer">
-    <navbar :title="title" :right-btns="rightBtns" />
-
+    <div class="topbar">
+      <navbar :title="title" :right-btns="rightBtns" />
+    </div>
+    
     <data-view 
       class="explorer-container"
       :loading="isPending" 
