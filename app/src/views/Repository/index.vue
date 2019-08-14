@@ -119,13 +119,12 @@ export default {
         .then(() => {
           // we should reset store
           eventHub.$emit('store.reset', { repoName: this.repoName });
-          //this.$router.push({ name: 'explorer' });
         });
     },
 
     handleRemoveRepo($event, repo) {
       $event.stopPropagation();
-      const index = this.repos.indexOf(repo);
+      const index = this.repos.map(item => item.path).indexOf(repo);
       const scope = 'user';
       const payload = { key: `repos[${index}]` };
 

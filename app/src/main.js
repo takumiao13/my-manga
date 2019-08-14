@@ -69,12 +69,12 @@ function bootstrapApp() {
     $loading.style.display = '';
 
     backwardAllHistory();
-
     setTimeout(() => {
       resetStore();
+      router.replace({ name: 'explorer' })
       // change repo settings
       store.dispatch(types.repo.INIT).then(showApp);
-    }, 1000); 
+    }, 360);
   });
 
   Promise.all(
@@ -103,19 +103,20 @@ function render() {
 }
 
 function showApp() {
-  delay(2000)
-  .then(() => $loading.classList.add('fade'))
-  .then(() => delay(1000))
-  .then(() => {
-    $loading.style.display = 'none';
-    document.body.style.overflow = 'auto';
-  }); 
+  delay(1000)
+    .then(() => $loading.classList.add('fade'))
+    .then(() => delay(1000))
+    .then(() => {
+      $loading.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }); 
 }
 
 function backwardAllHistory() {
   // backward all history (we cannot clear it)
   router._reset = true;
   router._routerHistory = [];
+
   const delta = -window.history.length + router._startHistoryLength;
-  window.history.go(delta)
+  delta < 0 && window.history.go(delta);
 }
