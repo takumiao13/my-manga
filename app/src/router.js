@@ -1,10 +1,13 @@
 import Vue from 'vue'
 import store from './store';
 import VueRouter from 'vue-router';
-import { last, isDef } from '@/helpers';
+import { last, isUndef } from '@/helpers';
+import { types as appTypes } from '@/store/modules/app';
+import { types as settingTypes, createSettings, createTypes } from '@/store/modules/settings';
 
 // views
 import MainInterface from '@/views/MainInterface';
+import Explorer from '@/views/MainInterface/Explorer';
 import MangaList from '@/views/MainInterface/MangaList';
 import Viewer from '@/views/Viewer';
 import Repository from '@/views/Repository';
@@ -13,7 +16,7 @@ import Repository from '@/views/Repository';
 VueRouter.prototype._routerHistory = []; // sync browser history
 VueRouter.prototype.navigate = function(to) {
 	const route = this.match(to);
-	const index = this._routerHistory.indexOf(historyName(route));
+	const index = this._routerHistory.lastIndexOf(historyName(route));
 
 	if (index > -1) {
 		this._backdelta = this._routerHistory.length - index;
@@ -23,28 +26,37 @@ VueRouter.prototype.navigate = function(to) {
 	}
 };
 
+const routerPush = VueRouter.prototype.push;
+VueRouter.prototype.push = function() {
+	this._push = true;
+	routerPush.apply(this, arguments);
+}
+
+VueRouter.prototype.canGoBack = function() {
+	return this._routerHistory.length > 1;
+}
+
 Vue.use(VueRouter);
 
 // initialize router
 const routes = [
-	{
-		path: '/',
-		redirect: 'manga'
-	},
 	{
 		path: '/manga', 
 		component: MainInterface,
 		children: [
 			{ 
 				name: 'explorer', 
-				path: ':path?', 
-				component: MangaList
+				path: ':dirId/:path?', 
+				components: {
+					sidebar: Explorer,
+          main: MangaList
+				}
 			}
 		]
 	},
 	{
 		name: 'viewer',
-		path: '/viewer/:path/:ch?',
+		path: '/viewer/:dirId/:path/:ch?',
 		component: Viewer,
 		meta: {
 			themeColor: '#000'
@@ -57,7 +69,17 @@ const routes = [
 	},
 	{
 		path: '*', // handle not found
-		redirect: 'manga'
+		redirect() {
+			const userSettings = store.getters['settings/user/settings'];
+			const repo = store.getters['settings/repo/repo'];
+			
+			if (userSettings) return 'repos';
+
+			return {
+				name: 'explorer',
+				params: { dirId: repo.dirId }
+			}
+		}
 	}
 ];
 const router = new VueRouter({
@@ -70,7 +92,6 @@ const router = new VueRouter({
 			if (to.meta.scrollPromise) {
 				return new Promise((resolve) => {
 					to.meta.scrollPromise.then(() => {
-						console.log(savedPosition);
 						setTimeout(() => resolve(savedPosition), 16);
 					});
 				});
@@ -100,27 +121,20 @@ window.onbeforeunload = () => {
 router.beforeEach(function(to, from, next) {
 	const history = router._routerHistory;
 	const delta = router._backdelta;
-
 	console.log('beforeEach', to);
-	
+
 	// handle reset when change repo
 	if (router._reset) {
-		history.push('/')
 		to.meta.isBack = false;
-		delete router._reset;
 
-	// has back delta
+	// handle navigate back delta
 	} else if (delta) {
 		history.splice(history.length - delta, delta);
 		to.meta.isBack = true;
 		router._backdelta = undefined;
 
-	// is back
-	} else if (isDef(router._isBack)) {
-		to.meta.isBack = router._isBack;
-		delete router._isBack;
-
-	} else if (history.length && historyName(to) === last(history)) {
+	// handle browser back
+	} else if (isUndef(router._push) && historyName(to) === last(history)) {
 		history.splice(history.length - 1, 1);
 		to.meta.isBack = true;
 	
@@ -130,19 +144,29 @@ router.beforeEach(function(to, from, next) {
 		if (p !== '/' || (p === '/' && history.length === 0)) {
 			history.push(p);
 		}
-		to.meta.isBack = false;
+
+		// shouldn't fetch again when repo has not changed
+		if (from.name == 'repos' && to.name == 'explorer') {
+			to.meta.isBack = (to.params.dirId === store.state.app.repoId);
+		} else {
+			to.meta.isBack = false;
+		}
 	}
+
+	delete router._push;
 
 	// change doc title
 	if (['explorer', 'viewer'].indexOf(to.name) > -1) {
 		let title = 'My Manga';
 		const { path } = to.params;
-		const repoName = store.getters['settings/user/repoName'];
+		const { name: repoName } = store.getters[`app/repo`];
 		
 		if (path) title = last(path.split('/'));
 		if (repoName) title += ` - ${repoName}`
 
 		document.title = title;
+	} else if (to.name == 'repos') {
+		document.title = 'REPOS';
 	}
 
 	// change mobile top theme color
@@ -150,8 +174,34 @@ router.beforeEach(function(to, from, next) {
 	// @XXX need to optimze
 	meta.content = to.meta.themeColor || '#fff';
 
+	
+
+	// check repo settings
+	if (['explorer', 'viewer'].indexOf(to.name) > -1) {
+		const { dirId } = to.params;
+		const scope = dirId;
+		const repoSettings = store.state.settings[scope];
+
+		// dynamic load repo settings
+		if (isUndef(repoSettings)) {
+			store.registerModule(['settings', scope], createSettings(scope))
+			createTypes(scope);
+			store.dispatch(settingTypes[scope].INIT)
+				.then(() => store.dispatch(appTypes.TOGGLE_REPO, { repo: scope }))
+				.then(next)
+		} else {
+			if (store.state.app.repoId !== scope) {
+				store.dispatch(appTypes.TOGGLE_REPO, { repo: scope }).then(next);
+			} else {
+				next();
+			}
+		}
+	} else {
+		next();
+	}
+
+
 	console.log(history);
-	next();
 });
 
 

@@ -17,21 +17,19 @@ const imgRE = /(jpe?g|png|webp|gif|bmp)/i;
 
 class MangaService extends Service {
 
-  async list(path = '') {
-    const { baseDir } = this.app.options;
+  async list(path = '', baseDir) {
     const [ err, result ] = await to(traverse({ path, baseDir, onlyDir: false }));
     if (err) { 
-      err.message = `get ${path} file list error`;
+      err.message = `get [${path}] file list error`;
       throw err;
     }
     return result;
   }
 
-  async folder(path = '') {
-    const { baseDir } = this.app.options;
+  async folder(path = '', baseDir) {
     const [ err, result ] = await to(traverse({ path, baseDir, skipMeta: true }));
     if (err) { 
-      err.message = `get ${path} sub folder error`;
+      err.message = `get [${path}] sub folder error`;
       throw err;
     }
     return result;

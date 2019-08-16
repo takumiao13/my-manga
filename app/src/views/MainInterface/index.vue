@@ -2,13 +2,13 @@
   <div class="main-interface">
     <div class="container-fluid">
       <div class="row flex-xl-nowrap">
-        <div id="sidebar" class="col-12 col-md-3 col-xl-4">
-          <explorer @selected="handleSelected" />
-        </div>
+        <router-view name="sidebar" id="sidebar" class="col-12 col-md-3 col-xl-4">
+          <!-- <explorer @selected="handleSelected" /> -->
+        </router-view>
 
         <div class="backdrop" @click="toggle"></div>
 
-        <router-view id="main" class="col-12 col-md-9 col-xl-8">
+        <router-view name="main" id="main" class="col-12 col-md-9 col-xl-8">
         </router-view>
       </div>
     </div>
@@ -34,12 +34,6 @@ export default {
   methods: {
     toggle() {
       this.$store.dispatch(types.TOGGLE_SIDEBAR);
-    },
-    
-    handleSelected(item) {
-      const path = item.path;
-      this.$store.dispatch(types.TOGGLE_SIDEBAR, { open: false });
-      this.$router.push({ name: 'explorer', params: { path }})
     }
   }  
 }

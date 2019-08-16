@@ -4,7 +4,7 @@ import Vuex from 'vuex'
 // Load Modules
 import appModule, { types as appTypes } from './modules/app';
 import explorerModule from './modules/explorer';
-import mangaModule from './modules/manga';
+import mangaModule, { cacheStack as mangaCacheStack } from './modules/manga';
 import viewerModule from './modules/viewer';
 import settingsModule from './modules/settings';
 
@@ -41,6 +41,7 @@ export default store;
 
 export function resetStore() {
   store.dispatch(appTypes.TOGGLE_SIDEBAR, { open: false });
+  mangaCacheStack.clear();
   unregisterModules()
   registerModules()
 }

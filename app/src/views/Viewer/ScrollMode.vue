@@ -17,9 +17,10 @@
     >
       <div class="img-loading">{{ index + 1 }}</div>
       <div 
-        class="img-inner" 
-        :style="{ padding:'0 0 ' + (item.height / item.width) * 100 + '%' }">
-        <img v-lazy="makeSrc(item)" />
+        class="img-inner"
+        :style="$service.image.coverStyle(item)"
+      >
+        <img v-lazy="$service.image.makeSrc(item.path)" />
       </div>
     </div>
     <!-- /GALLERY -->
@@ -117,11 +118,6 @@ export default {
   },
 
   methods: {
-    makeSrc(item) {
-      if (!item) return undefined;
-      return `${config.baseURL}img/${encodeURIComponent(item.path)}`;
-    },
-
     refresh(type) {
       const scrollTop = getScrollTop();
       const imgWrappers = this.$refs.imgWrapper;

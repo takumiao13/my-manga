@@ -6,7 +6,8 @@ import store, { resetStore } from './store';
 import router from './router';
 import { byId, delay, inElectron } from '@/helpers';
 import config from '@/config';
-import { types } from '@/store/modules/settings';
+import { types as appTypes } from '@/store/modules/app';
+import { types as settingTypes, createSettings, createTypes } from '@/store/modules/settings';
 
 // Global components
 import Spinner from './components/Spinner';
@@ -26,6 +27,9 @@ import VueQriously from 'vue-qriously';
 import loadingDirective from './directives/loading';
 import { eventHub } from './helpers';
 
+// Services
+import $Service from '@/services';
+
 Vue.component('spinner', Spinner);
 Vue.component('navbar', Navbar);
 Vue.component('toolbar', Toolbar);
@@ -42,6 +46,11 @@ Vue.use(VueLazyload, {
   preLoad: 1.3,
   attempt: 1,
   lazyComponent: true
+});
+
+Vue.use($Service, {
+  router,
+  store
 });
 
 Vue.config.productionTip = false;
@@ -62,31 +71,40 @@ function bootstrapApp() {
     window.onload = () => ipc.send('win-load');
   }
 
-  eventHub.$on('store.reset', ({ repoName }) => {
-    $message.innerHTML = 'Change Repository <br/> <strong>' + repoName + '</strong>';
+  eventHub.$on('store.reset', (repo) => {
+    const { name, dirId } = repo;
+    $message.innerHTML = '<p>Change Repository</p> <strong>' + name + '</strong>';
     document.body.style.overflow = 'hidden';
     $loading.classList.remove('fade');
     $loading.style.display = '';
+    window.localStorage.setItem('_REPO', dirId);
 
-    backwardAllHistory();
-    setTimeout(() => {
-      resetStore();
-      router.replace({ name: 'explorer' })
-      // change repo settings
-      store.dispatch(types.repo.INIT).then(showApp);
-    }, 360);
+    backwardAllHistory(function() {
+      resetStore();     
+      router.push({ name: 'explorer', params: { dirId }});
+      showApp();
+    });
   });
 
-  Promise.all(
-    ['user', 'repo'].map(scope => store.dispatch(types[scope].INIT))
-  ).then(() => {
-    const userSettings = store.getters['settings/user/settings'];
-
-    // should go to select repo
-    if (userSettings && !userSettings.baseDir) {
-      window.history.replaceState(null, null, '#/repos');
+  // just get user settings
+  const _REPO = window.localStorage.getItem('_REPO');
+  Promise.all([
+    store.dispatch(settingTypes.user.INIT),
+    store.dispatch(settingTypes.repo.INIT)  
+  ]).then(() => {
+    if (_REPO) {
+      const scope = _REPO;
+      const repoSettings = store.state.settings[scope];
+      
+      // dynamic load repo settings
+      if (!repoSettings) {
+        store.registerModule(['settings', scope], createSettings(scope))
+        createTypes(scope);
+        return store.dispatch(settingTypes[scope].INIT)
+          .then(() => store.dispatch(appTypes.TOGGLE_REPO, { repo: scope }))
+      }
     }
-
+  }).then(() => {
     render();
     showApp();
   }).catch((err) => {
@@ -112,11 +130,26 @@ function showApp() {
     }); 
 }
 
-function backwardAllHistory() {
-  // backward all history (we cannot clear it)
-  router._reset = true;
-  router._routerHistory = [];
+function backwardAllHistory(done) {
+  const wrappedDone = () => {
+    if (router.history.current.name !== 'repos') {
+      // force fisrt history is `repos`
+      router.replace({ name: 'repos' });
+    }
+    delete router._reset;
+    done();
+  }
 
   const delta = -window.history.length + router._startHistoryLength;
-  delta < 0 && window.history.go(delta);
+  
+  if (router.canGoBack()) {
+    // backward all history (we cannot clear it)
+    router._reset = true;
+    router._routerHistory = ['/'];
+
+    window.history.go(delta);
+    setTimeout(wrappedDone, 260);
+  } else {
+    done();
+  }
 }

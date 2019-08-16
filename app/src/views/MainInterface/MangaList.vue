@@ -1,121 +1,130 @@
 <template>
-  <div class="main-explorer">
-    <div class="topbar">
-      <navbar :class="{'no-shadow': breadcrumb.length > 1}" :title="title" :left-btns="leftBtns" />
-      <breadcrumb
-        :class="{ collapsed: isCollapsed }"
-        v-show="breadcrumb.length > 1" 
-        :navs="breadcrumb" 
-        @navigate="handleNavigate" 
-      />
-    </div>    
-    <data-view class="main-explorer-container" :loading="isPending" :empty="empty">
-      <div class="row" v-show="isSuccess">
+  <div>
+    <div class="main-explorer">
+      <div class="topbar">
+        <navbar :class="{'no-shadow': breadcrumb.length > 1 }" :title="title" :left-btns="leftBtns" />
+        <breadcrumb
+          :class="{ collapsed: isCollapsed }"
+          v-show="breadcrumb.length > 1" 
+          :navs="breadcrumb"
+          @back="handleNavigateBack"
+          @navigate="handleNavigate"
+        />
+      </div>    
+      <data-view class="main-explorer-container" :loading="isPending" :empty="empty">
+        <div class="row" v-show="isSuccess">
 
-        <!-- META DATA -->
-        <div v-if="metadata" id="metadata" class="col-12 col-sm-3">
-          <div class="metadata-inner">
-            <img class="cover" :src="makeSrc(path, metadata.cover)" />  
-            <div class="description">
-              {{ metadata.description }}
+          <!-- META DATA -->
+          <div v-if="metadata" id="metadata" class="col-12 col-sm-3">
+            <div class="metadata-inner">
+              <img class="cover" :src="$service.image.makeSrc(path, metadata.cover)" />  
+              <div class="description">
+                {{ metadata.description }}
+              </div>
             </div>
           </div>
-        </div>
-        <!-- / META DATA -->
+          <!-- / META DATA -->
 
-        <div class="col-12" :class="{ 'col-sm-9': metadata }">
+          <div class="col-12" :class="{ 'col-sm-9': metadata }">
 
-          <!-- FOLDER AREA -->
-          <div class="folder-area mb-4" v-show="folders.length">
-            <p class="area-header">FOLDER</p>
-            <div class="list-group">
-              <router-link 
-                class="list-group-item list-group-item-action folder-item" 
-                v-for="item in folders" 
-                :key="item.path"
-                :to="{
-                  name: 'explorer', 
-                  params:{ path: item.path }
-                }"
-              >
-                <icon name="folder" /> &nbsp; {{ item.name }}
-              </router-link>
-            </div>
-          </div>
-          <!-- / FOLDER AREA -->
-
-          <!-- MANGA AREA -->
-          <div class="manga-area mb-4" v-show="mangas.length">
-            <p class="area-header">MANGA</p>
-            <div class="row">
-              <div 
-                class="col-6 manga-item"
-                :class="itemClass"           
-                v-for="item in mangas" 
-                :key="item.path"
-              >
-
+            <!-- FOLDER AREA -->
+            <div class="folder-area mb-4" v-show="folders.length">
+              <p class="area-header">FOLDER</p>
+              <div class="list-group">
                 <router-link 
-                  class="cover"
-                  :style="coverStyle(item)"
+                  class="list-group-item list-group-item-action folder-item"
+                  :class="{ active: item.path === activePath }"
+                  v-for="item in folders" 
+                  :key="item.path"
                   :to="{
                     name: 'explorer', 
-                    params:{ path: item.path }
+                    params:{ 
+                      dirId: repo.dirId,
+                      path: item.path 
+                    }
                   }"
                 >
-                  <img v-lazy="makeSrc(item.cover)" />
+                  <icon name="folder" /> &nbsp; {{ item.name }}
                 </router-link>
-
-                <div class="caption">{{ item.name }}</div>
               </div>
             </div>
-          </div>
-          <!-- / MANGA AREA -->
+            <!-- / FOLDER AREA -->
 
-          <!-- CHAPTER AREA -->
-          <div class="chapter-area mb-4" v-show="chapters.length">
-            <p class="area-header">CHAPTERS</p>
-            <div class="list-group">
-              <a class="list-group-item list-group-item-action chapter-item"
-                :class="{ active: item.name === activeCh}"
-                v-for="(item, index) in chapters" 
-                :key="item.path"
-                @click="handleViewManga($event, item, 0)"
-              >
+            <!-- MANGA AREA -->
+            <div class="manga-area mb-4" v-show="mangas.length">
+              <p class="area-header">MANGA</p>
+              <div class="row">
+                <div 
+                  class="col-6 col-sm-3 col-xl-2 manga-item"
+                  :class="{ active: item.path === activePath }"      
+                  v-for="item in mangas" 
+                  :key="item.path"
+                >
 
-                <small class="float-right">
-                  #{{ index + 1 }}
-                </small>
+                  <router-link 
+                    class="cover"
+                    :style="$service.image.coverStyle(item, true)"
+                    :to="{
+                      name: 'explorer', 
+                      params:{ 
+                        dirId: repo.dirId,
+                        path: item.path 
+                      }
+                    }"
+                  >
+                    <img v-lazy="$service.image.makeSrc(item.cover)" />
+                  </router-link>
 
-                {{ item.name }}
-              </a>
-            </div>
-          </div>
-          <!-- / CHAPTER AREA -->
-
-          <!-- GALLERY AREA -->
-          <div class="gallery-area mb-4" v-show="images.length">
-            <p class="area-header">GALLERY</p>
-            <div class="row">
-              <div class="col-6 gallery-item" 
-                :class="itemClass"
-                v-for="(item, index) in images" 
-                :key="item.path">
-
-                <div class="cover"
-                  :style="coverStyle(item)"
-                  @click="handleViewManga($event, item, index)">
-                  <img v-lazy="makeSrc(item.path)" />
+                  <div class="caption">{{ item.name }}</div>
                 </div>
-
-                <div class="caption">{{ item.name }}</div>
               </div>
             </div>
-          </div>
-          <!-- / GALLERY GALLERY -->
-        </div>      
-      </div>
-    </data-view>
+            <!-- / MANGA AREA -->
+
+            <!-- CHAPTER AREA -->
+            <div class="chapter-area mb-4" v-show="chapters.length">
+              <p class="area-header">CHAPTERS</p>
+              <div class="list-group">
+                <a class="list-group-item list-group-item-action chapter-item"
+                  :class="{ active: item.name === activeCh}"
+                  v-for="(item, index) in chapters" 
+                  :key="item.path"
+                  @click="handleViewManga($event, item, 0)"
+                >
+
+                  <small class="float-right">
+                    #{{ index + 1 }}
+                  </small>
+
+                  {{ item.name }}
+                </a>
+              </div>
+            </div>
+            <!-- / CHAPTER AREA -->
+
+            <!-- GALLERY AREA -->
+            <div class="gallery-area mb-4" v-show="images.length">
+              <p class="area-header">GALLERY</p>
+              <div class="row">
+                <div class="col-6 col-sm-3 col-xl-2 gallery-item" 
+                  v-for="(item, index) in images" 
+                  :key="item.path">
+
+                  <div class="cover"
+                    :style="$service.image.coverStyle(item, true)"
+                    @click="handleViewManga($event, item, index)">
+                    <img v-lazy="$service.image.makeSrc(item.path)" />
+                  </div>
+
+                  <div class="caption">{{ item.name }}</div>
+                </div>
+              </div>
+            </div>
+            <!-- / GALLERY GALLERY -->
+          </div>      
+        </div>
+      </data-view>
+    </div>
   </div>
 </template>
 
@@ -149,12 +158,8 @@ export default {
   },
 
   computed: {
-    ...mapGetters('manga', [ 'isPending', 'isSuccess', 'empty' ]),
-
-    ...mapGetters('settings/user', [ 'repoName' ]),
-    
     ...mapState('manga', [
-      'path', 'metadata', 'list', 'folders', 'mangas', 'chapters', 'images'
+      'path', 'metadata', 'list', 'folders', 'mangas', 'chapters', 'images', 'activePath'
     ]),
 
     ...mapState('viewer', {
@@ -162,34 +167,33 @@ export default {
       viewerCh: 'ch'
     }),
 
+    ...mapGetters('app', [ 'repo' ]),
+
+    ...mapGetters('manga', [ 'isPending', 'isSuccess', 'empty' ]),
+
     title() {
-      const title = this.repoName;
+      const title = this.repo.name;
       const { path } = this.$route.params;
       return path ? last(path.split(PATH_SEP)) : title;
     },
 
     breadcrumb() {
-      const name = this.repoName;
+      const name = this.repo.name;
       const { path } = this.$route.params;
       const items = [{ name }];
 
       if (path) {
         const fragments = path.split('/');
         fragments.forEach((item, idx) => {
-          const path = fragments.slice(0, idx + 1).join(PATH_SEP);
+          // make path (the last ignore click)
+          const path = idx < fragments.length - 1 ? 
+            fragments.slice(0, idx + 1).join(PATH_SEP) : false;
           const data = { name: item, path };
           items.push(data);
         });
       }
-
+      
       return items;
-    },
-
-    itemClass() {
-      return {
-        'col-sm-3 col-xl-2': !this.metadata,
-        'col-sm-4 col-xl-3': this.metadata
-      }
     }
   },
 
@@ -202,13 +206,13 @@ export default {
   },
 
   activated() {
-    if (!this.$route.meta.isBack) {
-      this.fetchMangas(this.$route.params.path);
-    }
+    if (this.$route.meta.isBack || this.$router._reset) return;
+    this.fetchMangas(this.$route.params.path);
   },
 
   beforeRouteUpdate(to, from, next) {
-    to.meta.scrollPromise = this.fetchMangas(to.params.path);
+    const { isBack } = to.meta;
+    to.meta.scrollPromise = this.fetchMangas(to.params.path, isBack);
     next();
   },
 
@@ -222,8 +226,10 @@ export default {
   },
 
   methods: {
-    fetchMangas(path = '') {
-      return this.$store.dispatch(mangaTypes.LIST, { path })
+    fetchMangas(path = '', isBack) {
+      const { dirId } = this.repo;
+      const payload = { path, dirId, isBack }
+      return this.$store.dispatch(mangaTypes.LIST, payload)
     },
 
     toggleLocationCollapsed: debounce(function(scrollTop, prevScrollTop) {
@@ -237,16 +243,6 @@ export default {
       leading: true,
       trailing: false
     }),
-
-    coverStyle(item) {
-      const ratio = Math.min((item.height / item.width) * 100, 141.4);
-      return { padding:'0 0 ' + ratio + '%' }
-    },
-
-    makeSrc(...paths) {
-      const path = paths.join(PATH_SEP);
-      return path && `${config.baseURL}img/${encodeURIComponent(path)}`;
-    },
 
     // events
     handleToggleSidebar($event) {
@@ -263,18 +259,32 @@ export default {
       this._prevScrollTop = scrollTop;
     },
 
+    handleNavigateBack($event) {
+      this.$router.back();
+    },
+
     handleNavigate($event, location) {
       const { path } = location;
+      const { dirId } = this.repo;
+
       if (path === false) return;
 
       this.$router.navigate({
         name: 'explorer',
-        params: { path }
+        params: { dirId, path }
+      });
+    },
+
+    handleViewList($event, item) {
+      this.$router.push({
+        name: 'explorer',
+        params:{ path: item.path }
       });
     },
 
     handleViewManga($event, item, index = 0) {
       const { path } = this.$route.params;
+      const { dirId } = this.repo;
       const ch = item.type === 'CHAPTER' ? item.name : undefined;
       
       // sync state to viewer
@@ -309,7 +319,7 @@ export default {
 
       this.$router.push({
         name: 'viewer',
-        params: { path, ch }
+        params: { dirId, path, ch }
       });
     }
   }
@@ -394,9 +404,16 @@ export default {
   
   .manga-item,
   .gallery-item {
-    padding-left: .5rem;
-    padding-right: .5rem;
-    margin-bottom: 5rem;
+    padding: .5rem;
+    margin-bottom: 4rem;
+
+    &:hover {
+      z-index: 1;
+      .caption {
+        max-height: none;
+        overflow: visible;
+      }
+    }
   }
 
   .cover {

@@ -41,14 +41,25 @@
 
   .manga-area > .row,
   .gallery-area > .row {
-    background: $app-primary !important;
+    background: $app-primary;
     border-color: $app-border-color;
+
+    .manga-item,
+    .gallery-item {
+      &.active {
+        background: $app-lighter-bg;
+      }
+    }
 
     .cover {
       img {
         background: $app-cover-bg;
         border: .5px solid $app-border-color;
       }
+    }
+
+    .caption {
+      background: $app-primary;
     }
   }
 
@@ -68,9 +79,16 @@
   background: $app-primary;
   
   > ul {
-    > li {
+    > li:hover {
+      background: $app-border-color;
+    }
+
+    > li:last-child,
+    > li.muted {
+      color: $app-muted-color;
+
       &:hover {
-        background: $app-border-color;
+        background: none;
       }
     }
 

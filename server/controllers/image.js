@@ -5,10 +5,12 @@ class ImageController extends Controller {
 
   async show(ctx) {
     const { app } = this;
-    const { path } = ctx.params;
-    const { baseDir } = app.options;
+    const { path, baseDir } = ctx.params;
+    const { repoMap } = app.options;
+
+    const root = repoMap[baseDir].baseDir; // get real path;
     const [ err, result ] = await to(app.send(ctx, path, { 
-      root: baseDir,
+      root,
       setHeaders: (res) => {
         res.setHeader('Cache-Control', 'max-age=31536000')
       }

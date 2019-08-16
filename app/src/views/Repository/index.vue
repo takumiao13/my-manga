@@ -1,6 +1,9 @@
 <template>
   <div class="repos">
-    <navbar class="d-sm-none" :title="title" :left-btns="leftBtns" />
+    <div class="topbar">
+      <navbar class="d-sm-none" :title="title" :left-btns="leftBtns" />
+    </div>
+    
     <div class="container">
 
       <div class="d-none d-sm-block" style="overflow: hidden;">
@@ -19,29 +22,28 @@
         <div class="list-group-item text-truncate"
           v-for="(repo, index) in repos"
           :key="index"
-          @click="handleToggleRepo($event, repo.path)"
+          @click="handleToggleRepo($event, repo)"
         >
           <div class="list-group-item-actions" v-if="inElectron">
-            <button class="btn" @click="handleRemoveRepo($event, repo.path)">
+            <button class="btn" @click="handleRemoveRepo($event, repo)">
               <icon name="trash" />
             </button>
           </div>
 
           <icon 
-            v-if="repo.path === baseDir"
+            v-if="repo.dirId === repoId"
             name="check"
             size="20" 
             class="text-success mr-2"
           />
 
           <div 
-            v-if="repo.path !== baseDir"
+            v-if="repo.dirId !== repoId"
             class="svg-icon mr-2"
             style="display: inline-block; width: 20px; height: 20px;"
           />
 
           <strong>{{ repo.name }}</strong>&nbsp;
-          <small>{{ repo.dir }}</small>
         </div>
       </div>
     </div>
@@ -52,8 +54,9 @@
 import { inElectron, eventHub } from '@/helpers';
 import settingsAPI from '@/apis/settings';
 import { resetStore } from '@/store';
+import { types as appTypes } from '@/store/modules/app';
 import { types } from '@/store/modules/settings';
-import { mapGetters } from 'vuex';
+import { mapGetters, mapState } from 'vuex';
 
 const ipc = inElectron ? window.require('electron').ipcRenderer : null;
 
@@ -72,7 +75,9 @@ export default {
   },
 
   computed: {
-    ...mapGetters('settings/user', [ 'settings', 'repos', 'baseDir', 'repoName' ])
+    ...mapState('app', [ 'repoId' ]),
+    
+    ...mapGetters('settings/user', [ 'settings', 'repos' ])
   },
 
   created() {
@@ -105,21 +110,15 @@ export default {
       inElectron && ipc.send('open-file-dialog');
     },
 
-    handleToggleRepo($event, repo) {
-      if (repo === this.baseDir) {
+    handleToggleRepo($event, repo) {      
+      if (repo.dirId === this.repoId && 
+        this.$router._routerHistory.length > 1) {
         this.$router.go(-1);
         return;
       }
-
-      const scope = 'user';
-      const payload = { key: 'baseDir', value: repo };
-
-      this.$store.dispatch(types[scope].SET, payload)
-        .then(() => this.$store.dispatch(types['repo'].INIT))
-        .then(() => {
-          // we should reset store
-          eventHub.$emit('store.reset', { repoName: this.repoName });
-        });
+    
+      // we should reset store
+      eventHub.$emit('store.reset', repo);
     },
 
     handleRemoveRepo($event, repo) {

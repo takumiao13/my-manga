@@ -2,7 +2,7 @@ const Service = require('./_base');
 const pathFn = require('path');
 const fs = require('fs-extra');
 const to = require('await-to-js').default;
-const { isDef, set, get, unset } = require('../helpers');
+const { isUndef, isDef, set, get, unset, has, md5, cloneDeep } = require('../helpers');
 
 const FILE_NAME = 'settings.json';
 
@@ -26,6 +26,14 @@ class Data {
 }
 
 
+const _hooks = {
+  repos: {
+    get(value, context) {
+      return context._cryptoedRepos;
+    }
+  }
+}
+
 class SettingsService extends Service {
 
   constructor(opts) {
@@ -34,22 +42,39 @@ class SettingsService extends Service {
     const { settings, baseDir } = options;
     
     this._settings = {};
+    this._hooks = _hooks;
+    const repoMap = {};
 
     if (settings) {
-      this.setPath('user', settings);
-      let dir = this.get('user', 'baseDir');
-      if (dir) {
-        options.baseDir = dir;
-        this.setPath('repo', pathFn.resolve(dir, FILE_NAME));
-      }
+      this.setPath('user', settings); // 全局 settings 需要获取 repos
+      const repos = this.get('user', 'repos', false);
+      const cryptoedRepos = [];
+      
+      repos.forEach(baseDir => {
+        const name = pathFn.basename(baseDir);
+        const dirId = this.hashBaseDir(baseDir);
+
+        repoMap[dirId] = { name, baseDir };
+        cryptoedRepos.push({ name, dirId });
+      });
+
+      this._cryptoedRepos = cryptoedRepos;
     } else if (baseDir) {
+      // single dir
       this.setPath('repo', pathFn.resolve(baseDir, FILE_NAME));
+      const name = pathFn.basename(baseDir);
+      const dirId = this.hashBaseDir(baseDir);
+      repoMap[dirId] = { name, baseDir };
     }
+
+    // set repoMap to app options
+    // we can get it from other service or controller
+    options.repoMap = repoMap; 
   }
 
   setPath(scope, path) {
     let data;
-    const settings = this.getScope(scope);
+    const settings = this._settings[scope] = {};
     
     if (fs.existsSync(path)) {
       data = fs.readFileSync(path, { encoding: 'utf8' });
@@ -58,30 +83,62 @@ class SettingsService extends Service {
 
     settings.path = path;
     settings.data = new Data(data);
+    return settings;
+  }
+
+  hashBaseDir(baseDir) {
+    return md5(baseDir);
   }
 
   getScope(scope) {
-    const s = this._settings;
-    s[scope] || (s[scope] = {})
-    return s[scope];
+    let settings = null;
+    const { repoMap } = this.app.options;
+
+    // scope ['user'] has loaded when init
+    if (scope === 'user') {
+      settings = this._settings.user;
+    } else if (scope === 'repo') {
+      settings = this._settings.repo;
+    // scope ['<hash>'] dynamic load
+    } else if (repoMap[scope]) {
+      const { baseDir } = repoMap[scope]; // get real dir
+      settings = this._settings[scope];
+      if (!settings && baseDir) {
+        settings = this.setPath(scope, pathFn.resolve(baseDir, FILE_NAME));
+      }
+    }
+
+    return settings;
   }
 
-  get(scope, key) {
-    const { data } = this.getScope(scope);
-    return data ? data.get(key) : null;
+  get(scope, key, encode) {
+    const { repoMap } = this.app.options;
+    const settings = this.getScope(scope);
+    // if unknown scope settings return null
+    if (!settings) return null; 
+    const { data } = settings;
+    const value = encode === false ? 
+        data.get(key) : 
+        this.encode(data.get(key), key);
+    
+    if (scope !== 'user' && scope !== 'repo') {
+      const repo = repoMap[scope]
+      if (isUndef(key) && repo) {      
+        Object.assign(value, {
+          name: repo.name,
+          dirId: scope
+        });
+      }
+    }
+    
+    return value;
   }
 
   set(scope, key, value) {
     const { data } = this.getScope(scope);
-
+    // @todo
+    // if unknow scope return null
     if (isDef(value)) {
-      const { options } = this.app;
-
-      if (scope === 'user' && key === 'baseDir') {
-        options.baseDir = value;
-        this.setPath('repo', pathFn.resolve(value, FILE_NAME));
-      }
-
       return data.set(key, value);
     } else {
       return data.unset(key) ? data.get() : null;
@@ -99,6 +156,28 @@ class SettingsService extends Service {
     }
     return result;
   }
+
+  encode(data, key) {
+    data = cloneDeep(data);
+    const _hooks = this._hooks;
+    if (_hooks[key] && _hooks[key].get) {
+      data = _hooks[key].get(data, this);
+    }
+
+    Object.keys(_hooks).forEach(key => {
+      if (has(data, key) && _hooks[key].get) {
+        const value = get(data, key);
+        set(data, key, _hooks[key].get(value, this));
+      }
+    });
+
+    return data;
+  }
+
+  // // @todo
+  // decode(data, key) {
+  //   return data;
+  // }
 }
 
 module.exports = SettingsService;

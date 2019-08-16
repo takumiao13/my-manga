@@ -8,26 +8,34 @@ const ns = 'settings';
 const INIT = 'INIT';
 const SET = 'SET';
 
-export const types = {
-  user: createTypesWithNs([ INIT, SET ], `${ns}/user`),
-  repo: createTypesWithNs([ INIT, SET ], `${ns}/repo`)
-};
+export const types = {};
 
-const parseRepoPath = (path) => {
-  const seq = /\/|\\/;
-  if (path) {
-    const fragments = path.split(seq);
-    return {
-      path,
-      name: last(fragments).toUpperCase(),
-      dir: fragments.slice(0, -1).join('/')
-    }
-  } else {
-    return {};
+const parseRepoPath = (repo) => {
+  // const seq = /\/|\\/;
+  // if (path) {
+  //   const fragments = path.split(seq);
+  //   return {
+  //     path,
+  //     name: last(fragments).toUpperCase(),
+  //     dir: fragments.slice(0, -1).join('/')
+  //   }
+  // } else {
+  //   return {};
+  // }
+
+  const { name, dirId } = repo;
+
+  return {
+    name: name.toUpperCase(),
+    dirId
   }
 }
 
-const createSettings = (scope) => ({
+export const createTypes = (scope) => {
+  types[scope] = createTypesWithNs([ INIT, SET ], `${ns}/${scope}`);
+}
+
+export const createSettings = (scope) => ({
   namespaced: true,
 
   state: {
@@ -39,18 +47,16 @@ const createSettings = (scope) => ({
       return state.data;
     },
 
+    repo(state, getters) {
+      const settings = getters.settings;
+      return settings ? {
+         name: settings.name.toUpperCase(),
+         dirId: settings.dirId
+      } : {}
+    },
+
     repos(state) {
       return (get(state, 'data.repos') || []).map(parseRepoPath);
-    },
-
-    baseDir(state) {
-      return get(state, 'data.baseDir');
-    },
-
-    repoName(state) {
-      const settings = state.data || {};
-      const { name } = parseRepoPath(settings.baseDir);
-      return name || 'My Manga'
     }
   },
 
@@ -118,6 +124,9 @@ const createSettings = (scope) => ({
     }
   }
 });
+
+createTypes('user');
+createTypes('repo')
 
 export default {
   namespaced: true,

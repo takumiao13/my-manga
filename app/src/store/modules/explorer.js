@@ -36,11 +36,11 @@ export default {
 
   actions: {
     [FETCH]({ commit }, payload = {}) {
-      const { path } = payload;
+      const { path, dirId } = payload;
       const global = !path;
       if (global) statusHelper.pending(commit);
 
-      return mangaAPI.folder({ path })
+      return mangaAPI.folder({ path, dirId })
         .then(res => {
           // group manga
           const mangaGroup = {

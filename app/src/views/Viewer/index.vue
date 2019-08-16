@@ -84,13 +84,15 @@ export default {
   },
   
   computed: {
+    ...mapGetters('app', [ 'repo' ]),
+
     ...mapGetters('viewer', [ 'count', 'chIndex', 'chCount', 'pending' ]),
 
     ...mapState('viewer', [ 'path', 'mode', 'page', 'ch', 'images', 'chapters' ]),
 
-    ...mapState('settings/repo', {
+    ...mapState('settings', {
       settings(state) {
-
+        state = state[this.repo.dirId]; // find nested state
         const obj = state.data.viewer || {};
         let margin = true;
 
@@ -151,7 +153,8 @@ export default {
 
   mounted() {
     const { path, ch } = this.$route.params;
-    this.$store.dispatch(types.VIEW, { path, ch });
+    const { dirId } = this.repo
+    this.$store.dispatch(types.VIEW, { dirId, path, ch });
     
     setTimeout(_ => { 
       window.addEventListener('scroll', (e) => {
@@ -181,7 +184,8 @@ export default {
     },
 
     goCh(chIndex) {
-      this.$store.dispatch(types.GO_CH, { chIndex });
+      const { dirId } = this.repo;
+      this.$store.dispatch(types.GO_CH, { dirId, chIndex });
     },
 
     toggleOperation(show) {
@@ -193,7 +197,7 @@ export default {
     // events
     handleBack($event) {
       if (this.$router._routerHistory.length === 1) {
-        this.$router.push({ name: 'explorer'  })
+        this.$router.push({ name: 'explorer' })
       } else {
         this.$router.go(-1);
       }

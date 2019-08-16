@@ -53,19 +53,19 @@ export default {
     },
 
     [VIEW]({ commit, state }, payload = {}) {
-      const { path, ch } = payload;
+      const { dirId, path, ch } = payload;
       const promiseArray = [];
       const pathResStub = () => {};
       const chResStub = () => {};
 
       const pathPromise = state.path !== path ? 
-        mangaAPI.list({ path }) : pathResStub;
+        mangaAPI.list({ dirId, path }) : pathResStub;
   
       promiseArray.push(pathPromise);
       
       if (ch) {
         const chPromise = state.ch !== ch ? 
-          mangaAPI.list({ path: `${path}/${ch}` }) : chResStub;
+          mangaAPI.list({ dirId, path: `${path}/${ch}` }) : chResStub;
 
         promiseArray.push(chPromise);
       }
@@ -103,14 +103,14 @@ export default {
     },
 
     [GO_CH]({ commit, state }, payload = {}) {
-      const { chIndex } = payload;
+      const { dirId, chIndex } = payload;
       const chapter = state.chapters[chIndex-1];
       const ch = chapter.name;
 
       if (chIndex < 1 || chIndex > state.chCount) return;
       
       // load new chapter images
-      mangaAPI.list({ path: `${state.path}/${ch}` })
+      mangaAPI.list({ dirId, path: `${state.path}/${ch}` })
         .then(res => {
           const { images } = res;
 

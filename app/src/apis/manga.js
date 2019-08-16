@@ -2,10 +2,9 @@
 import fetch from './fetch';
 import groupBy from 'lodash/groupBy';
 
-function list({ path }) {
-  let url = `api/manga/list`;
+function list({ path, dirId }) {
+  let url = `api/manga/list/${dirId}`;
   if (path) url += `/${encodeURIComponent(path)}`;
-
   return fetch(url)
     .then(res => {
       // filter cover from list
@@ -27,10 +26,9 @@ function list({ path }) {
     });
 }
 
-function folder({ path } = {}) {
-  let url = `api/manga/folder`;
+function folder({ path, dirId }) {
+  let url = `api/manga/folder/${dirId}`;
   if (path) url += `/${encodeURIComponent(path)}`;
-  
   return fetch(url);
 }
 

@@ -1,23 +1,25 @@
 <template>
-  <div class="explorer">
-    <div class="topbar">
-      <navbar :title="title" :right-btns="rightBtns" />
+  <div>
+    <div class="explorer">
+      <div class="topbar">
+        <navbar :title="title" :right-btns="rightBtns" />
+      </div>
+      
+      <data-view 
+        class="explorer-container"
+        :loading="isPending" 
+        :empty="empty"
+      >
+        <div class="repo-name" @click="handleBack">{{ repo.name }}</div>
+        <nested-list 
+          v-show="isSuccess"  
+          :props="treeProps"
+          :data="folders"
+          @on-expanded="handleItemExpanded"
+          @on-selected="handleItemSelected" 
+        />
+      </data-view>
     </div>
-    
-    <data-view 
-      class="explorer-container"
-      :loading="isPending" 
-      :empty="empty"
-    >
-      <div class="repo-name" @click="handleBack">{{ repoName }}</div>
-      <nested-list 
-        v-show="isSuccess"  
-        :props="treeProps"
-        :data="folders"
-        @on-expanded="handleItemExpanded"
-        @on-selected="handleItemSelected" 
-      />
-    </data-view>
   </div>
 </template>
 
@@ -63,7 +65,7 @@ export default {
       }
     }),
 
-    ...mapGetters('settings/user', [ 'repoName' ]),
+    ...mapGetters('app', [ 'repo' ]),
 
     ...mapGetters('explorer', [ 'isPending', 'isSuccess', 'empty' ]),
 
@@ -77,18 +79,26 @@ export default {
   },
 
   activated() {
-    if (!this.$route.meta.isBack) {
+    if (this.$route.meta.isBack || this.$router._reset) return;
+    this.fetchFolders();
+  },
+
+  beforeRouteUpdate(to, from, next) {
+    if (to.params.dirId !== from.params.dirId) {
       this.fetchFolders();
     }
+    next();
   },
 
   methods: {
     fetchFolders() {
-      this.$store.dispatch(types.FETCH);
+      const { dirId } = this.repo;
+      this.$store.dispatch(types.FETCH, { dirId });
     },
 
     // events
     handleItemExpanded(item, ctx) {
+      const { dirId } = this.repo;
       if (item._mangaGroup) return;
       if (/success|pending/.test(ctx.getStatus())) return;
       
@@ -96,7 +106,8 @@ export default {
       // faster then vuex (but we cannot use strict mode)
       ctx.setStatus('pending');
       this.$store.dispatch(types.FETCH, {
-        path: item.path
+        path: item.path,
+        dirId
       }).then(res => {
         ctx.setStatus('success');
       }).catch(err => {
@@ -109,7 +120,11 @@ export default {
         ctx.isOpen = !ctx.isOpen;
         return;
       };
-      this.$emit('selected', item);
+
+      const path = item.path;
+      const { dirId } = this.repo;
+      this.$store.dispatch(appTypes.TOGGLE_SIDEBAR, { open: false });
+      this.$router.push({ name: 'explorer', params: { dirId, path }})
     },
 
     handleGotoRepos() {
@@ -121,8 +136,9 @@ export default {
     },
 
     handleBack() {
-      if (this.$router.history.current.fullPath !== '/manga') {
-        this.$router.push({ name: 'explorer' });
+      if (this.$router.history.current.params.path) {
+        const { dirId } = this.repo;
+        this.$router.push({ name: 'explorer', params: { dirId }});
       }
       
       this.$store.dispatch(appTypes.TOGGLE_SIDEBAR, { open: false });
