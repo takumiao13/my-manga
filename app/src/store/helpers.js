@@ -66,9 +66,8 @@ export function createRequestStatus(name, type = 'STATUS') {
       clear();
       commit(type, { 
         [name]: ERROR,
-        ...payload
+        error: payload
       });
-      throw payload;
     },
 
     mutation() {

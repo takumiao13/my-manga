@@ -69,7 +69,7 @@ export default {
       let index = -1;
       const { path, isBack, dirId } = payload;
       if (isBack) index = cacheStack.find(dirId, path);
-      console.log(cacheStack);
+      // console.log(cacheStack);
 
       statusHelper.pending(commit);
       // if cannot find cache
@@ -84,7 +84,7 @@ export default {
             return statusHelper.success(commit);
           })
           .catch(error => {
-            statusHelper.error(commit, { error });
+            statusHelper.error(commit, error);
           });
       // get result from cache
       } else {
@@ -98,7 +98,7 @@ export default {
   mutations: {
     [LIST](state, payload) {
       state.inited || (state.inited = true);
-      assign(state, payload);
+      assign(state, { ...payload, error: null });
     },
 
     ...statusHelper.mutation()

@@ -1,12 +1,14 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 
+import { eventHub, errorCodeMap, ERR_CODE } from '@/helpers';
+
 // Load Modules
 import appModule, { types as appTypes } from './modules/app';
 import explorerModule from './modules/explorer';
 import mangaModule, { cacheStack as mangaCacheStack } from './modules/manga';
 import viewerModule from './modules/viewer';
-import settingsModule from './modules/settings';
+import settingsModule, { types as settingTypes, createTypes, createSettings } from './modules/settings';
 
 Vue.use(Vuex);
 
@@ -44,4 +46,24 @@ export function resetStore() {
   mangaCacheStack.clear();
   unregisterModules()
   registerModules()
+}
+
+export const loadSettingsState = (scope) => {
+  // first we should check the scope is valid
+  const repos = store.getters['settings/user/repos'];
+  const isExists = repos.map(repo => repo.dirId).indexOf(scope) > -1;
+  
+  if (!isExists) {
+    const code = ERR_CODE.REPO_UNACCESSED;
+    const error = errorCodeMap[code];
+    return store.dispatch(appTypes.TOGGLE_REPO, { repo: '' })
+      .then(() => Promise.reject(Object.assign(error, { code })));
+  }
+
+  // register nested settings state
+  const settingsState = createSettings(scope);
+  createTypes(scope);
+  store.registerModule(['settings', scope], settingsState);
+  return store.dispatch(settingTypes[scope].INIT)
+    .then(() => store.dispatch(appTypes.TOGGLE_REPO, { repo: scope }))
 }

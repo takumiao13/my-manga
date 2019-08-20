@@ -59,6 +59,8 @@ export default {
   computed: {
     ...mapState('explorer', [ 'folders', 'empty' ]),
     
+    ...mapState('app', { appError: 'error' }),
+
     ...mapState('settings/user', {
       allowChangeRepos(state) {
         return !!state.data;
@@ -79,12 +81,12 @@ export default {
   },
 
   activated() {
-    if (this.$route.meta.isBack || this.$router._reset) return;
+    if (this.appError || this.$route.meta.isBack || this.$router._reset) return;
     this.fetchFolders();
   },
 
   beforeRouteUpdate(to, from, next) {
-    if (to.params.dirId !== from.params.dirId) {
+    if (!this.appError && to.params.dirId !== from.params.dirId) {
       this.fetchFolders();
     }
     next();

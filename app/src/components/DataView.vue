@@ -4,22 +4,44 @@
       <spinner class="loading-spinner" />
     </div>
     <slot></slot>
-    <div class="empty-text" v-show="!loading && empty">
+    <div class="empty-text" v-show="!loading && empty && !error">
       <icon name="empty" size="48" />
       <br/>
-      NO FILES
+      NO ITEMS
+    </div>
+    <div class="error-info" v-if="!loading && error">
+      <div class="error-icon mb-3">
+        <icon :name="error_.icon" size="48" />
+      </div>
+      <h4 class="error-title">{{ error_.name }}</h4>
+      <p class="error-message">{{ error_.message }}</p>
     </div>
   </div>
 </template>
 
 <script>
+
+const DEFAULT_ERROR = {
+  icon: 'times-circle',
+  name: 'ERROR',
+  message: 'An error occurred'
+}
+
 export default {
   name: 'DataView',
 
   props: {
     loading: Boolean,
     
-    empty: Boolean
+    empty: Boolean,
+    
+    error: Object,
+  },
+
+  computed: {
+    error_() {
+      return Object.assign({}, DEFAULT_ERROR, this.error || {})
+    }
   }
 }
 </script>
@@ -46,7 +68,8 @@ export default {
   }
 }
 
-.empty-text {
+.empty-text,
+.error-info {
   text-align: center;
   font-size: 1rem;
   color: #999;
@@ -55,4 +78,9 @@ export default {
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+.error-info {
+  width: 100%;
+}
+
 </style>

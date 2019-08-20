@@ -11,7 +11,12 @@
           @navigate="handleNavigate"
         />
       </div>    
-      <data-view class="main-explorer-container" :loading="isPending" :empty="empty">
+      <data-view 
+        class="main-explorer-container" 
+        :loading="isPending" 
+        :empty="empty"
+        :error="error"
+      >
         <div class="row" v-show="isSuccess">
 
           <!-- META DATA -->
@@ -158,8 +163,10 @@ export default {
   },
 
   computed: {
+    ...mapState('app', { appError: 'error' }),
+
     ...mapState('manga', [
-      'path', 'metadata', 'list', 'folders', 'mangas', 'chapters', 'images', 'activePath'
+      'path', 'metadata', 'list', 'folders', 'mangas', 'chapters', 'images', 'activePath', 'error'
     ]),
 
     ...mapState('viewer', {
@@ -206,13 +213,16 @@ export default {
   },
 
   activated() {
-    if (this.$route.meta.isBack || this.$router._reset) return;
+    if (this.appError || this.$route.meta.isBack || this.$router._reset) return;
     this.fetchMangas(this.$route.params.path);
   },
 
   beforeRouteUpdate(to, from, next) {
     const { isBack } = to.meta;
-    to.meta.scrollPromise = this.fetchMangas(to.params.path, isBack);
+    if (!this.appError) {
+      to.meta.scrollPromise = this.fetchMangas(to.params.path, isBack);
+    }
+    
     next();
   },
 
@@ -275,13 +285,6 @@ export default {
       });
     },
 
-    handleViewList($event, item) {
-      this.$router.push({
-        name: 'explorer',
-        params:{ path: item.path }
-      });
-    },
-
     handleViewManga($event, item, index = 0) {
       const { path } = this.$route.params;
       const { dirId } = this.repo;
@@ -338,7 +341,7 @@ export default {
 }
 
 .main-explorer-container {
-  min-height: calc(100vh - 4.8rem);
+  min-height: calc(100vh - 5rem);
 }
 
 .area-header {

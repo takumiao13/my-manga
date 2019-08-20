@@ -90,9 +90,12 @@ export default {
 
     ...mapState('viewer', [ 'path', 'mode', 'page', 'ch', 'images', 'chapters' ]),
 
+    ...mapState('app', { appError: 'error' }),
+
     ...mapState('settings', {
       settings(state) {
         state = state[this.repo.dirId]; // find nested state
+        if (!state) return {}
         const obj = state.data.viewer || {};
         let margin = true;
 
@@ -152,15 +155,17 @@ export default {
   },
 
   mounted() {
-    const { path, ch } = this.$route.params;
-    const { dirId } = this.repo
-    this.$store.dispatch(types.VIEW, { dirId, path, ch });
-    
-    setTimeout(_ => { 
-      window.addEventListener('scroll', (e) => {
-        this.inOperation = false;
-      }, false);
-    }, 300);
+    if (!this.appError) {  
+      const { path, ch } = this.$route.params;
+      const { dirId } = this.repo;
+      this.$store.dispatch(types.VIEW, { dirId, path, ch });
+      
+      setTimeout(_ => { 
+        window.addEventListener('scroll', (e) => {
+          this.inOperation = false;
+        }, false);
+      }, 300);
+    };
   },
 
   methods: {
@@ -197,7 +202,8 @@ export default {
     // events
     handleBack($event) {
       if (this.$router._routerHistory.length === 1) {
-        this.$router.push({ name: 'explorer' })
+        const { dirId } = this.$router.history.current.params;
+        this.$router.push({ name: 'explorer', params: { dirId } })
       } else {
         this.$router.go(-1);
       }

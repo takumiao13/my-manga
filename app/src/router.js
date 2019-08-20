@@ -1,7 +1,7 @@
 import Vue from 'vue'
-import store from './store';
+import store, { loadSettingsState } from './store';
 import VueRouter from 'vue-router';
-import { last, isUndef } from '@/helpers';
+import { last, isUndef, eventHub } from '@/helpers';
 import { types as appTypes } from '@/store/modules/app';
 import { types as settingTypes, createSettings, createTypes } from '@/store/modules/settings';
 
@@ -11,6 +11,7 @@ import Explorer from '@/views/MainInterface/Explorer';
 import MangaList from '@/views/MainInterface/MangaList';
 import Viewer from '@/views/Viewer';
 import Repository from '@/views/Repository';
+import ServerError from '@/views/Error/ServerError';
 
 // extend router
 VueRouter.prototype._routerHistory = []; // sync browser history
@@ -65,9 +66,13 @@ const routes = [
 	{
 		name: 'repos',
 		path: '/repos',
-		component: Repository
+		component: Repository,
+		meta: {
+			title: 'REPOSITORY'
+		}
 	},
 	{
+		name: 'home',
 		path: '*', // handle not found
 		redirect() {
 			const userSettings = store.getters['settings/user/settings'];
@@ -91,6 +96,7 @@ const router = new VueRouter({
 		if (to.meta.isBack) {
 			if (to.meta.scrollPromise) {
 				return new Promise((resolve) => {
+					// set scroll position when data has fetched
 					to.meta.scrollPromise.then(() => {
 						setTimeout(() => resolve(savedPosition), 16);
 					});
@@ -121,7 +127,7 @@ window.onbeforeunload = () => {
 router.beforeEach(function(to, from, next) {
 	const history = router._routerHistory;
 	const delta = router._backdelta;
-	console.log('beforeEach', to);
+	console.log('beforeEach', to, 'from', from);
 
 	// handle reset when change repo
 	if (router._reset) {
@@ -145,36 +151,35 @@ router.beforeEach(function(to, from, next) {
 			history.push(p);
 		}
 
-		// shouldn't fetch again when repo has not changed
 		if (from.name == 'repos' && to.name == 'explorer') {
-			to.meta.isBack = (to.params.dirId === store.state.app.repoId);
+			// shouldn't fetch again when repo has not changed
+			to.meta.isBack = (store.state.manga.inited && to.params.dirId === store.state.app.repoId);
 		} else {
 			to.meta.isBack = false;
 		}
 	}
 
+	// hack for something ... :(
 	delete router._push;
 
 	// change doc title
 	if (['explorer', 'viewer'].indexOf(to.name) > -1) {
 		let title = 'My Manga';
 		const { path } = to.params;
-		const { name: repoName } = store.getters[`app/repo`];
+		const { name: repoName } = store.getters['app/repo'];
 		
 		if (path) title = last(path.split('/'));
 		if (repoName) title += ` - ${repoName}`
 
 		document.title = title;
-	} else if (to.name == 'repos') {
-		document.title = 'REPOS';
+	} else {
+		document.title = to.meta.title || 'My Manga';
 	}
 
 	// change mobile top theme color
 	const meta = document.querySelector('[name="theme-color"]');
 	// @XXX need to optimze
 	meta.content = to.meta.themeColor || '#fff';
-
-	
 
 	// check repo settings
 	if (['explorer', 'viewer'].indexOf(to.name) > -1) {
@@ -184,22 +189,28 @@ router.beforeEach(function(to, from, next) {
 
 		// dynamic load repo settings
 		if (isUndef(repoSettings)) {
-			store.registerModule(['settings', scope], createSettings(scope))
-			createTypes(scope);
-			store.dispatch(settingTypes[scope].INIT)
-				.then(() => store.dispatch(appTypes.TOGGLE_REPO, { repo: scope }))
-				.then(next)
+			// when repo settings is undef force `isBack` false
+			// need check repo path first then create store;
+			to.meta.isBack = false; 
+			loadSettingsState(scope).then($next).catch($next);
 		} else {
 			if (store.state.app.repoId !== scope) {
-				store.dispatch(appTypes.TOGGLE_REPO, { repo: scope }).then(next);
+				store.dispatch(appTypes.TOGGLE_REPO, { repo: scope }).then($next)
 			} else {
-				next();
+				$next();
 			}
 		}
 	} else {
-		next();
+		$next();
 	}
 
+	// wrap original next to handle app error
+	function $next(err) {
+		if (err) return store.dispatch(appTypes.ERROR, err).then(next);
+		const appError = store.state.app.error;
+		if (appError) return store.dispatch(appTypes.ERROR, null).then(next);
+		next();
+	}
 
 	console.log(history);
 });
@@ -210,3 +221,28 @@ function historyName(route) {
 }
 
 export default router;
+
+
+export function backwardAllHistory(done) {
+  const wrappedDone = () => {
+    if (router.history.current.name !== 'repos') {
+      // force fisrt history is `repos`
+      router.replace({ name: 'repos' });
+    }
+    delete router._reset;
+    done();
+  }
+
+  const delta = -window.history.length + router._startHistoryLength;
+  
+  if (router.canGoBack()) {
+    // backward all history (we cannot clear it)
+    router._reset = true;
+    router._routerHistory = ['/'];
+
+    window.history.go(delta);
+    setTimeout(wrappedDone, 260);
+  } else {
+    done();
+  }
+}

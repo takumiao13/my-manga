@@ -2,12 +2,11 @@ import './assets/style/index.scss';
 
 import Vue from 'vue'
 import App from './App.vue'
-import store, { resetStore } from './store';
-import router from './router';
-import { byId, delay, inElectron } from '@/helpers';
+import store, { resetStore, loadSettingsState } from './store';
+import router, { backwardAllHistory } from './router';
+import { byId, delay, inElectron, eventHub } from '@/helpers';
 import config from '@/config';
-import { types as appTypes } from '@/store/modules/app';
-import { types as settingTypes, createSettings, createTypes } from '@/store/modules/settings';
+import { types as settingTypes } from '@/store/modules/settings';
 
 // Global components
 import Spinner from './components/Spinner';
@@ -25,7 +24,6 @@ import VueQriously from 'vue-qriously';
 
 // Directives
 import loadingDirective from './directives/loading';
-import { eventHub } from './helpers';
 
 // Services
 import $Service from '@/services';
@@ -57,6 +55,7 @@ Vue.config.productionTip = false;
 
 const $loading = byId('app-loading');
 const $message = byId('app-message');
+const REPO_KEY = '_REPO';
 
 bootstrapApp();
 
@@ -64,6 +63,7 @@ function bootstrapApp() {
 
   if (inElectron) {
     const ipc = window.require('electron').ipcRenderer;
+    // get real ip from electron
     ipc.on('app-config', (event, { host }) => {
       config.host = host;
     });
@@ -77,7 +77,7 @@ function bootstrapApp() {
     document.body.style.overflow = 'hidden';
     $loading.classList.remove('fade');
     $loading.style.display = '';
-    window.localStorage.setItem('_REPO', dirId);
+    window.localStorage.setItem(REPO_KEY, dirId);
 
     backwardAllHistory(function() {
       resetStore();     
@@ -86,34 +86,35 @@ function bootstrapApp() {
     });
   });
 
-  // just get user settings
-  const _REPO = window.localStorage.getItem('_REPO');
-  Promise.all([
+  // try to get user settings
+    Promise.all([
     store.dispatch(settingTypes.user.INIT),
     store.dispatch(settingTypes.repo.INIT)  
-  ]).then(() => {
-    if (_REPO) {
-      const scope = _REPO;
-      const repoSettings = store.state.settings[scope];
-      
-      // dynamic load repo settings
-      if (!repoSettings) {
-        store.registerModule(['settings', scope], createSettings(scope))
-        createTypes(scope);
-        return store.dispatch(settingTypes[scope].INIT)
-          .then(() => store.dispatch(appTypes.TOGGLE_REPO, { repo: scope }))
-      }
-    }
-  }).then(() => {
-    render();
-    showApp();
-  }).catch((err) => {
-    console.error('setting error', err);
-  });
+  ])
+    .then(checkCurrentRepo)
+    .then(render)
+    .catch(error => {
+      window.localStorage.removeItem(REPO_KEY);
+      render({ error });
+      console.error('setting error', error);
+    });
 }
 
-function render() {
+function checkCurrentRepo() {
+  const _REPO = window.localStorage.getItem(REPO_KEY);
+  // check is has current repo
+  if (_REPO) {
+    const scope = _REPO;
+    const repoSettings = store.state.settings[scope];
+    // dynamic load repo settings
+    if (!repoSettings) { return loadSettingsState(scope) }
+  }
+}
+
+function render({ error } = {}) {
+  showApp();
   new Vue({
+    data: { error },
     router,
     store,
     render: h => h(App),
@@ -128,28 +129,4 @@ function showApp() {
       $loading.style.display = 'none';
       document.body.style.overflow = 'auto';
     }); 
-}
-
-function backwardAllHistory(done) {
-  const wrappedDone = () => {
-    if (router.history.current.name !== 'repos') {
-      // force fisrt history is `repos`
-      router.replace({ name: 'repos' });
-    }
-    delete router._reset;
-    done();
-  }
-
-  const delta = -window.history.length + router._startHistoryLength;
-  
-  if (router.canGoBack()) {
-    // backward all history (we cannot clear it)
-    router._reset = true;
-    router._routerHistory = ['/'];
-
-    window.history.go(delta);
-    setTimeout(wrappedDone, 260);
-  } else {
-    done();
-  }
 }

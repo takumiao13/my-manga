@@ -9,9 +9,9 @@ class ImageService extends Service {
   makeSrc(...paths) {
     const { baseURL } = this.$config;
     const { dirId } = this.$store.getters['app/repo'];
-
     const path = paths.join('/');
-    return path && `${baseURL}img/${dirId}/${encodeURIComponent(path)}`;
+    
+    return dirId && path && `${baseURL}img/${dirId}/${encodeURIComponent(path)}`;
   }
 
   coverStyle({ width, height }, limit) {

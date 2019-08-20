@@ -1,14 +1,27 @@
 <template>
   <div id="app">
+    <server-error v-if="error" :error="error" />
     <keep-alive include="MainInterface">
-      <router-view />
+      <router-view v-show="!error" />
     </keep-alive>
   </div>
 </template>
 
 <script>
+import ServerError from '@/views/Error/ServerError';
+import { types as appTypes } from '@/store/modules/app';
+import { mapGetters, mapState } from 'vuex';
+
 export default {
-  name: 'App'
+  name: 'App',
+
+  components: {
+    ServerError
+  },
+
+  computed: {
+    ...mapState('app', [ 'error' ]),
+  }
 }
 </script>
 

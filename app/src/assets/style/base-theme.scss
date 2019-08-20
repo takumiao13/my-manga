@@ -1,7 +1,8 @@
 
-#app {
+#app,
+#app-error {
   background: $app-bg !important;
-  color: $app-color !important;
+  //color: $app-color !important;
 }
 
 .topbar > .navbar {
@@ -31,6 +32,10 @@
 
 .list-group .list-group-item {
   border-color: $app-border-color;
+
+  &.disabled {
+    background: $app-light-bg;
+  }
 }
 
 .main-explorer {

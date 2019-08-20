@@ -7,6 +7,16 @@ exports.extname = (file) => pathFn.extname(file).substr(1);
 exports.pathExists = (path) => 
   new Promise(resolve => fs.access(path, fs.F_OK, err => resolve(!err)));
 
+exports.pathAccess = (path) => {
+  try {
+    fs.accessSync(path)
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+
 exports.sortFiles = (files) => files.sort((a, b) => {
   var m = 0, n = 0;
   var j = a.length, k = b.length;
