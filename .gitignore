@@ -6,8 +6,10 @@
 # Editor directories and files
 .idea
 .vscode
+*.tgz
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+*.tgz

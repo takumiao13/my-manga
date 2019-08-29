@@ -8,8 +8,29 @@
   "bin": {
     "my-manga": "./bin/my-manga.js"
   },
+  "files": [
+    "dist",
+    "bin",
+    "lib",
+    "server",
+    "shared",
+    "package-lock.json"
+  ],
   "author": "takumiao13",
-  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/takumiao13/my-manga.git"
+  },
+  "keywords": [
+    "comics-reader",
+    "comics",
+    "manga",
+    "javascript",
+    "frontend"
+  ],
+  "bugs": {
+    "url": "https://github.com/takumiao13/my-manga/issues"
+  },
   "dependencies": {
     "address": "^1.1.0",
     "await-to-js": "^2.1.1",
