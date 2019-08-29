@@ -46,25 +46,43 @@
 
   .manga-area > .row,
   .gallery-area > .row {
-    background: $app-primary;
     border-color: $app-border-color;
 
-    .manga-item,
-    .gallery-item {
-      &.active {
-        background: $app-lighter-bg;
+    .area-item:hover {
+      .cover,
+      .caption {
+        box-shadow: 0 0 0 5px $app-item-hover-bg;
+      }
+    }
+
+    .area-item.active {
+      .cover,
+      .caption {
+        box-shadow: 0 0 0 5px $app-item-active-bg;
       }
     }
 
     .cover {
+      border: .5px solid $app-border-color;
       img {
         background: $app-cover-bg;
-        border: .5px solid $app-border-color;
       }
     }
+  }
 
+  .manga-area > .row .cover {
+    border-bottom: 0;
+  }
+
+  .gallery-area > .row {
+    background: $app-primary;
+  }
+
+  .manga-area {
     .caption {
       background: $app-primary;
+      border: .5px solid $app-border-color;
+      box-shadow: 0 1px 0px rgba(0,0,0,.1);
     }
   }
 
@@ -73,7 +91,7 @@
     .list-group-item {
       &.active {
         color: $app-color;
-        background: $app-lighter-bg;
+        background: $app-item-active-bg;
         border-color: $app-border-color;
       }
     }

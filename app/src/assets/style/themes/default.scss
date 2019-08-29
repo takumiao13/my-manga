@@ -1,20 +1,25 @@
 $white:        #fff;
 $black:        #000;
-$light:        #eee;
-$lighter:      #ddd;
-
+$light:        #f8f9fa;
+$light-100:    #eee;
+$light-200:    #ddd;
+$light-300:    #ccc;
+$light-400:    #999;
+        
 // Variables
 $app-primary:     $white;
-$app-bg:          #f8f9fa;
+$app-bg:          $light;
 $app-color:       $black;
-$app-sidebar-bg:  $light;
+$app-sidebar-bg:  $light-100;
 
-$app-light-bg:        $light;
-$app-lighter-bg:      $lighter;
-$app-cover-bg:        $light;
+$app-light-bg:        $light-100;
+$app-lighter-bg:      $light-200;
+$app-cover-bg:        $light-100;
 $app-shadow-color:    $black;
-$app-border-color:    $lighter;
-$app-muted-color:     #999;
+$app-border-color:    $light-200;
+$app-muted-color:     $light-400;
+$app-item-active-bg:  $light-200;
+$app-item-hover-bg:   $light-100;
 
-$app-scrollbar-thumb: #ccc;
-$app-scrollbar-track: $light;
+$app-scrollbar-thumb: $light-300;
+$app-scrollbar-track: $light-100;

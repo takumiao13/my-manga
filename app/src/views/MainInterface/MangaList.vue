@@ -57,10 +57,10 @@
 
             <!-- MANGA AREA -->
             <div class="manga-area mb-4" v-show="mangas.length">
-              <p class="area-header">MANGA</p>
+              <p class="area-header">MANGA - {{ mangas.length }} items</p>
               <div class="row">
                 <div 
-                  class="col-6 col-sm-3 col-xl-2 manga-item"
+                  class="col-6 col-sm-4 col-md-3 col-xl-2 area-item"
                   :class="{ active: item.path === activePath }"      
                   v-for="item in mangas" 
                   :key="item.path"
@@ -68,7 +68,7 @@
 
                   <router-link 
                     class="cover"
-                    :style="$service.image.coverStyle(item, true)"
+                    v-bind="$service.image.coverStyle(item)"
                     :to="{
                       name: 'explorer', 
                       params:{ 
@@ -109,14 +109,14 @@
 
             <!-- GALLERY AREA -->
             <div class="gallery-area mb-4" v-show="images.length">
-              <p class="area-header">GALLERY</p>
+              <p class="area-header">GALLERY - {{ images.length }} pages</p>
               <div class="row">
-                <div class="col-6 col-sm-3 col-xl-2 gallery-item" 
+                <div class="col-6 col-sm-3 col-xl-2 area-item" 
                   v-for="(item, index) in images" 
                   :key="item.path">
 
                   <div class="cover"
-                    :style="$service.image.coverStyle(item, true)"
+                    :style="$service.image.style(item, 240)"
                     @click="handleViewManga($event, item, index)">
                     <img v-lazy="$service.image.makeSrc(item.path)" />
                   </div>
@@ -325,6 +325,12 @@ export default {
         params: { dirId, path, ch }
       });
     }
+  },
+
+  filters: {
+    capitalize: function (item) {
+      return this.$service.image.cover(item);
+    }
   }
 }
 </script>
@@ -392,28 +398,16 @@ export default {
 
 .manga-area,
 .gallery-area {
-
-  > .row {
-    padding: 1rem .5rem;
-    border-width: .5px 0;
-    border-style: solid;
-
-    @include media-breakpoint-up(md) {
-      margin-left: 0;
-      margin-right: 0;
-      border-width: .5px;
-    }
-  }
-  
-  .manga-item,
-  .gallery-item {
+  .area-item {
     padding: .5rem;
-    margin-bottom: 4rem;
+    margin-bottom: 3rem;
 
     &:hover {
       z-index: 1;
+
       .caption {
-        max-height: none;
+        min-height: 2.8625rem;
+        height: auto;
         overflow: visible;
       }
     }
@@ -425,14 +419,13 @@ export default {
     display: block;
     position: relative;
     overflow: hidden;
-    transform: translateY(-50%);
-    top: 50%;
-
+    
     img {
       position: absolute;
       width: 100%;
       height: 100%;
       display: block;
+      z-index: 1; // covered box-shadow
     }
 
     img[lazy="loaded"] {
@@ -443,24 +436,64 @@ export default {
   }
 
   .caption {
-    left: 0;
-    right: 0;
-    top: 100%;
+    left: .5rem;
+    right: .5rem;
     position: absolute;
     overflow: hidden;
-    width: 100%;
-    max-height: 3rem;
-    padding: .3rem .5rem;
+    height: 2.8625rem;
+    padding: .2rem .4rem;
     display: block;
-    text-align: center;
-    font-size: .85rem;
+    font-size: 13px;
+  }
+}
+
+.manga-area {
+  > .row {
+    padding: 0 .5rem;
+
+    @include media-breakpoint-up(md) {
+      margin-left: -.5rem;
+      margin-right: -.5rem;
+      padding: 0;
+    }
+  }
+  
+  .cover {
+    border-radius: .5rem .5rem 0 0;
+
+    &.adjust img[lazy="loaded"] {
+      height: 100%;
+    }
   }
 
-  .manga-item {
-    .caption {
-      font-weight: 700;
-      text-align: left;
+  .caption {
+    border-radius: 0 0 .5rem .5rem;
+    font-weight: 600;
+    text-align: left;
+  }
+}
+
+.gallery-area {
+
+  > .row {
+    padding: .5rem .5rem;
+    border-width: .5px 0;
+    border-style: solid;
+
+    @include media-breakpoint-up(md) {
+      margin-left: 0;
+      margin-right: 0;
+      border-width: .5px;
     }
+  }
+
+  .cover {
+    transform: translateY(-50%);
+    top: 50%;
+  }
+
+  .caption {
+    top: 100%;
   }
 }
 

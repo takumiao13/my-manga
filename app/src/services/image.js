@@ -1,7 +1,8 @@
 import Service from './_base';
 
 const DEFAULT = {
-  ratio: 141.4
+  vRatio: 141.4,
+  hRatio: 70.1
 };
 
 class ImageService extends Service {
@@ -13,10 +14,32 @@ class ImageService extends Service {
     
     return dirId && path && `${baseURL}img/${dirId}/${encodeURIComponent(path)}`;
   }
-
-  coverStyle({ width, height }, limit) {
+  
+  coverStyle({ width, height }) {
     let ratio = (height / width) * 100;
-    if (limit) ratio = Math.min(ratio, DEFAULT.ratio);
+    let adjust = false;
+    const bounding = 8;
+    if (ratio >= DEFAULT.vRatio - bounding && ratio <= DEFAULT.vRatio + bounding) {
+      ratio = DEFAULT.vRatio;
+      adjust = true;
+    } else if (ratio >= DEFAULT.hRatio - bounding && ratio <= DEFAULT.hRatio + bounding) {
+      ratio = DEFAULT.hRatio;
+      adjust = true;
+    }
+
+    if (ratio > DEFAULT.vRatio + bounding) {
+      ratio = DEFAULT.vRatio;
+    }
+
+    return {
+      class: { adjust },
+      style: { padding:'0 0 ' + ratio + '%' }
+    }
+  }
+
+  style({ width, height }, maxRatio) {
+    let ratio = (height / width) * 100;
+    if (maxRatio) ratio = Math.min(ratio, maxRatio);
     return { padding:'0 0 ' + ratio + '%' }
   }
 

@@ -18,7 +18,7 @@
       <div class="img-loading">{{ index + 1 }}</div>
       <div 
         class="img-inner"
-        :style="$service.image.coverStyle(item)"
+        :style="$service.image.style(item)"
       >
         <img v-lazy="$service.image.makeSrc(item.path)" />
       </div>
