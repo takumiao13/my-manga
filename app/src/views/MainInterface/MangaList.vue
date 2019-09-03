@@ -1,11 +1,20 @@
 <template>
   <div>
     <div class="main-explorer">
-      <div class="topbar">
-        <navbar :class="{'no-shadow': breadcrumb.length > 1 }" :title="title" :left-btns="leftBtns" />
+      <div class="topbar" v-show="isSuccess">
+        <navbar 
+          :class="{
+            'no-shadow': (!isManga && breadcrumb.length > 1) || (isManga && !isShowTopTitle),
+            'manga-title-shown': isManga && isShowTopTitle,
+            'manga-title-hidden': isManga && !isShowTopTitle
+          }" 
+          :title="title" 
+          :left-btns="leftBtns"
+        />
+        
         <breadcrumb
           :class="{ collapsed: isCollapsed }"
-          v-show="breadcrumb.length > 1" 
+          v-show="breadcrumb.length > 1 && !isManga" 
           :navs="breadcrumb"
           @back="handleNavigateBack"
           @navigate="handleNavigate"
@@ -20,17 +29,34 @@
         <div class="row" v-show="isSuccess">
 
           <!-- META DATA -->
-          <div v-if="metadata" id="metadata" class="col-12 col-sm-3">
+          <div v-if="isManga && !empty" id="metadata" class="col-12" ref="metadata">
+            <canvas id="metadata-bg" ref="metadataBg" />
             <div class="metadata-inner">
-              <img class="cover" :src="$service.image.makeSrc(path, metadata.cover)" />  
-              <div class="description">
-                {{ metadata.description }}
+              <img class="metadata-cover mb-3" :src="$service.image.makeSrc(cover)" />
+              <h4 class="metadata-title mb-3">
+                {{ title }} <br />
+                <small v-if="chapters.length">{{ chapters.length }} chapters</small>
+                <small v-if="!chapters.length">{{ images.length }} pages</small> 
+              </h4>
+              <div class="metadata-footer">
+                <div>
+                  <a @click="handleViewManga($event, chapters[0] || images[0], 0)">
+                    <icon name="book-open" size="36" />
+                  </a>
+                  <span>Read Now</span>
+                </div>
+                <div>
+                  <a @click="handleViewGallery">
+                    <icon name="gallery" size="36" />
+                  </a>
+                  <span>Gallery</span>
+                </div>
               </div>
-            </div>
+            </div>       
           </div>
           <!-- / META DATA -->
 
-          <div class="col-12" :class="{ 'col-sm-9': metadata }">
+          <div class="col-12 area-container">
 
             <!-- FOLDER AREA -->
             <div class="folder-area mb-4" v-show="folders.length">
@@ -134,18 +160,12 @@
 </template>
 
 <script>
-import { isUndef, last, debounce } from '@/helpers';
+import { isUndef, last, debounce, getScrollTop } from '@/helpers';
 import config from '@/config';
 import { types as appTypes } from '@/store/modules/app';
 import { types as mangaTypes } from '@/store/modules/manga';
 import { types as viewerTypes } from '@/store/modules/viewer';
 import { mapState, mapGetters } from 'vuex';
-
-const getScrollTop = () => {
-  return window.pageYOffset || 
-        document.documentElement.scrollTop || 
-        document.body.scrollTop;
-}
 
 const PATH_SEP = '/';
 
@@ -154,11 +174,7 @@ export default {
     return {
       activeCh: '',
       isCollapsed: false,
-      leftBtns: [{
-        icon: 'bars',
-        className: 'd-inline-block d-md-none',
-        click: this.handleToggleSidebar
-      }]
+      isShowTopTitle: false,
     }
   },
 
@@ -166,8 +182,14 @@ export default {
     ...mapState('app', { appError: 'error' }),
 
     ...mapState('manga', [
-      'path', 'metadata', 'list', 'folders', 'mangas', 'chapters', 'images', 'activePath', 'error'
+      'path', 'list', 'cover', 'folders', 'mangas', 'chapters', 'images', 'activePath', 'error'
     ]),
+
+    ...mapState('manga', {
+      metadata(state) {
+        return state.metadata || {}
+      }
+    }),
 
     ...mapState('viewer', {
       viewerPath: 'path',
@@ -176,12 +198,16 @@ export default {
 
     ...mapGetters('app', [ 'repo' ]),
 
-    ...mapGetters('manga', [ 'isPending', 'isSuccess', 'empty' ]),
+    ...mapGetters('manga', [ 'isManga', 'isPending', 'isSuccess', 'empty' ]),
 
     title() {
-      const title = this.repo.name;
+      const repoName = this.repo.name;
       const { path } = this.$route.params;
-      return path ? last(path.split(PATH_SEP)) : title;
+      const title = path ? 
+        this.metadata.title || last(path.split(PATH_SEP)) : 
+        repoName;
+      
+      return title;
     },
 
     breadcrumb() {
@@ -201,7 +227,18 @@ export default {
       }
       
       return items;
-    }
+    },
+
+    leftBtns() {
+      return this.isManga ? [{
+        icon: 'arrow-left',
+        click: this.handleBack
+      }] : [{
+        icon: 'bars',
+        className: 'd-inline-block d-md-none',
+        click: this.handleToggleSidebar
+      }];
+    },
   },
 
   watch: {
@@ -239,7 +276,9 @@ export default {
     fetchMangas(path = '', isBack) {
       const { dirId } = this.repo;
       const payload = { path, dirId, isBack }
-      return this.$store.dispatch(mangaTypes.LIST, payload)
+      return this.$store.dispatch(mangaTypes.LIST, payload).then(res => {
+        if (this.isManga) this.makeCoverBg();
+      });
     },
 
     toggleLocationCollapsed: debounce(function(scrollTop, prevScrollTop) {
@@ -254,18 +293,47 @@ export default {
       trailing: false
     }),
 
+    makeCoverBg() {
+      const canvas = this.$refs.metadataBg;
+      const ctx = canvas.getContext('2d');
+      ctx.filter = 'blur(160px) saturate(6)';
+
+      const img = new Image();
+      img.src = this.$service.image.makeSrc(this.cover, true); 
+      img.onload = function() {
+        const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+        // get the top left position of the image
+        const x = (canvas.width / 2) - (img.width / 2) * scale;
+        const y = (canvas.height / 2) - (img.height / 2) * scale;
+        ctx.drawImage(img, x, y, img.width * scale, img.height * scale);  
+      }
+    },
+
     // events
     handleToggleSidebar($event) {
       this.$store.dispatch(appTypes.TOGGLE_SIDEBAR);
     },
 
+    handleBack($event) {
+      this.$router.go(-1);
+    },
+
     handleScroll($event) {
       const scrollTop = getScrollTop();
-      if (scrollTop < 160) {
-        this.isCollapsed = false;
+
+      // handle breadcrumb show or hide
+      if (!this.isManga) {  
+        if (scrollTop < 160) {
+          this.isCollapsed = false;
+        } else {
+          this.toggleLocationCollapsed(scrollTop, this._prevScrollTop);
+        }
+      // handle mange title show or hide
       } else {
-        this.toggleLocationCollapsed(scrollTop, this._prevScrollTop);
+        const metaH = this.$refs.metadata.clientHeight - 48;
+        this.isShowTopTitle = scrollTop >= metaH;
       }
+
       this._prevScrollTop = scrollTop;
     },
 
@@ -324,6 +392,11 @@ export default {
         name: 'viewer',
         params: { dirId, path, ch }
       });
+    },
+
+    handleViewGallery($event) {
+      const y = this.$refs.metadata.clientHeight - 48;
+      window.scrollTo(0, y+1);
     }
   },
 
@@ -379,19 +452,21 @@ export default {
 
 .chapter-area .list-group {
   @include media-breakpoint-up(md) {
+    margin: -.2rem;
     flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-start;
 
     .list-group-item {
       width: 50%;
-      margin-left: -.5px;
+      margin: .2rem;
+      width: calc(50% - .4rem);
     }
   }
 
   @include media-breakpoint-up(lg) {
     .list-group-item {
-      width: 33.3%;
+      width: calc(33.3% - .4rem);
     }
   }
 }
@@ -444,6 +519,8 @@ export default {
     padding: .2rem .4rem;
     display: block;
     font-size: 13px;
+    word-wrap: break-word;
+    word-break:break-all;
   }
 }
 
@@ -498,54 +575,133 @@ export default {
 }
 
 #metadata {
-  position: relative;
-  height: auto;
-  top: auto;
-  margin-bottom: 0;
+  height: 100vh;
+  margin-top: -3rem;
   display: flex;
-
-  @include media-breakpoint-up(md) {
-    @supports (position: sticky) {
-      position: sticky;
-      top: 4.8rem;
-      height: calc(100vh - 4.8rem);
-    }
-  }
+  overflow: hidden;
+  position: sticky;
+  top: 0;
 
   .metadata-inner {
+    padding: 3rem 0;
+    width: 100%;
     display: flex;
-    align-items: flex-start;
-    padding-top: 15px;
-    padding-bottom: 15px;
-    
-    @include media-breakpoint-up(md) {
-      flex-direction: column;
-      align-items: center;
-      padding-left: 15px;
-      padding-top: 30px;
-    }
-  } 
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
 
-  .cover {
-    width: 140px;
+  #metadata-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .metadata-cover {
+    max-width: 240px;
     display: block;
-    border-radius: .25rem;
-    margin: 0 1rem 0 0;
+    position: relative;
+    box-shadow: 0 2px 12px 0 rgba(0,0,0,0.35);
+    border-radius: .5rem;
 
     @include media-breakpoint-up(md) {
-      width: auto;
-      max-width: 100%;
-      font-size: 100%;
-      margin: 0 0 1rem 0;
+      max-width: 40%;
+      max-height: 36%;
     }
   }
 
-  .description {
-    font-size: 80%;
-    text-indent: 1rem;
+  .metadata-info {
+    color: #999;
 
-    @include media-breakpoint-up(md) {  
-      line-height: 1.6;
+    > p {
+      margin-bottom: .2rem;
+    }
+
+    margin-bottom: .5rem;
+  }
+
+  .metadata-title {
+    font-size: 1.4rem;
+    text-align: center;
+
+    @include media-breakpoint-up(md) {
+      font-size: 1.8rem;
+    }
+  }
+
+  .metadata-footer {
+    width: 100%;
+    max-width: 300px;
+    display: flex;
+    justify-items: center;
+    font-size: 1rem;
+    flex-wrap: wrap;
+
+    > div {
+      width: 33.3%;
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+      margin-bottom: 1rem;
+
+      > a {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 100%;
+        display: block;
+        margin: 0 auto .5rem auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        background: rgba(0,0,0, .1);
+      
+        .svg-icon {
+          width: 28px;
+          height: 28px;
+        }
+      }
+    }
+
+    @include media-breakpoint-up(md) {
+      max-width: 480px;
+
+      > div {
+        width: 25%;
+        
+        > a {
+          width: 4rem;
+          height: 4rem;
+
+          .svg-icon {
+            width: 36px;
+            height: 36px;
+          }
+        } 
+      }
+    }
+  }
+}
+
+.topbar {
+  .manga-title-shown {
+    transition: opacity .5s ease;
+
+    .navbar-brand {
+      opacity: 1
+    }
+  }
+
+  .manga-title-hidden {
+    background: transparent !important;
+    transition: opacity .5s ease;
+    border-bottom-color: transparent;
+
+    .navbar-brand {
+      opacity: 0;
     }
   }
 }

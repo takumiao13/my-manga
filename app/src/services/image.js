@@ -1,3 +1,4 @@
+import { isArray } from '@/helpers';
 import Service from './_base';
 
 const DEFAULT = {
@@ -7,12 +8,17 @@ const DEFAULT = {
 
 class ImageService extends Service {
 
-  makeSrc(...paths) {
+  makeSrc(paths, escape) {
     const { baseURL } = this.$config;
     const { dirId } = this.$store.getters['app/repo'];
-    const path = paths.join('/');
+    const path = isArray(paths) ? paths.join('/') : paths;
+    let src = dirId && path && `${baseURL}img/${dirId}/${encodeURIComponent(path)}`;
     
-    return dirId && path && `${baseURL}img/${dirId}/${encodeURIComponent(path)}`;
+    if (src && escape) {
+      src = src.replace(/(\(|\))/g, "\\$1");
+    }
+  
+    return src;
   }
   
   coverStyle({ width, height }) {

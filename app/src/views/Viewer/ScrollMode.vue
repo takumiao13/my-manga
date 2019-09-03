@@ -41,24 +41,8 @@
 </template>
 
 <script>
+import { getScrollTop, getScrollHeight, getOffsetHeight } from '@/helpers';
 import config from '@/config';
-
-const getScrollTop = () => {
-  return window.pageYOffset || 
-        document.documentElement.scrollTop || 
-        document.body.scrollTop;
-}
-
-const getScrollHeight = () => {
-  return Math.max(
-    document.body.scrollHeight,
-    document.documentElement.scrollHeight
-  );
-}
-
-const getOffsetHeight = () => {
-  return window.innerHeight;
-}
 
 export default {
   name: 'ScrollMode',

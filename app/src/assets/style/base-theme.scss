@@ -7,7 +7,7 @@
 
 .topbar > .navbar {
   background: $app-primary !important;
-  border-bottom: .5px solid $app-border-color;
+  //border-bottom: .5px solid $app-border-color;
   box-shadow: 0 1px 2px rgba(0,0,0,.1);
   z-index: 1030;
 
@@ -39,6 +39,9 @@
 }
 
 .main-explorer {
+  .area-container {
+    background: $app-bg !important;
+  }
 
   .area-header {
     color: $app-muted-color;
@@ -48,24 +51,26 @@
   .gallery-area > .row {
     border-color: $app-border-color;
 
+    .cover {
+      border: .5px solid $app-border-color;
+      img {
+        background: $app-cover-bg;
+      }
+    }
+  }
+
+  .manga-area > .row {
     .area-item:hover {
       .cover,
       .caption {
-        box-shadow: 0 0 0 5px $app-item-hover-bg;
+        box-shadow: 0 0 0 6px $app-item-hover-bg;
       }
     }
 
     .area-item.active {
       .cover,
       .caption {
-        box-shadow: 0 0 0 5px $app-item-active-bg;
-      }
-    }
-
-    .cover {
-      border: .5px solid $app-border-color;
-      img {
-        background: $app-cover-bg;
+        box-shadow: 0 0 0 8px $app-item-active-bg;
       }
     }
   }
@@ -76,6 +81,16 @@
 
   .gallery-area > .row {
     background: $app-primary;
+  }
+
+  .gallery-area > .row {
+    .area-item:hover {
+      background: $app-item-hover-bg;
+    }
+
+    .area-item.active {
+      background: 0 0 0 8px $app-item-active-bg;
+    }
   }
 
   .manga-area {
@@ -141,6 +156,9 @@
 }
 
 #metadata {
+  // background: $app-primary;
+  // border-bottom: .5px solid $app-border-color;
+
   .cover {
     box-shadow: 1px 2px 3px rgba($app-shadow-color, .3);
   }
@@ -152,6 +170,10 @@
 
 ::-webkit-scrollbar-thumb {
   background: $app-scrollbar-thumb;
+
+  &:hover {
+    background: $app-scrollbar-thumb-hover;
+  }
 }
 
 ::-webkit-scrollbar-track {

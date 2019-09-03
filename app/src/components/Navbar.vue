@@ -40,7 +40,7 @@ export default {
   
   props: {
     title: {
-      type: [ String, Object ],
+      type: [ String, Object, Function ],
       default: () => ''
     },
 
@@ -54,6 +54,8 @@ export default {
       let t;
       if (typeof this.title === 'string') {
         t = { content: this.title }
+      } else if (typeof this.title === 'function') {
+        t = this.title();
       } else {
         t = this.title;
       }

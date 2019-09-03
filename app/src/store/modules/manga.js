@@ -38,6 +38,7 @@ export default {
 
   state: {
     inited: false,
+    cover: '',
     type: '',
     path: '',
     metadata: null,
@@ -61,6 +62,10 @@ export default {
 
     empty(state) {
       return state.inited && !state.list.length;
+    },
+
+    isManga(state) {
+      return state.type === 'MANGA';
     }
   },
 

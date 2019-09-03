@@ -38,9 +38,12 @@ class MangaController extends Controller {
         await process({ baseDir, path });
       }
     } catch(err) {
+      debugger;
       switch (err.errno) {
         case -4058: // no such file or directory
           throw new CustomError(ERR_CODE.MANGA_NO_DIR)
+        default:
+          throw err;
       }
     }
   }
