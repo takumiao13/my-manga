@@ -48,7 +48,8 @@ export default {
   position: fixed;
   z-index: 1050;
   transform: translateX(-100%);
-  overflow: auto;
+  overflow-y: auto;
+  overflow-y: overlay;
 
   @include transition(transform .3s ease-out);
 

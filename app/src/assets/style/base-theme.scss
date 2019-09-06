@@ -26,7 +26,6 @@
 
   .topbar > .navbar {
     background: $app-sidebar-bg !important;
-    box-shadow: none;
   }
 }
 
@@ -179,16 +178,25 @@
   }
 }
 
-::-webkit-scrollbar-thumb {
-  background: $app-scrollbar-thumb;
-
-  &:hover {
-    background: $app-scrollbar-thumb-hover;
-  }
+::-webkit-scrollbar-track {
+  background-color: $app-scrollbar-track;
 }
 
-::-webkit-scrollbar-track {
-  background: $app-scrollbar-track;
+::-webkit-scrollbar-thumb {
+  background-color: $app-scrollbar-track;
+}
+
+:hover::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+:hover::-webkit-scrollbar-thumb {
+  background-color: $app-scrollbar-thumb;
+}
+
+body::-webkit-scrollbar-thumb {
+  background-color: $app-scrollbar-thumb !important;
 }
 
 

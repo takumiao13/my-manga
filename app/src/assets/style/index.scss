@@ -4,6 +4,7 @@ $theme-colors: (
 
 @import "../../../node_modules/bootstrap/scss/bootstrap.scss";
 @import "./simple-slider.scss";
+@import "./scrollbar.scss";
 @import "./themes/default.scss";
 @import "./base-theme.scss";
 
@@ -43,12 +44,6 @@ $theme-colors: (
     box-shadow: none;
   }
 }
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
 .app-toast {
   .vue-notification {
     padding: .5rem 1rem;
