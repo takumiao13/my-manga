@@ -406,7 +406,7 @@ export default {
 
     // events
     handleToggleSidebar() {
-      this.$store.dispatch(appTypes.TOGGLE_SIDEBAR);
+      this.$store.dispatch(appTypes.TOGGLE_ASIDE);
     },
 
     handleBack() {

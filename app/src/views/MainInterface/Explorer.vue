@@ -56,20 +56,12 @@ export default {
 
     ...mapState('explorer', [ 'inited', 'folders', 'empty' ]),
     
-    ...mapState('settings/user', {
-      canChangeRepos: (state) => !!state.data
-    }),
-
     ...mapGetters('app', [ 'repo' ]),
 
     ...mapGetters('explorer', [ 'pending', 'success', 'empty' ]),
 
     rightBtns() {
-      return this.canChangeRepos ? [{
-        icon: 'folders',
-        click: this.handleGotoRepos,
-        tip: 'change repository'
-      }] : null;
+      return null
     }
   },
 
@@ -100,7 +92,7 @@ export default {
     },
 
     closeSidebar() {
-      this.$store.dispatch(appTypes.TOGGLE_SIDEBAR, { open: false });
+      this.$store.dispatch(appTypes.TOGGLE_ASIDE, { open: false });
     },
 
     // events
@@ -155,11 +147,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.explorer {
-  margin-left: -15px;
-  margin-right: -15px;
-}
-
 .explorer-container {
   min-height: calc(100vh - 3rem);
 }

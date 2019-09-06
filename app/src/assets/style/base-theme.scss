@@ -20,7 +20,7 @@
   }
 }
 
-#sidebar {
+#aside {
   background: $app-sidebar-bg !important;
 
   .topbar > .navbar {
@@ -28,7 +28,7 @@
   }
 }
 
-.sidebar-open #sidebar {
+.aside-open #aside {
   @include media-breakpoint-down(sm) {
     box-shadow: 3px 0 3px rgba($black, .1);
   }
