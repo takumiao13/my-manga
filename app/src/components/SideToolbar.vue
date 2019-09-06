@@ -49,6 +49,7 @@ $side-toolbar-btn-height: 3rem !default;
       border-radius: 100%;
       background: $side-toolbar-bg;
       transition: .1s ease-in;
+      margin-bottom: 1rem;
     }
   }
 

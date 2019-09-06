@@ -120,9 +120,9 @@ export default {
         });
     },
 
-    [GO]({ commit, state }, payload = {}) {
+    [GO]({ commit, state, getters }, payload = {}) {
       const { page } = payload;
-      if (page < 1 || page > state.count) return;
+      if (page < 1 || page > getters.count) return;
       // should empty ch
       commit(GO, payload);
     }

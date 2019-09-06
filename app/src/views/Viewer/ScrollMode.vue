@@ -121,7 +121,7 @@ export default {
       this._ignoreScrollEvent = true;
       const y = this._offsets[this.page - 1];
       console.log('scrollTo', this.page, y);
-      window.scrollTo(0, y);
+      window.scrollTo({ top: y, behavior: 'smooth' });
     },
 
     handleScroll(e) {

@@ -80,7 +80,7 @@ export default {
 
       @include media-breakpoint-up(md) {
         margin-top: .5rem;
-        margin-bottom: 3rem;
+        margin-bottom: 1rem;
       }
     }
 
