@@ -11,6 +11,7 @@ class ImageController extends Controller {
     const root = repoMap[baseDir].baseDir; // get real path;
     const [ err, result ] = await to(app.send(ctx, path, { 
       root,
+      hidden: true,
       setHeaders: (res) => {
         res.setHeader('Cache-Control', 'max-age=31536000')
       }
