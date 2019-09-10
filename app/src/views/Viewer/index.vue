@@ -77,8 +77,11 @@ export default {
       inOperation: true,
       isQrcodeShown: false,
       actions: [{
-        icon: 'qrcode',
-        click: this.handleQrcodeToggle
+        icon: 'arrow-up',
+        click: this.handlePrevPage
+      },{
+        icon: 'arrow-down',
+        click: this.handleNextPage
       }]
     }
   },
@@ -219,29 +222,37 @@ export default {
       this.isQrcodeShown = !this.isQrcodeShown;
     },
 
+    handlePrevPage($event) {
+      $event.stopPropagation();
+      this.go(this.page - 1);
+    },
+
+    handleNextPage($event) {
+      $event.stopPropagation();
+      this.go(this.page + 1);
+    },
+
     handleOperation($event) {
+      // only for mobile
       if (this.mode === 'scroll') {
-        this.toggleOperation(true);
-        return;
-      }
 
-      // @todo sipe mode support later
-      if (this.mode === 'swipe') {
-        const width = window.innerWidth;
-        const x = $event.pageX;
-        const wHalf = width / 2;
-        const left = wHalf - 120;
-        const right = wHalf + 120;
+        if ('ontouchstart' in window) {
+          const width = window.innerWidth;
+          const x = $event.pageX;
+          const wHalf = width / 2;
+          const left = wHalf - 120;
+          const right = wHalf + 120;
 
-        if (x > 0 && x < left) {
-          this.go(this.page - 1);
-        } else if (x >= left && x <= right) {
+          if (x > 0 && x < left) {
+            this.go(this.page - 1);
+          } else if (x >= left && x <= right) {
+            this.toggleOperation(true);
+          } else if (x > right) {
+            this.go(this.page + 1);
+          }
+        } else {
           this.toggleOperation(true);
-        } else if (x > right) {
-          this.go(this.page + 1);
         }
-
-        return;
       }
     }
   }

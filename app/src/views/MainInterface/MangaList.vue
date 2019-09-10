@@ -226,7 +226,7 @@ export default {
     ...mapState('app', { appError: 'error' }),
 
     ...mapState('manga', [
-      'path', 'list', 'cover', 'folders', 
+      'inited', 'path', 'list', 'cover', 'folders', 
       'mangas', 'chapters', 'images', 'activePath', 
       'error', 'shortId'
     ]),
@@ -319,7 +319,7 @@ export default {
   },
 
   activated() {
-    if (this.appError || this.$route.meta.isBack || this.$router._reset) return;
+    if (this.appError || (this.$route.meta.isBack && this.inited) || this.$router._reset) return;
     this.isShowTopTitle = false;
     this.isManga = this.$route.query.type === 'manga';
     this.isQrcodeShown = false;

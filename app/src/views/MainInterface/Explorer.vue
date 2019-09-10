@@ -57,7 +57,7 @@ export default {
   },
 
   computed: {
-    ...mapState('explorer', [ 'folders', 'empty' ]),
+    ...mapState('explorer', [ 'inited', 'folders', 'empty' ]),
     
     ...mapState('app', { appError: 'error' }),
 
@@ -81,7 +81,7 @@ export default {
   },
 
   activated() {
-    if (this.appError || this.$route.meta.isBack || this.$router._reset) return;
+    if (this.appError || (this.$route.meta.isBack && this.inited) || this.$router._reset) return;
     this.fetchFolders();
   },
 
