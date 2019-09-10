@@ -34,7 +34,34 @@
           <div id="metadata" v-if="isManga && !empty" class="col-12" ref="metadata">
             <div class="metadata-banner" ref="banner"></div>
             
-            <div class="metadata-inner">
+            <div class="metadata-share metadata-inner" v-if="isQrcodeShown">
+              <div class="modal mb-3" tabindex="-1" role="dialog">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">Share: {{ title }}</h5>
+                    </div>
+                    <div class="modal-body">
+                      <qriously class="mb-3 qr-code" :value="qrcodeValue" :size="160" />
+                      <p class="text-center text-muted">Scan it to get link</p>                    
+                      <hr/>
+                      <p class="text-center">
+                        Link: 
+                        <a :href="qrcodeValue" target="_blank">{{ qrcodeValue }}</a>
+                      </p>                    
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="metadata-btn">
+                <a @click="isQrcodeShown = false">
+                  <icon name="times" size="36" />
+                </a>
+                <span>Close</span>
+              </div>
+            </div>
+
+            <div class="metadata-main metadata-inner" v-show="!isQrcodeShown">
               <img class="metadata-cover mb-3" ref="cover" />
               <h4 class="metadata-title mb-4">
                 {{ title }} <br />
@@ -42,20 +69,26 @@
                 <small v-if="!chapters.length">{{ images.length }} pages</small> 
               </h4>
               <div class="metadata-footer">
-                <div>
+                <div class="metadata-btn">
                   <a @click="handleViewManga($event, chapters[0] || images[0], 0)">
                     <icon name="book-open" />
                   </a>
                   <span>Read Now</span>
                 </div>
-                <div>
+                <div class="metadata-btn">
                   <a @click="handleViewGallery">
                     <icon name="gallery" />
                   </a>
                   <span>Gallery</span>
                 </div>
+                <div class="metadata-btn">
+                  <a @click="handleShareManga">
+                    <icon name="share-alt" size="36" />
+                  </a>
+                  <span>Share</span>
+                </div>
               </div>
-            </div>       
+            </div>
           </div>
           <!-- / META DATA -->
 
@@ -166,7 +199,7 @@
 </template>
 
 <script>
-import { isUndef, last, debounce, byId, getScrollTop } from '@/helpers';
+import { isUndef, last, debounce, byId, getScrollTop, inElectron } from '@/helpers';
 import config from '@/config';
 import { types as appTypes } from '@/store/modules/app';
 import { types as mangaTypes } from '@/store/modules/manga';
@@ -184,7 +217,8 @@ export default {
       isCollapsed: false,
       isShowTopTitle: false,
       isManga: false,
-      isDarkerBg: false
+      isDarkerBg: false,
+      isQrcodeShown: false,
     }
   },
 
@@ -193,8 +227,8 @@ export default {
 
     ...mapState('manga', [
       'path', 'list', 'cover', 'folders', 
-      'mangas', 'chapters', 'images', 'activePath', 'error',
-
+      'mangas', 'chapters', 'images', 'activePath', 
+      'error', 'shortId'
     ]),
 
     ...mapState('manga', {
@@ -259,7 +293,21 @@ export default {
         tip: 'back to parent',
         click: this.handleBackToParent
       }] : null;
-    }
+    },
+    
+    qrcodeValue() {
+      const { host, port } = config;
+      const { protocol } = window.location;
+      // if (inElectron && process.env.NODE_ENV === 'development') {
+      //   const { host, port, baseURL } = config;
+      //   // when share the qrcode we need the real ip
+  
+      //   return href.replace('localhost', host); // replace real ip
+      // } else {
+      //   return `http://${host}:${port}/manga/share/${this.shortId}`
+      // }
+      return `${protocol}//${host}:${port}/s/${this.shortId}`
+    },
   },
 
   watch: {
@@ -274,6 +322,7 @@ export default {
     if (this.appError || this.$route.meta.isBack || this.$router._reset) return;
     this.isShowTopTitle = false;
     this.isManga = this.$route.query.type === 'manga';
+    this.isQrcodeShown = false;
     this.fetchMangas(this.$route.params.path);
   },
 
@@ -282,6 +331,7 @@ export default {
     if (!this.appError) {
       this.isShowTopTitle = false;
       this.isManga = to.query.type === 'manga';
+      this.isQrcodeShown = false;
       to.meta.scrollPromise = this.fetchMangas(to.params.path, isBack);
     }
     
@@ -324,7 +374,26 @@ export default {
     },
 
     handleBack($event) {
-      this.$router.go(-1);
+     if (this.$router._routerHistory.length === 1) {
+        const { dirId } = this.$router.history.current.params;
+        this.$router.push({ name: 'explorer', params: { dirId } })
+      } else {
+        this.$router.go(-1);
+      }
+    },
+
+    handleBackToParent($event) {
+      const { dirId } = this.repo;
+      const path = this.path.split(PATH_SEP).slice(0, -1).join(PATH_SEP);
+
+      this.$router.navigate({
+        name: 'explorer',
+        params: { dirId, path }
+      });
+    },
+
+    handleBackToTop($event) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     },
 
     handleBackToParent($event) {
@@ -428,6 +497,13 @@ export default {
         });
         this.$refs.topbar.style.zIndex = 1030;
       });
+    },
+
+    handleShareManga($event) {
+      const payload = { url: window.location.href }
+      this.$store.dispatch(mangaTypes.SHARE, payload).then(res => {
+        this.isQrcodeShown = true;
+      });      
     },
 
     changeBanner() {
@@ -662,6 +738,51 @@ export default {
     transition: .2s linear;
   }
 
+  .metadata-share {
+    .metadata-share-inner {
+      padding: 1rem 0;
+      background: #fff;
+      border-radius: .5rem;
+      width: 100%;
+      max-width: 360px;
+      margin-bottom: 1rem;
+    }
+
+    .modal {
+      position: relative;
+      top: auto;
+      right: auto;
+      bottom: auto;
+      left: auto;
+      z-index: 1;
+      display: block;
+      height: auto;
+
+      p {
+        word-wrap: break-word;
+        word-break:break-all;     
+      }
+    }
+
+    .qr-code {
+      //padding: .5rem .5rem .3rem .5rem;
+      canvas {
+        display: block;
+        margin: 0 auto;
+      }
+    }
+
+    input {
+      text-align: center;
+    }
+
+    .close-share-btn {
+      position: absolute;
+      right: 0;
+      top: 0;
+    }
+  }
+
   .metadata-cover {
     display: block;
     position: relative;
@@ -703,37 +824,39 @@ export default {
       flex-direction: column;
       text-align: center;
       margin-bottom: 1rem;
+    }
+  }
 
-      > a {
-        width: 3rem;
-        height: 3rem;
-        border-radius: 100%;
-        display: block;
-        margin: 0 auto .5rem auto;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        background: rgba(0,0,0, .1);
-      
-        .svg-icon {
-          width: 28px;
-          height: 28px;
-        }
+  .metadata-btn {
+    text-align: center;
+
+    > a {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 100%;
+      display: block;
+      margin: 0 auto .5rem auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      background: rgba(0,0,0, .1);
+    
+      .svg-icon {
+        width: 28px;
+        height: 28px;
       }
     }
 
     @include media-breakpoint-up(md) {
-      > div {   
-        > a {
-          width: 4rem;
-          height: 4rem;
+      > a {
+        width: 4rem;
+        height: 4rem;
 
-          .svg-icon {
-            width: 36px;
-            height: 36px;
-          }
-        } 
+        .svg-icon {
+          width: 36px;
+          height: 36px;
+        }
       }
     }
   }

@@ -24,6 +24,7 @@ const SettingsController = require('./controllers/settings');
 // Load Services
 const MangaService    = require('./services/manga');
 const SettingsService = require('./services/settings');
+const ShareService = require('./services/share');
 
 class Application {
 
@@ -59,6 +60,23 @@ class Application {
     });
   }
 
+  _loadServices() {
+    const service = {};
+    const options = {
+      app: this,
+      config: this.config,
+      service
+    };
+
+    Object.assign(service, {
+      manga: new MangaService(options),
+      settings: new SettingsService(options),
+      share: new ShareService(options)
+    });
+
+    this.service = service;
+  }
+
   _loadControllers() {
     const options = {
       app: this,
@@ -71,18 +89,6 @@ class Application {
       image: new ImageController(options),
       manga: new MangaController(options),
       settings: new SettingsController(options)
-    };
-  }
-
-  _loadServices() {
-    const options = {
-      app: this,
-      config: this.config
-    };
-
-    this.service = {
-      manga: new MangaService(options),
-      settings: new SettingsService(options)
     };
   }
 

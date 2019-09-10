@@ -42,8 +42,20 @@ function folder({ path, dirId }) {
   return fetch(url);
 }
 
+function share(longUrl) {
+  const url = 'api/manga/share';
+  return fetch(url, {
+    method: 'post',
+    headers: {
+      'content-type': 'application/json;charset=utf-8'
+    },
+    body: JSON.stringify({ url: longUrl })
+  });
+}
+
 export default {
   list,
   pick,
   folder,
+  share
 }
