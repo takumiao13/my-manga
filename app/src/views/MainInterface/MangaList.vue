@@ -1,20 +1,22 @@
 <template>
   <div>
     <div class="main-explorer">
-      <div class="topbar" v-show="isSuccess">
-        <navbar 
+      <div class="topbar" v-show="noError" ref="topbar">
+        <navbar
           :class="{
-            'no-shadow': (!isManga && breadcrumb.length > 1) || (isManga && !isShowTopTitle),
-            'manga-title-shown': isManga && isShowTopTitle,
-            'manga-title-hidden': isManga && !isShowTopTitle
+            'no-shadow': !isManga && breadcrumb.length > 1,
+            'manga-title-shown': isShowTopTitle,
+            'manga-title-hidden': isManga && !empty && !isShowTopTitle
           }" 
           :title="title" 
           :left-btns="leftBtns"
+          :right-btns="rightBtns"
+          @click="handleBackToTop"
         />
         
         <breadcrumb
-          :class="{ collapsed: isCollapsed }"
           v-show="breadcrumb.length > 1 && !isManga" 
+          :class="{ collapsed: isCollapsed }"
           :navs="breadcrumb"
           @back="handleNavigateBack"
           @navigate="handleNavigate"
@@ -22,18 +24,19 @@
       </div>    
       <data-view 
         class="main-explorer-container" 
-        :loading="isPending" 
+        :loading="isPending"
         :empty="empty"
         :error="error"
       >
-        <div class="row" v-show="isSuccess">
+        <div class="row" v-show="noError">
 
           <!-- META DATA -->
           <div v-if="isManga && !empty" id="metadata" class="col-12" ref="metadata">
-            <canvas id="metadata-bg" ref="metadataBg" />
+            <div class="metadata-banner" ref="banner"></div>
+            
             <div class="metadata-inner">
               <img class="metadata-cover mb-3" :src="$service.image.makeSrc(cover)" />
-              <h4 class="metadata-title mb-3">
+              <h4 class="metadata-title mb-4">
                 {{ title }} <br />
                 <small v-if="chapters.length">{{ chapters.length }} chapters</small>
                 <small v-if="!chapters.length">{{ images.length }} pages</small> 
@@ -41,13 +44,13 @@
               <div class="metadata-footer">
                 <div>
                   <a @click="handleViewManga($event, chapters[0] || images[0], 0)">
-                    <icon name="book-open" size="36" />
+                    <icon name="book-open" />
                   </a>
                   <span>Read Now</span>
                 </div>
                 <div>
                   <a @click="handleViewGallery">
-                    <icon name="gallery" size="36" />
+                    <icon name="gallery" />
                   </a>
                   <span>Gallery</span>
                 </div>
@@ -97,9 +100,12 @@
                     v-bind="$service.image.coverStyle(item)"
                     :to="{
                       name: 'explorer', 
-                      params:{ 
+                      params: { 
                         dirId: repo.dirId,
                         path: item.path 
+                      },
+                      query: {
+                        type: 'manga'
                       }
                     }"
                   >
@@ -160,13 +166,15 @@
 </template>
 
 <script>
-import { isUndef, last, debounce, getScrollTop } from '@/helpers';
+import { isUndef, last, debounce, byId, getScrollTop } from '@/helpers';
 import config from '@/config';
 import { types as appTypes } from '@/store/modules/app';
 import { types as mangaTypes } from '@/store/modules/manga';
 import { types as viewerTypes } from '@/store/modules/viewer';
 import { mapState, mapGetters } from 'vuex';
+import ColorThief from 'colorthief/dist/color-thief.mjs';
 
+const colorThief = new ColorThief();
 const PATH_SEP = '/';
 
 export default {
@@ -175,6 +183,7 @@ export default {
       activeCh: '',
       isCollapsed: false,
       isShowTopTitle: false,
+      isManga: false,
     }
   },
 
@@ -198,7 +207,7 @@ export default {
 
     ...mapGetters('app', [ 'repo' ]),
 
-    ...mapGetters('manga', [ 'isManga', 'isPending', 'isSuccess', 'empty' ]),
+    ...mapGetters('manga', [ 'isPending', 'isSuccess', 'noError', 'empty' ]),
 
     title() {
       const repoName = this.repo.name;
@@ -232,6 +241,7 @@ export default {
     leftBtns() {
       return this.isManga ? [{
         icon: 'arrow-left',
+        tip: 'back',
         click: this.handleBack
       }] : [{
         icon: 'bars',
@@ -239,6 +249,14 @@ export default {
         click: this.handleToggleSidebar
       }];
     },
+
+    rightBtns() {
+      return this.isManga ? [{
+        icon: 'level-up-alt',
+        tip: 'back to parent',
+        click: this.handleBackToParent
+      }] : null;
+    }
   },
 
   watch: {
@@ -251,12 +269,16 @@ export default {
 
   activated() {
     if (this.appError || this.$route.meta.isBack || this.$router._reset) return;
+    this.isShowTopTitle = false;
+    this.isManga = this.$route.query.type === 'manga';
     this.fetchMangas(this.$route.params.path);
   },
 
   beforeRouteUpdate(to, from, next) {
     const { isBack } = to.meta;
     if (!this.appError) {
+      this.isShowTopTitle = false;
+      this.isManga = to.query.type === 'manga';
       to.meta.scrollPromise = this.fetchMangas(to.params.path, isBack);
     }
     
@@ -273,12 +295,12 @@ export default {
   },
 
   methods: {
-    fetchMangas(path = '', isBack) {
+    fetchMangas(path = '', isBack, random = false) {
       const { dirId } = this.repo;
       const payload = { path, dirId, isBack }
-      return this.$store.dispatch(mangaTypes.LIST, payload).then(res => {
-        if (this.isManga) this.makeCoverBg();
-      });
+      return this.$store.dispatch(mangaTypes.LIST, payload).then(() => {
+        if (this.isManga && !this.empty) this.changeBanner();
+      })
     },
 
     toggleLocationCollapsed: debounce(function(scrollTop, prevScrollTop) {
@@ -293,22 +315,6 @@ export default {
       trailing: false
     }),
 
-    makeCoverBg() {
-      const canvas = this.$refs.metadataBg;
-      const ctx = canvas.getContext('2d');
-      ctx.filter = 'blur(160px) saturate(6)';
-
-      const img = new Image();
-      img.src = this.$service.image.makeSrc(this.cover, true); 
-      img.onload = function() {
-        const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
-        // get the top left position of the image
-        const x = (canvas.width / 2) - (img.width / 2) * scale;
-        const y = (canvas.height / 2) - (img.height / 2) * scale;
-        ctx.drawImage(img, x, y, img.width * scale, img.height * scale);  
-      }
-    },
-
     // events
     handleToggleSidebar($event) {
       this.$store.dispatch(appTypes.TOGGLE_SIDEBAR);
@@ -316,6 +322,20 @@ export default {
 
     handleBack($event) {
       this.$router.go(-1);
+    },
+
+    handleBackToParent($event) {
+      const { dirId } = this.repo;
+      const path = this.path.split(PATH_SEP).slice(0, -1).join(PATH_SEP);
+
+      this.$router.navigate({
+        name: 'explorer',
+        params: { dirId, path }
+      });
+    },
+
+    handleBackToTop($event) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     },
 
     handleScroll($event) {
@@ -396,13 +416,37 @@ export default {
 
     handleViewGallery($event) {
       const y = this.$refs.metadata.clientHeight - 48;
-      window.scrollTo(0, y+1);
-    }
-  },
+      // fix ios metadata overwrite bug
+      this.$refs.topbar.style.zIndex = 1031;
+      setTimeout(() => {
+        window.scrollTo({
+          top: y,
+          behavior: 'smooth'
+        });
+        this.$refs.topbar.style.zIndex = 1030;
+      });
+    },
 
-  filters: {
-    capitalize: function (item) {
-      return this.$service.image.cover(item);
+    changeBanner() {
+      const img = new Image();
+      const src = this.$service.image.makeSrc(this.cover);
+
+      const getColor = (img) => {
+        const [ r, g, b] = colorThief.getColor(img);
+        const bg = `rgb(${r},${g},${b})`;
+        this.$refs.banner.style.backgroundColor = bg;
+      }
+
+      img.setAttribute('crossOrigin', '');
+      img.src = src;
+
+      if (img.complete) {
+        getColor(img);
+      } else {
+        img.onload = () => {
+          getColor(img);
+        };
+      }
     }
   }
 }
@@ -478,7 +522,7 @@ export default {
     margin-bottom: 3rem;
 
     &:hover {
-      z-index: 1;
+      z-index: 2;
 
       .caption {
         min-height: 2.8625rem;
@@ -592,25 +636,23 @@ export default {
     position: relative;
   }
 
-  #metadata-bg {
+  .metadata-banner {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    opacity: .85;
+    transition: .2s linear;
   }
 
   .metadata-cover {
-    max-width: 240px;
     display: block;
     position: relative;
     box-shadow: 0 2px 12px 0 rgba(0,0,0,0.35);
     border-radius: .5rem;
-
-    @include media-breakpoint-up(md) {
-      max-width: 40%;
-      max-height: 36%;
-    }
+    max-width: 50%;
+    max-height: 50%;
   }
 
   .metadata-info {
@@ -624,11 +666,11 @@ export default {
   }
 
   .metadata-title {
-    font-size: 1.4rem;
+    font-size: 1.1rem;
     text-align: center;
 
     @include media-breakpoint-up(md) {
-      font-size: 1.8rem;
+      font-size: 1.2rem;
     }
   }
 
@@ -667,11 +709,7 @@ export default {
     }
 
     @include media-breakpoint-up(md) {
-      max-width: 480px;
-
-      > div {
-        width: 25%;
-        
+      > div {   
         > a {
           width: 4rem;
           height: 4rem;
@@ -688,7 +726,7 @@ export default {
 
 .topbar {
   .manga-title-shown {
-    transition: opacity .5s ease;
+    color: '';
 
     .navbar-brand {
       opacity: 1
@@ -697,8 +735,9 @@ export default {
 
   .manga-title-hidden {
     background: transparent !important;
-    transition: opacity .5s ease;
     border-bottom-color: transparent;
+    box-shadow: none;
+    color: #fff;
 
     .navbar-brand {
       opacity: 0;

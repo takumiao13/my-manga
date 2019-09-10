@@ -57,34 +57,37 @@ export default {
     },
 
     isSuccess(state) {
-      return statusHelper.is.success(state);
+      return statusHelper.is.success(state, true);
+    },
+
+    noError(state) {
+      return statusHelper.is.success(state) || statusHelper.is.warn(state);
     },
 
     empty(state) {
       return state.inited && !state.list.length;
-    },
-
-    isManga(state) {
-      return state.type === 'MANGA';
     }
   },
 
   actions: {
     [LIST]({ commit }, payload = {}) { 
       let index = -1;
-      const { path, isBack, dirId } = payload;
-      if (isBack) index = cacheStack.find(dirId, path);
+      const { path, isBack, dirId, random } = payload;
+      if (isBack && !random) index = cacheStack.find(dirId, path);
       // console.log(cacheStack);
 
-      statusHelper.pending(commit);
+      // hack no flashing when random manga
+      if (!random) statusHelper.pending(commit);
       // if cannot find cache
       if (index === -1) {
-        return mangaAPI.list({ dirId, path })
+        return mangaAPI[random ? 'pick' : 'list']({ dirId, path })
           .then(res => {
-            cacheStack.push(Object.assign(res, { 
-              _prevPath: path,
-              _dirId: dirId
-            }));
+            if (!random) {
+              cacheStack.push(Object.assign(res, { 
+                _prevPath: path,
+                _dirId: dirId
+              }));
+            }
             commit(LIST, res);
             return statusHelper.success(commit);
           })

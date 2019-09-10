@@ -1,10 +1,12 @@
 <template>
-  <nav class="navbar">
+  <nav class="navbar" @click="$emit('click')">
     <a class="btn topbar-left-btn"
       v-for="(btn, index) in leftBtns_"
-      :key="index"
+      :key="`left-${index}`"
       :class="btn.className"
-      @click="btn.click">
+      @click="btn.click"
+      :title="btn.tip"
+    >
       <icon v-if="btn.icon" :name="btn.icon" />
       <span v-html="btn.title"></span>
     </a>
@@ -17,13 +19,13 @@
 
     <a class="btn topbar-right-btn"
       v-for="(btn, index) in rightBtns_"
-      :key="index"
+      :key="`right-${index}`"
       :class="btn.className"
       @click="btn.click"
       :title="btn.tip"
     >
       <icon v-if="btn.icon" :name="btn.icon" />
-      {{ btn.title }}
+      <span v-html="btn.title"></span>
     </a>
   </nav>
 </template>

@@ -125,8 +125,14 @@ export default {
 
       const path = item.path;
       const { dirId } = this.repo;
+      const query = item.type === 'MANGA' ? { type: 'manga' } : null
+
       this.$store.dispatch(appTypes.TOGGLE_SIDEBAR, { open: false });
-      this.$router.push({ name: 'explorer', params: { dirId, path }})
+      this.$router.push({ 
+        name: 'explorer', 
+        params: { dirId, path },
+        query,
+      })
     },
 
     handleGotoRepos() {

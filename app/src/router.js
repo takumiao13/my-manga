@@ -28,9 +28,16 @@ VueRouter.prototype.navigate = function(to) {
 };
 
 const routerPush = VueRouter.prototype.push;
+const routerReplace = VueRouter.prototype.replace;
+
 VueRouter.prototype.push = function() {
 	this._push = true;
 	routerPush.apply(this, arguments);
+}
+
+VueRouter.prototype.replace = function() {
+	this._replace = true;
+	routerReplace.apply(this, arguments);
 }
 
 VueRouter.prototype.canGoBack = function() {
@@ -145,7 +152,7 @@ router.beforeEach(function(to, from, next) {
 		to.meta.isBack = true;
 	
 	// forward
-	} else {
+	} else if (!router._replace) {
 		const p = historyName(from);
 		if (p !== '/' || (p === '/' && history.length === 0)) {
 			history.push(p);
@@ -161,6 +168,7 @@ router.beforeEach(function(to, from, next) {
 
 	// hack for something ... :(
 	delete router._push;
+	delete router._replace;
 
 	// change doc title
 	if (['explorer', 'viewer'].indexOf(to.name) > -1) {

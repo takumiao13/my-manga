@@ -9,7 +9,7 @@
       <br/>
       NO ITEMS
     </div>
-    <div class="error-info" v-if="!loading && error">
+    <div class="error-info" v-if="!loading && error && !error.warn">
       <div class="error-icon mb-3">
         <icon :name="error_.icon" size="48" />
       </div>

@@ -16,6 +16,7 @@ export function createRequestStatus(name, type = 'STATUS') {
   const SUCCESS = 'success';
   const SUCCESS_DEBOUNCED = 'success_debounced';
   const ERROR = 'error';
+  const WARN = 'warn';
   
   let timer = null;
 
@@ -37,7 +38,7 @@ export function createRequestStatus(name, type = 'STATUS') {
       timer = setTimeout(() => {
         commit(type, { [name]: PENDING_DEBOUNCED });
         timer = null;
-      }, 160);
+      }, 180);
     },
 
     success(commit) {
@@ -64,10 +65,12 @@ export function createRequestStatus(name, type = 'STATUS') {
 
     error(commit, payload = {}) {
       clear();
+      const isWarn = payload.warn;
       commit(type, { 
-        [name]: ERROR,
+        [name]: isWarn ? WARN : ERROR,
         error: payload
       });
+      throw payload;
     },
 
     mutation() {
@@ -79,14 +82,29 @@ export function createRequestStatus(name, type = 'STATUS') {
     },
 
     is: {
-      pending(state) {
-        return state[name] === PENDING_DEBOUNCED || state[name] === SUCCESS;
+      pending(state, immediately) {
+        if (immediately) {
+          return state[name] === PENDING_DEBOUNCED;
+        } else {
+          return state[name] === PENDING_DEBOUNCED || state[name] === SUCCESS;
+        }
       },
-      success(state) {
-        return state[name] === SUCCESS_DEBOUNCED;
+
+      success(state, immediately) {
+        //return state[name] === SUCCESS_DEBOUNCED || state[name] === PENDING;
+        if (immediately) {
+          return state[name] === SUCCESS_DEBOUNCED;
+        } else {
+          return state[name] === SUCCESS_DEBOUNCED || state[name] === PENDING;
+        }
       },
+
       error(state) {
         return state[name] === ERROR;
+      },
+
+      warn(state) {
+        return state[name] === WARN;
       }
     }
   }
