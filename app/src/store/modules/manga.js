@@ -5,9 +5,10 @@ import mangaAPI from '@/apis/manga';
 // types for internal
 const ns = 'manga';
 const LIST = 'LIST';
+const SHARE = 'SHARE';
 const statusHelper = createRequestStatus('status');
 
-export const types = createTypesWithNs([ LIST ], ns);
+export const types = createTypesWithNs([ LIST, SHARE ], ns);
 
 export const cacheStack = {
   _value: [],
@@ -48,6 +49,7 @@ export default {
     chapters: [],
     images: [],
     activePath: '',
+    shortId: false,
     ...statusHelper.state()
   },
 
@@ -100,13 +102,29 @@ export default {
         commit(LIST, result);
         return statusHelper.success(commit);
       }
+    },
+
+    [SHARE]({ commit }, payload = {}) {
+      const { url } = payload;
+      return mangaAPI.share(url).then(res => {
+        commit(SHARE, res);
+      })
     }
   },
   
   mutations: {
     [LIST](state, payload) {
       state.inited || (state.inited = true);
-      assign(state, { ...payload, error: null });
+      assign(state, { 
+        ...payload, 
+        error: null,
+        shortId: false
+      });
+    },
+
+    [SHARE](state, payload) {
+      const { shortId } = payload;
+      assign(state, { shortId });
     },
 
     ...statusHelper.mutation()

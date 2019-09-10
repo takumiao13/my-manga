@@ -49,10 +49,27 @@ class MangaController extends Controller {
 
   _getBaseDir(dirId) {
     const { repoMap } = this.app.options;
-    return repoMap[dirId].baseDir;
+    const repo = repoMap[dirId]
+    
+    if (!repo) throw new CustomError(ERR_CODE.REPO_UNACCESSED);
+    return repo.baseDir;
+  }
+
+  async share(ctx) {
+    const { service } = this;
+    const { url } = ctx.request.body;
+    const shortId = service.share.generate(url);
+    ctx.body = { shortId }
+  }
+
+  async expand(ctx) {
+    const { service } = this;
+    const { shortId } = ctx.params;
+    const url = service.share.expand(shortId);
+    ctx.redirect(url || '/');
   }
 }
 
-MangaController.actions = [ 'folder', 'list' ];
+MangaController.actions = [ 'folder', 'list', 'share', 'expand' ];
 
 module.exports = MangaController;
