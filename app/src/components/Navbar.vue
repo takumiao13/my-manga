@@ -4,7 +4,7 @@
       v-for="(btn, index) in leftBtns_"
       :key="`left-${index}`"
       :class="btn.className"
-      @click="btn.click"
+      @click="btnClick($event, btn.click)"
       :title="btn.tip"
     >
       <icon v-if="btn.icon" :name="btn.icon" />
@@ -21,7 +21,7 @@
       v-for="(btn, index) in rightBtns_"
       :key="`right-${index}`"
       :class="btn.className"
-      @click="btn.click"
+      @click="btnClick($event, btn.click)"
       :title="btn.tip"
     >
       <icon v-if="btn.icon" :name="btn.icon" />
@@ -79,6 +79,13 @@ export default {
       } else {
         return this.rightBtns;
       }
+    }
+  },
+
+  methods: {
+    btnClick($event, click) {
+      $event.stopPropagation();
+      click($event);
     }
   }
 }

@@ -155,14 +155,19 @@
   background: $app-lighter-bg;
 }
 
-#metadata {
-  // background: $app-primary;
-  // border-bottom: .5px solid $app-border-color;
+.dark #metadata {
   color: #fff;
-  text-shadow: 1px 1px 10px rgba(0,0,0, .5);
+}
 
-  .cover {
-    box-shadow: 1px 2px 3px rgba($app-shadow-color, .3);
+.dark .manga-title-hidden {
+  color: #fff;
+}
+
+#metadata {
+
+  .metadata-cover {
+    background: $app-cover-bg;
+    box-shadow: 0 2px 12px 0 rgba($app-shadow-color, .35);
   }
   
   .description {

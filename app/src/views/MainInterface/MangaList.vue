@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="main-explorer">
+    <div class="main-explorer" :class="{ dark: isDarkerBg }">
       <div class="topbar" v-show="noError" ref="topbar">
         <navbar
           :class="{
@@ -31,11 +31,11 @@
         <div class="row" v-show="noError">
 
           <!-- META DATA -->
-          <div v-if="isManga && !empty" id="metadata" class="col-12" ref="metadata">
+          <div id="metadata" v-if="isManga && !empty" class="col-12" ref="metadata">
             <div class="metadata-banner" ref="banner"></div>
             
             <div class="metadata-inner">
-              <img class="metadata-cover mb-3" :src="$service.image.makeSrc(cover)" />
+              <img class="metadata-cover mb-3" ref="cover" />
               <h4 class="metadata-title mb-4">
                 {{ title }} <br />
                 <small v-if="chapters.length">{{ chapters.length }} chapters</small>
@@ -184,6 +184,7 @@ export default {
       isCollapsed: false,
       isShowTopTitle: false,
       isManga: false,
+      isDarkerBg: false
     }
   },
 
@@ -191,7 +192,9 @@ export default {
     ...mapState('app', { appError: 'error' }),
 
     ...mapState('manga', [
-      'path', 'list', 'cover', 'folders', 'mangas', 'chapters', 'images', 'activePath', 'error'
+      'path', 'list', 'cover', 'folders', 
+      'mangas', 'chapters', 'images', 'activePath', 'error',
+
     ]),
 
     ...mapState('manga', {
@@ -431,20 +434,33 @@ export default {
       const img = new Image();
       const src = this.$service.image.makeSrc(this.cover);
 
-      const getColor = (img) => {
-        const [ r, g, b] = colorThief.getColor(img);
+      const changeCover = (img) => {
+        const [ r, g, b ] = colorThief.getColor(img);
         const bg = `rgb(${r},${g},${b})`;
+        const grayLevel = r * 0.299 + g * 0.587 + b * 0.114;
+
+        clearTimeout(timer);
+
         this.$refs.banner.style.backgroundColor = bg;
+        this.$refs.cover.src = src;
+        this.isDarkerBg = grayLevel < 192;
       }
+
+      const timer = setTimeout(() => {
+        this.$refs.banner.style.backgroundColor = '';
+        this.$refs.cover.src = '';
+        this.isDarkerBg = false;
+      }, 200);
+      
 
       img.setAttribute('crossOrigin', '');
       img.src = src;
 
       if (img.complete) {
-        getColor(img);
+        changeCover(img);
       } else {
         img.onload = () => {
-          getColor(img);
+          changeCover(img);
         };
       }
     }
@@ -649,7 +665,6 @@ export default {
   .metadata-cover {
     display: block;
     position: relative;
-    box-shadow: 0 2px 12px 0 rgba(0,0,0,0.35);
     border-radius: .5rem;
     max-width: 50%;
     max-height: 50%;
@@ -737,8 +752,7 @@ export default {
     background: transparent !important;
     border-bottom-color: transparent;
     box-shadow: none;
-    color: #fff;
-
+    
     .navbar-brand {
       opacity: 0;
     }
