@@ -6,11 +6,11 @@ const arrayHelper = require('./array');
 const functionHelper = require('./function');
 const errorCode = require('./error-code');
 
-module.exports = {
-  ...typeHelper,
-  ...stringHelper,
-  ...objectHelper,
-  ...arrayHelper,
-  ...functionHelper,
-  ...errorCode
-}
+module.exports = Object.assign({}, 
+  typeHelper,
+  stringHelper,
+  objectHelper,
+  arrayHelper,
+  functionHelper,
+  errorCode
+)

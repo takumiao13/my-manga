@@ -9,7 +9,7 @@ const MANGA_NO_DIR = 20100;
 
 exports.ERR_CODE = {
   REPO_UNACCESSED,
-  MANGA_NO_DIR,
+  MANGA_NO_DIR
 };
 
 exports.errorCodeMap = {
