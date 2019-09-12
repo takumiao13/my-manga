@@ -1,6 +1,9 @@
 <template>
-  <div class="la-ball-clip-rotate" :class="[size_, className]">
-    <div></div>
+  <div class="spinner">
+    <div class="la-ball-clip-rotate" :class="[ size_, className ]">
+      <div></div>
+    </div>
+    <p v-show="tip">{{ tip }}</p>
   </div>
 </template>
 
@@ -14,7 +17,12 @@ export default {
   props: {
     size: String,
     className: String,
+    tip: {
+      type: [ String, Boolean ],
+      default: false
+    }
   },
+
   computed:{
     size_: function() {
       return sizeMap[this.size] || ''
@@ -35,6 +43,8 @@ export default {
     display: block;
     font-size: 0;
     color: #333;
+    margin: 0 auto;
+    margin-bottom: 1rem;
 }
 .la-ball-clip-rotate > div {
     display: inline-block;

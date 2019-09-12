@@ -54,16 +54,12 @@ export default {
   },
 
   getters: {
-    isPending(state) {
+    pending(state) {
       return statusHelper.is.pending(state);
     },
 
-    isSuccess(state) {
-      return statusHelper.is.success(state, true);
-    },
-
-    noError(state) {
-      return statusHelper.is.success(state) || statusHelper.is.warn(state);
+    isSuccess: (state) => (immediately) => {
+      return statusHelper.is.success(state, immediately);
     },
 
     empty(state) {

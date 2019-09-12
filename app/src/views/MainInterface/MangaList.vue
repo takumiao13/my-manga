@@ -1,12 +1,12 @@
 <template>
   <div>
-    <div class="main-explorer" :class="{ dark: isDarkerBg }">
-      <div class="topbar" v-show="noError" ref="topbar">
+    <div class="main-explorer" :class="{ dark: isManga && darkBg }">
+      <div class="topbar" ref="topbar">
         <navbar
           :class="{
-            'no-shadow': !isManga && breadcrumb.length > 1,
-            'manga-title-shown': isShowTopTitle,
-            'manga-title-hidden': isManga && !empty && !isShowTopTitle
+            'no-shadow': !isManga && navs.length > 1,
+            'manga-title-shown': titleShown,
+            'manga-title-hidden': isManga && !empty && !titleShown
           }" 
           :title="title" 
           :left-btns="leftBtns"
@@ -14,32 +14,38 @@
           @click="handleBackToTop"
         />
         
-        <breadcrumb
-          v-show="breadcrumb.length > 1 && !isManga" 
-          :class="{ collapsed: isCollapsed }"
-          :navs="breadcrumb"
+        <addressbar
+          v-show="navs.length > 1 && !isManga" 
+          :class="{ collapsed: addressbarCollapsed }"
+          :navs="navs"
           @back="handleNavigateBack"
           @navigate="handleNavigate"
         />
       </div>    
       <data-view 
         class="main-explorer-container" 
-        :loading="isPending"
+        :loading="loading"
         :empty="empty"
         :error="error"
       >
-        <div class="row" v-show="noError">
+        <div class="row" v-show="success">
 
           <!-- META DATA -->
           <div id="metadata" v-if="isManga && !empty" class="col-12" ref="metadata">
-            <div class="metadata-banner" ref="banner"></div>
-            
-            <div class="metadata-share metadata-inner" v-if="isQrcodeShown">
-              <div class="modal mb-3" tabindex="-1" role="dialog">
+            <div class="metadata-banner" ref="banner" />
+                     
+            <div class="metadata-share metadata-inner" v-if="sharing">
+              <div class="modal" tabindex="-1" role="dialog">
                 <div class="modal-dialog">
                   <div class="modal-content">
                     <div class="modal-header">
                       <h5 class="modal-title">Share: {{ title }}</h5>
+                      <button type="button" class="close" 
+                        data-dismiss="modal" aria-label="Close"
+                        @click="sharing = false"
+                      >
+                        <span aria-hidden="true">×</span>
+                      </button>
                     </div>
                     <div class="modal-body">
                       <qriously class="mb-3 qr-code" :value="qrcodeValue" :size="160" />
@@ -53,15 +59,9 @@
                   </div>
                 </div>
               </div>
-              <div class="metadata-btn">
-                <a @click="isQrcodeShown = false">
-                  <icon name="times" size="36" />
-                </a>
-                <span>Close</span>
-              </div>
             </div>
 
-            <div class="metadata-main metadata-inner" v-show="!isQrcodeShown">
+            <div class="metadata-main metadata-inner" v-show="!sharing">
               <img class="metadata-cover mb-3" ref="cover" />
               <h4 class="metadata-title mb-4">
                 {{ title }} <br />
@@ -92,7 +92,7 @@
           </div>
           <!-- / META DATA -->
 
-          <div class="col-12 area-container">
+          <div class="col-12 area-container" v-show="!sharing">
 
             <!-- FOLDER AREA -->
             <div class="folder-area mb-4" v-show="folders.length">
@@ -156,7 +156,7 @@
               <p class="area-header">CHAPTERS</p>
               <div class="list-group">
                 <a class="list-group-item list-group-item-action chapter-item"
-                  :class="{ active: item.name === activeCh}"
+                  :class="{ active: item.name === activeChapter}"
                   v-for="(item, index) in chapters" 
                   :key="item.path"
                   @click="handleViewManga($event, item, 0)"
@@ -199,7 +199,7 @@
 </template>
 
 <script>
-import { isUndef, last, debounce, byId, getScrollTop, inElectron } from '@/helpers';
+import { isUndef, last, debounce, getScrollTop } from '@/helpers';
 import config from '@/config';
 import { types as appTypes } from '@/store/modules/app';
 import { types as mangaTypes } from '@/store/modules/manga';
@@ -213,12 +213,14 @@ const PATH_SEP = '/';
 export default {
   data() {
     return {
-      activeCh: '',
-      isCollapsed: false,
-      isShowTopTitle: false,
+      activeChapter: '',
+      addressbarCollapsed: false,
+      titleShown: false,
       isManga: false,
-      isDarkerBg: false,
-      isQrcodeShown: false,
+      darkBg: false,
+      sharing: false,
+      immediately: true,
+      coverLoaded: false,
     }
   },
 
@@ -244,11 +246,23 @@ export default {
 
     ...mapGetters('app', [ 'repo' ]),
 
-    ...mapGetters('manga', [ 'isPending', 'isSuccess', 'noError', 'empty' ]),
+    ...mapGetters('manga', [ 'pending', 'isSuccess', 'empty' ]),
+
+    loading() {
+      return this.immediately ? 
+        this.pending :
+        this.pending || !this.coverLoaded;
+    },
+    
+    success() {
+      return this.isManga ?
+        this.isSuccess(this.immediately) && this.coverLoaded :
+        this.isSuccess(this.immediately)
+    },
 
     title() {
       const repoName = this.repo.name;
-      const { path } = this.$route.params;
+      const path = this.immediately ? this.$route.params.path : this.path;
       const title = path ? 
         this.metadata.title || last(path.split(PATH_SEP)) : 
         repoName;
@@ -256,8 +270,8 @@ export default {
       return title;
     },
 
-    breadcrumb() {
-      const name = this.repo.name;
+    navs() {
+      const { name } = this.repo;
       const { path } = this.$route.params;
       const items = [{ name }];
 
@@ -266,7 +280,8 @@ export default {
         fragments.forEach((item, idx) => {
           // make path (the last ignore click)
           const path = idx < fragments.length - 1 ? 
-            fragments.slice(0, idx + 1).join(PATH_SEP) : false;
+            fragments.slice(0, idx + 1).join(PATH_SEP) : 
+            false;
           const data = { name: item, path };
           items.push(data);
         });
@@ -313,25 +328,39 @@ export default {
   watch: {
     $route(to, from) {
       if (from.name === 'viewer') {
-        this.activeCh = this.viewerCh;
+        this.activeChapter = this.viewerCh;
       }
     }
   },
 
   activated() {
     if (this.appError || (this.$route.meta.isBack && this.inited) || this.$router._reset) return;
-    this.isShowTopTitle = false;
+    this.titleShown = false;
+    this.sharing = false;
+    this.coverLoaded = false;
     this.isManga = this.$route.query.type === 'manga';
-    this.isQrcodeShown = false;
     this.fetchMangas(this.$route.params.path);
   },
 
   beforeRouteUpdate(to, from, next) {
     const { isBack } = to.meta;
     if (!this.appError) {
-      this.isShowTopTitle = false;
+      
       this.isManga = to.query.type === 'manga';
-      this.isQrcodeShown = false;
+      this.sharing = false;
+      setTimeout(() => this.titleShown = false);
+
+      const fromManga = from.query.type === 'manga';
+
+      // when manga to mange ensure 200ms delay
+      if (this.isManga && fromManga) {
+        this.immediately = false;
+        this.coverLoaded = true;
+      } else {
+        this.immediately = true;
+        this.coverLoaded = false;
+      }
+
       to.meta.scrollPromise = this.fetchMangas(to.params.path, isBack);
     }
     
@@ -340,40 +369,97 @@ export default {
 
   created() {
     this._prevScrollTop;
-    window.addEventListener('scroll', this.handleScroll, false);
+    window.addEventListener('scroll', this.handleScroll);
   },
 
   destroyed() {
-    window.removeEventListener('scroll', this.handleScroll, false);
+    window.removeEventListener('scroll', this.handleScroll);
   },
 
   methods: {
-    fetchMangas(path = '', isBack, random = false) {
+    fetchMangas(path = '', isBack) {
       const { dirId } = this.repo;
       const payload = { path, dirId, isBack }
+
+      let timer = null;
+
+      // delay hide content when is not immediately change
+      if (!this.immediately) {
+        timer = setTimeout(() => {
+          this.coverLoaded = false;
+          timer = null;
+        }, 200);
+      }
+
       return this.$store.dispatch(mangaTypes.LIST, payload).then(() => {
-        if (this.isManga && !this.empty) this.changeBanner();
+        clearTimeout(timer);
+        if (this.isManga && !this.empty) {
+          this.changeBanner()
+        } else {
+          this.coverLoaded = true;
+        }
       })
     },
 
-    toggleLocationCollapsed: debounce(function(scrollTop, prevScrollTop) {
-      if (isUndef(prevScrollTop) || scrollTop > prevScrollTop) {
-        this.isCollapsed = true;
-      } else {
-        this.isCollapsed = false;
-      }
+    toggleAddressbar: debounce(function(scrollTop, prevScrollTop) {
+      this.addressbarCollapsed = scrollTop >= 160 ? 
+        isUndef(prevScrollTop) || scrollTop > prevScrollTop :
+        false;
     }, 500, {
       maxWait: 1500,
       leading: true,
       trailing: false
     }),
 
+    changeBanner() {
+      const img = new Image();
+      const src = this.$service.image.makeSrc(this.cover);
+  
+      const changeCoverDelayed = () => {
+        // when slow
+        if (timer === null) {
+          setTimeout(() => changeCover(), 360);
+          return;
+        }
+
+        clearTimeout(timer);
+        changeCover();
+      }
+
+      const changeCover = () => {
+        const [ r, g, b ] = colorThief.getColor(img);
+        const bg = `rgb(${r},${g},${b})`;
+        const grayLevel = r * 0.299 + g * 0.587 + b * 0.114;
+
+        // fix background transition
+        setTimeout(() => this.$refs.banner.style.backgroundColor = bg);
+        this.$refs.cover.style.backgroundColor = bg;
+        this.$refs.cover.src = src;
+        this.darkBg = grayLevel < 192;
+        this.coverLoaded = true;
+      }
+
+      let timer = setTimeout(() => {
+        timer = null;
+
+        // when change cover is slow, reset main color
+        this.$refs.banner.style.backgroundColor = '';
+        this.$refs.cover.src = '';
+        this.darkBg = false;
+        this.coverLoaded = true;
+      }, 1000);
+
+      img.onload = () => changeCoverDelayed(img);
+      img.setAttribute('crossOrigin', '');
+      img.src = src;
+    },
+
     // events
-    handleToggleSidebar($event) {
+    handleToggleSidebar() {
       this.$store.dispatch(appTypes.TOGGLE_SIDEBAR);
     },
 
-    handleBack($event) {
+    handleBack() {
      if (this.$router._routerHistory.length === 1) {
         const { dirId } = this.$router.history.current.params;
         this.$router.push({ name: 'explorer', params: { dirId } })
@@ -382,7 +468,7 @@ export default {
       }
     },
 
-    handleBackToParent($event) {
+    handleBackToParent() {
       const { dirId } = this.repo;
       const path = this.path.split(PATH_SEP).slice(0, -1).join(PATH_SEP);
 
@@ -392,44 +478,27 @@ export default {
       });
     },
 
-    handleBackToTop($event) {
+    handleBackToTop() {
       window.scrollTo({ top: 0, behavior: 'smooth' })
     },
 
-    handleBackToParent($event) {
-      const { dirId } = this.repo;
-      const path = this.path.split(PATH_SEP).slice(0, -1).join(PATH_SEP);
-
-      this.$router.navigate({
-        name: 'explorer',
-        params: { dirId, path }
-      });
-    },
-
-    handleBackToTop($event) {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    },
-
-    handleScroll($event) {
+    handleScroll() {
       const scrollTop = getScrollTop();
 
-      // handle breadcrumb show or hide
+      // handle navs show or hide
       if (!this.isManga) {  
-        if (scrollTop < 160) {
-          this.isCollapsed = false;
-        } else {
-          this.toggleLocationCollapsed(scrollTop, this._prevScrollTop);
-        }
+        this.toggleAddressbar(scrollTop, this._prevScrollTop);
+
       // handle mange title show or hide
       } else {
         const metaH = this.$refs.metadata.clientHeight - 48;
-        this.isShowTopTitle = scrollTop >= metaH;
+        this.titleShown = scrollTop >= metaH;
       }
 
       this._prevScrollTop = scrollTop;
     },
 
-    handleNavigateBack($event) {
+    handleNavigateBack() {
       this.$router.back();
     },
 
@@ -464,7 +533,7 @@ export default {
       };
 
       // activate chapter
-      item.type === 'CHAPTER' && (this.activeCh = item.name)
+      item.type === 'CHAPTER' && (this.activeChapter = item.name)
 
       // sync state to viewer store
       if (shouldSyncState()) {
@@ -486,8 +555,9 @@ export default {
       });
     },
 
-    handleViewGallery($event) {
+    handleViewGallery() {
       const y = this.$refs.metadata.clientHeight - 48;
+
       // fix ios metadata overwrite bug
       this.$refs.topbar.style.zIndex = 1031;
       setTimeout(() => {
@@ -499,46 +569,11 @@ export default {
       });
     },
 
-    handleShareManga($event) {
+    handleShareManga() {
       const payload = { url: window.location.href }
-      this.$store.dispatch(mangaTypes.SHARE, payload).then(res => {
-        this.isQrcodeShown = true;
-      });      
-    },
-
-    changeBanner() {
-      const img = new Image();
-      const src = this.$service.image.makeSrc(this.cover);
-
-      const changeCover = (img) => {
-        const [ r, g, b ] = colorThief.getColor(img);
-        const bg = `rgb(${r},${g},${b})`;
-        const grayLevel = r * 0.299 + g * 0.587 + b * 0.114;
-
-        clearTimeout(timer);
-
-        this.$refs.banner.style.backgroundColor = bg;
-        this.$refs.cover.src = src;
-        this.isDarkerBg = grayLevel < 192;
-      }
-
-      const timer = setTimeout(() => {
-        this.$refs.banner.style.backgroundColor = '';
-        this.$refs.cover.src = '';
-        this.isDarkerBg = false;
-      }, 200);
-      
-
-      img.setAttribute('crossOrigin', '');
-      img.src = src;
-
-      if (img.complete) {
-        changeCover(img);
-      } else {
-        img.onload = () => {
-          changeCover(img);
-        };
-      }
+      this.$store.dispatch(mangaTypes.SHARE, payload).then(() => {
+        this.sharing = true;
+      }); 
     }
   }
 }
@@ -547,7 +582,7 @@ export default {
 <style lang="scss">
 @import '../../assets/style/base';
 
-.location {
+.addressbar {
   transition-duration: .3s;
 
   &.collapsed {
@@ -719,7 +754,7 @@ export default {
   top: 0;
 
   .metadata-inner {
-    padding: 3rem 0;
+    padding: 3rem 0 1rem 0;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -734,18 +769,18 @@ export default {
     left: 0;
     width: 100%;
     height: 100%;
-    opacity: .85;
-    transition: .2s linear;
+    opacity: .8;
+    transition: .25s linear;
   }
 
   .metadata-share {
+
     .metadata-share-inner {
       padding: 1rem 0;
       background: #fff;
       border-radius: .5rem;
       width: 100%;
       max-width: 360px;
-      margin-bottom: 1rem;
     }
 
     .modal {
@@ -757,6 +792,16 @@ export default {
       z-index: 1;
       display: block;
       height: auto;
+      overflow: visible;
+
+      .modal-header {
+        padding: .5rem 1rem;
+      }
+      
+      .modal-dialog {
+        margin-top: 0;
+        max-width: 420px;
+      }
 
       p {
         word-wrap: break-word;
@@ -765,7 +810,6 @@ export default {
     }
 
     .qr-code {
-      //padding: .5rem .5rem .3rem .5rem;
       canvas {
         display: block;
         margin: 0 auto;
@@ -789,16 +833,6 @@ export default {
     border-radius: .5rem;
     max-width: 50%;
     max-height: 50%;
-  }
-
-  .metadata-info {
-    color: #999;
-
-    > p {
-      margin-bottom: .2rem;
-    }
-
-    margin-bottom: .5rem;
   }
 
   .metadata-title {

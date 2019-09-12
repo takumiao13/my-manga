@@ -20,11 +20,13 @@ export default {
   components: {
     ListItem
   },
+
   props: {
     data: {
       type: Array,
       default: () => []
     },
+
     props: {
       type: Object,
       default: () => ({
@@ -36,19 +38,22 @@ export default {
       })
     }
   },
+
   data() {
     return {
       depth: 1,
       activeItem: null
     }
   },
+
   methods: {
     selectItem(item, ctx) {
       this.activeItem = item;
-      this.$emit('on-selected', item, ctx);
+      this.$emit('selected', item, ctx);
     },
+
     expandItem(item, ctx) {
-      this.$emit('on-expanded', item, ctx);
+      this.$emit('expanded', item, ctx);
     }
   }
 }

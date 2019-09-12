@@ -1,8 +1,8 @@
 <template>
-  <div id="viewer" @click="handleOperation">
+  <div id="viewer" @click="handleOpenMenu">
     <navbar 
       class="viewer-topbar fixed-top"
-      :class="{ in: inOperation }"
+      :class="{ open: menuOpen }"
       :left-btns="leftBtns"
       @click="$event.stopPropagation()"
     />
@@ -27,19 +27,19 @@
 
     <div
       class="viewer-backdrop" 
-      v-show="inOperation" 
+      v-show="menuOpen" 
       @click="handleBackdropClick" 
     />
   
     <side-toolbar
       class="d-none d-md-block"
-      v-show="inOperation"
+      v-show="menuOpen"
       :actions="actions" 
     />
 
     <div
       class="viewer-toolbar fixed-bottom" 
-      :class="{ in: inOperation }"
+      :class="{ open: menuOpen }"
       @click="$event.stopPropagation()"
     >
       <seekbar :value="page" :max="count" @end="go" />
@@ -74,7 +74,7 @@ export default {
   data() {
     return {
       routePath: '',
-      inOperation: true,
+      menuOpen: true,
       isQrcodeShown: false,
       actions: [{
         icon: 'arrow-up',
@@ -165,7 +165,7 @@ export default {
       
       setTimeout(_ => { 
         window.addEventListener('scroll', (e) => {
-          this.inOperation = false;
+          this.menuOpen = false;
         }, false);
       }, 300);
     };
@@ -196,14 +196,14 @@ export default {
       this.$store.dispatch(types.GO_CH, { dirId, chIndex });
     },
 
-    toggleOperation(show) {
-      this.inOperation = show !== undefined ? 
+    toggleMenu(show) {
+      this.menuOpen = show !== undefined ? 
         !!show : 
-        !this.inOperation;
+        !this.menuOpen;
     },
     
     // events
-    handleBack($event) {
+    handleBack() {
       if (this.$router._routerHistory.length === 1) {
         const { dirId } = this.$router.history.current.params;
         this.$router.push({ name: 'explorer', params: { dirId } })
@@ -214,7 +214,7 @@ export default {
 
     handleBackdropClick($event) {
       $event.stopPropagation();
-      this.toggleOperation(false);
+      this.toggleMenu(false);
     },
 
     handleQrcodeToggle($event) {
@@ -232,7 +232,7 @@ export default {
       this.go(this.page + 1);
     },
 
-    handleOperation($event) {
+    handleOpenMenu() {
       // only for mobile
       if (this.mode === 'scroll') {
 
@@ -246,12 +246,12 @@ export default {
           if (x > 0 && x < left) {
             this.go(this.page - 1);
           } else if (x >= left && x <= right) {
-            this.toggleOperation(true);
+            this.toggleMenu(true);
           } else if (x > right) {
             this.go(this.page + 1);
           }
         } else {
-          this.toggleOperation(true);
+          this.toggleMenu(true);
         }
       }
     }
@@ -273,7 +273,7 @@ export default {
   transform: translateY(-100%);
   transition: transform .3s ease-in;
 
-  &.in {
+  &.open {
     transform: translateY(0);
   }
 }
@@ -282,7 +282,7 @@ export default {
   transform: translateY(100%);
   transition: transform .3s ease-in;
 
-  &.in {
+  &.open {
     transform: translateY(0);
   }
 }
@@ -311,26 +311,6 @@ export default {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-  }
-}
-
-.qrcode-container {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  z-index: 2000;
-  cursor: pointer;
-  
-  .qrcode {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: .25rem;
-    border-radius: .25rem;
   }
 }
 </style>

@@ -60,14 +60,14 @@ export default {
     max-width: 100px;
     text-align: center;
     padding: .5rem 0;
-    background: rgba(#000, .8);
+    background: rgba(#000, .6);
   }
 
   .viewer-seekbar-container {
     max-width: 100%;
     padding: .5rem .5rem 1rem .5rem;
     margin: 0 auto;
-    background: rgba(#000, .8);
+    background: rgba(#000, .6);
 
     @include media-breakpoint-up(md) {
       max-width: 600px;

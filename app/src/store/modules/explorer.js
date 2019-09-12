@@ -21,11 +21,11 @@ export default {
   state: initialState,
 
   getters: {
-    isPending(state) {
+    pending(state) {
       return statusHelper.is.pending(state);
     },
 
-    isSuccess(state) {
+    success(state) {
       return statusHelper.is.success(state);
     },
 

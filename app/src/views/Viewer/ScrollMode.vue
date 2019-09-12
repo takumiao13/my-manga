@@ -78,7 +78,6 @@ export default {
     page(newVal, oldVal) {
       // 如果 page 和 page_ 值不一致，说明通过其他方式改变 page (seekbar)
       // 需要滚动到正确的位置
-      // console.log('p', newVal, oldVal, this.page_, this.$route);
       if (newVal !== this.page_) {
         this.page_ = newVal;
         this.$nextTick(() => this.scrollToCurrPage());
@@ -97,12 +96,12 @@ export default {
   },
 
   mounted() {
-    this.refresh('mounted')
+    this.refresh()
     this.scrollToCurrPage();
   },
 
   methods: {
-    refresh(type) {
+    refresh() {
       const scrollTop = getScrollTop();
       const imgWrappers = this.$refs.imgWrapper;
       if (!imgWrappers) return;
@@ -113,15 +112,13 @@ export default {
           return itemBCR.top + scrollTop
         }
       });
-
-      console.log(this._offsets);
     },
 
     scrollToCurrPage() {
       this._ignoreScrollEvent = true;
       const y = this._offsets[this.page - 1];
       console.log('scrollTo', this.page, y);
-      window.scrollTo({ top: y, behavior: 'smooth' });
+      window.scrollTo(0, y);
     },
 
     handleScroll(e) {
@@ -156,8 +153,8 @@ export default {
       }
     },
     
-    handleResize(e) {
-      this.refresh('size');
+    handleResize() {
+      this.refresh();
     }
   }
 }

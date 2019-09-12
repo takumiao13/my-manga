@@ -3,7 +3,6 @@ import store, { loadSettingsState } from './store';
 import VueRouter from 'vue-router';
 import { last, isUndef, eventHub } from '@/helpers';
 import { types as appTypes } from '@/store/modules/app';
-import { types as settingTypes, createSettings, createTypes } from '@/store/modules/settings';
 
 // views
 import MainInterface from '@/views/MainInterface';
@@ -11,7 +10,6 @@ import Explorer from '@/views/MainInterface/Explorer';
 import MangaList from '@/views/MainInterface/MangaList';
 import Viewer from '@/views/Viewer';
 import Repository from '@/views/Repository';
-import ServerError from '@/views/Error/ServerError';
 
 // extend router
 VueRouter.prototype._routerHistory = []; // sync browser history
@@ -32,12 +30,14 @@ const routerReplace = VueRouter.prototype.replace;
 
 VueRouter.prototype.push = function() {
 	this._push = true;
-	routerPush.apply(this, arguments);
+
+	const promise = routerPush.apply(this, arguments);	
+	if (promise) return promise.catch(err => err);
 }
 
 VueRouter.prototype.replace = function() {
 	this._replace = true;
-	routerReplace.apply(this, arguments);
+	return routerReplace.apply(this, arguments);
 }
 
 VueRouter.prototype.canGoBack = function() {
@@ -134,7 +134,6 @@ window.onbeforeunload = () => {
 router.beforeEach(function(to, from, next) {
 	const history = router._routerHistory;
 	const delta = router._backdelta;
-	console.log('beforeEach', to, 'from', from);
 
 	// handle reset when change repo
 	if (router._reset) {
@@ -220,7 +219,6 @@ router.beforeEach(function(to, from, next) {
 		next();
 	}
 
-	console.log(history);
 });
 
 

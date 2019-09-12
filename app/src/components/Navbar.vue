@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar" @click="$emit('click')">
+  <nav class="navbar" @click="$emit('click', $event)">
     <a class="btn topbar-left-btn"
       v-for="(btn, index) in leftBtns_"
       :key="`left-${index}`"

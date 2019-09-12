@@ -25,6 +25,7 @@ class ImageService extends Service {
     let ratio = (height / width) * 100;
     let adjust = false;
     const bounding = 8;
+    
     if (ratio >= DEFAULT.vRatio - bounding && ratio <= DEFAULT.vRatio + bounding) {
       ratio = DEFAULT.vRatio;
       adjust = true;

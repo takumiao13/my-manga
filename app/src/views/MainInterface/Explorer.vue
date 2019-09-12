@@ -7,16 +7,16 @@
       
       <data-view 
         class="explorer-container"
-        :loading="isPending" 
+        :loading="pending" 
         :empty="empty"
       >
-        <div class="repo-name" @click="handleBack">{{ repo.name }}</div>
+        <div class="explorer-repo-name" @click="handleBack">{{ repo.name }}</div>
         <nested-list 
-          v-show="isSuccess"  
+          v-show="success"  
           :props="treeProps"
           :data="folders"
-          @on-expanded="handleItemExpanded"
-          @on-selected="handleItemSelected" 
+          @expanded="handleItemExpanded"
+          @selected="handleItemSelected" 
         />
       </data-view>
     </div>
@@ -34,21 +34,16 @@ export default {
       title: {
         content: 'Explorer',
         className: 'navbar-brand-xs',
-        click: this.handleCloseSidebar
+        click: this.closeSidebar
       },
 
       treeProps: {
         key: 'name',
-        className: (item) => {
-          return item._mangaGroup ? 'manga-group-item' : ''
-        },
-        label: (item) => {
-          if (item._mangaGroup) {
-            return `<span class="manga-group-btn">${item.children.length} mangas</span>`;
-          } else {
-            return item.name;
-          }
-        },
+        label: (item) => item._mangaGroup ? 
+          `<span class="manga-group-btn">${item.children.length} mangas</span>` :
+          item.name
+        ,
+        className: (item) => item._mangaGroup ? 'manga-group-item' : '',
         title: 'name',
         children: 'children',
         isBranch: (item) => item._mangaGroup || item.type === 'FOLDER' && item.hasChildren
@@ -57,22 +52,20 @@ export default {
   },
 
   computed: {
-    ...mapState('explorer', [ 'inited', 'folders', 'empty' ]),
-    
     ...mapState('app', { appError: 'error' }),
 
+    ...mapState('explorer', [ 'inited', 'folders', 'empty' ]),
+    
     ...mapState('settings/user', {
-      allowChangeRepos(state) {
-        return !!state.data;
-      }
+      canChangeRepos: (state) => !!state.data
     }),
 
     ...mapGetters('app', [ 'repo' ]),
 
-    ...mapGetters('explorer', [ 'isPending', 'isSuccess', 'empty' ]),
+    ...mapGetters('explorer', [ 'pending', 'success', 'empty' ]),
 
     rightBtns() {
-      return this.allowChangeRepos ? [{
+      return this.canChangeRepos ? [{
         icon: 'folders',
         click: this.handleGotoRepos,
         tip: 'change repository'
@@ -81,7 +74,14 @@ export default {
   },
 
   activated() {
-    if (this.appError || (this.$route.meta.isBack && this.inited) || this.$router._reset) return;
+    if (
+      this.appError || 
+      (this.$route.meta.isBack && this.inited) || 
+      this.$router._reset
+    ) {
+      return;
+    }
+
     this.fetchFolders();
   },
 
@@ -89,6 +89,7 @@ export default {
     if (!this.appError && to.params.dirId !== from.params.dirId) {
       this.fetchFolders();
     }
+
     next();
   },
 
@@ -98,49 +99,47 @@ export default {
       this.$store.dispatch(types.FETCH, { dirId });
     },
 
+    closeSidebar() {
+      this.$store.dispatch(appTypes.TOGGLE_SIDEBAR, { open: false });
+    },
+
     // events
     handleItemExpanded(item, ctx) {
       const { dirId } = this.repo;
       if (item._mangaGroup) return;
       if (/success|pending/.test(ctx.getStatus())) return;
       
-      // maybe use two-way bingding later
+      // maybe use two-way binding later
       // faster then vuex (but we cannot use strict mode)
       ctx.setStatus('pending');
       this.$store.dispatch(types.FETCH, {
         path: item.path,
         dirId
-      }).then(res => {
+      }).then(() => {
         ctx.setStatus('success');
-      }).catch(err => {
+      }).catch(() => {
         ctx.setStatus('error');
-      });
+      })
     },
 
     handleItemSelected(item, ctx) {
       if (item._mangaGroup) {
-        ctx.isOpen = !ctx.isOpen;
+        ctx.open = !ctx.open;
         return;
-      };
+      }
 
-      const path = item.path;
       const { dirId } = this.repo;
-      const query = item.type === 'MANGA' ? { type: 'manga' } : null
-
-      this.$store.dispatch(appTypes.TOGGLE_SIDEBAR, { open: false });
+      const path = item.path;
+   
       this.$router.push({ 
         name: 'explorer', 
         params: { dirId, path },
-        query,
-      })
+        query: item.type === 'MANGA' ? { type: 'manga' } : null
+      }).then(() => this.closeSidebar());
     },
 
     handleGotoRepos() {
       this.$router.push({ name: 'repos' });
-    },
-
-    handleCloseSidebar() {
-      this.$store.dispatch(appTypes.TOGGLE_SIDEBAR, { open: false });
     },
 
     handleBack() {
@@ -149,7 +148,7 @@ export default {
         this.$router.push({ name: 'explorer', params: { dirId }});
       }
       
-      this.$store.dispatch(appTypes.TOGGLE_SIDEBAR, { open: false });
+      this.closeSidebar();
     }
   }
 }
@@ -165,7 +164,7 @@ export default {
   min-height: calc(100vh - 3rem);
 }
 
-.repo-name {
+.explorer-repo-name {
   padding: .25rem .8rem;
   cursor: pointer;
 }

@@ -16,7 +16,7 @@ import SvgIcon from './components/SvgIcon';
 import NestedList from './components/NestedList';
 import SideToolbar from './components/SideToolbar';
 import DataView from './components/DataView';
-import Breadcrumb from './components/Breadcrumb';
+import Addressbar from './components/Addressbar';
 
 // Third part components
 import VueLazyload from 'vue-lazyload';
@@ -35,7 +35,7 @@ Vue.component('icon', SvgIcon);
 Vue.component('nested-list', NestedList);
 Vue.component('side-toolbar', SideToolbar);
 Vue.component('data-view', DataView);
-Vue.component('breadcrumb', Breadcrumb);
+Vue.component('addressbar', Addressbar);
 
 Vue.directive('loading', loadingDirective);
 

@@ -4,9 +4,7 @@ export * from 'shared';
 
 const inElectron = / (?:e|E)lectron\//.test(navigator.userAgent);
 
-const delay = (ms) => new Promise((resolve, reject) => {
-  setTimeout(() => { resolve() }, ms);
-});
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const eventHub = new Vue();
 
@@ -28,7 +26,6 @@ const getScrollHeight = () => {
 const getOffsetHeight = () => {
   return window.innerHeight;
 }
-
 
 export { 
   inElectron, 
