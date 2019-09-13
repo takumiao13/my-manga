@@ -3,12 +3,15 @@
     <navbar 
       class="viewer-topbar fixed-top"
       :class="{ open: menuOpen }"
+      :title="{ content: pager, className: 'text-center d-none d-md-block' }"
       :left-btns="leftBtns"
+      :right-btns="rightBtns"
       @click="$event.stopPropagation()"
     />
 
     <viewport 
       :mode="mode"
+      :zoom="zoom"
       :gallery="images"
       :chapters="chapters"
       :page="page"
@@ -31,11 +34,11 @@
       @click="handleBackdropClick" 
     />
   
-    <side-toolbar
+    <!-- <side-toolbar
       class="d-none d-md-block"
       v-show="menuOpen"
       :actions="actions" 
-    />
+    /> -->
 
     <div
       class="viewer-toolbar fixed-bottom" 
@@ -43,16 +46,6 @@
       @click="$event.stopPropagation()"
     >
       <seekbar :value="page" :max="count" @end="go" />
-    </div>
-
-    <div 
-      class="qrcode-container" 
-      v-if="isQrcodeShown" 
-      @click="handleQrcodeToggle"
-    >
-      <div class="qrcode">
-        <qriously :value="getQrval()" :size="200" />
-      </div>
     </div>
   </div>
 </template>
@@ -64,6 +57,7 @@ import { mapState, mapGetters } from 'vuex';
 import { types } from '@/store/modules/viewer';
 import Viewport from './Viewport';
 import Seekbar from './Seekbar';
+import screenfull from 'screenfull';
 
 export default {
   components: {
@@ -75,14 +69,8 @@ export default {
     return {
       routePath: '',
       menuOpen: true,
-      isQrcodeShown: false,
-      actions: [{
-        icon: 'arrow-up',
-        click: this.handlePrevPage
-      },{
-        icon: 'arrow-down',
-        click: this.handleNextPage
-      }]
+      isFullscreen: false,
+      zoom: 'width'
     }
   },
   
@@ -128,17 +116,37 @@ export default {
 
     leftBtns() {
       return [{
-        icon: 'back',
-        title: this.title,
+        icon: 'arrow-left',
+        title: this.backTitle,
         click: this.handleBack
       }];
     },
 
-    title() {
-      return ` <small>${this.baseTitle} - ${this.pager}</small>`
+    rightBtns() {
+      const self = this;
+      return [{
+        icon: this.isFullscreen ? 'compress' : 'expand',
+        tip: 'Fullscreen',
+        click: this.handleToggleFullscreen
+      },{
+        icon: 'search-plus',
+        tip: 'Zoom',
+        dropdown: {
+          items: [{
+            text: 'Fit to width',
+            click() { self.handleZoom('width') }
+          }, {
+            text: 'Fit to screen',
+            click() { self.handleZoom('screen') }
+          },{
+            text: 'Real width',
+            click() { self.handleZoom('real') }
+          }]
+        }
+      }]
     },
 
-    baseTitle() {
+    backTitle() {
       const maxLen = 20;
       let title = last(this.path.split('/'));
 
@@ -149,7 +157,7 @@ export default {
 
       // addon chapter name
       if (this.ch) title += ` - ${this.ch}`
-      return title;
+      return ' ' + title;
     },
 
     pager() {
@@ -170,6 +178,21 @@ export default {
       }, 300);
     };
   },
+
+  created() {
+    setTimeout(() => {
+      window.addEventListener('scroll', this.handleScroll);
+    }, 300);
+    
+    window.addEventListener('keydown', this.handleKeydown);
+  },
+
+  destroyed() {
+    window.removeEventListener('scroll', this.handleScroll);
+    window.removeEventListener('keydown', this.handleKeydown);
+  },
+
+  
 
   methods: {
     getQrval() {
@@ -217,19 +240,29 @@ export default {
       this.toggleMenu(false);
     },
 
-    handleQrcodeToggle($event) {
+    handleKeydown($event) {
+      const { keyCode } = $event;
       $event.stopPropagation();
-      this.isQrcodeShown = !this.isQrcodeShown;
+      
+      if (keyCode === 37 ) {
+        this.go(this.page - 1);
+      } else if (keyCode === 39) {
+        console.log(this.page + 1);
+        this.go(this.page + 1);
+      }
     },
 
-    handlePrevPage($event) {
-      $event.stopPropagation();
-      this.go(this.page - 1);
+    handleToggleFullscreen() {
+      screenfull.toggle();
+      this.isFullscreen = !this.isFullscreen;
     },
 
-    handleNextPage($event) {
-      $event.stopPropagation();
-      this.go(this.page + 1);
+    handleZoom(zoom) {
+      this.zoom = zoom;
+    },
+
+    handleScroll() {
+      this.inOperation = false;
     },
 
     handleOpenMenu() {
@@ -275,6 +308,11 @@ export default {
 
   &.open {
     transform: translateY(0);
+  }
+
+  @include media-breakpoint-up(md) {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
   }
 }
 

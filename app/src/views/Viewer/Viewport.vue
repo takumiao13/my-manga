@@ -1,10 +1,15 @@
 <template>
   <div 
     class="viewer-viewport"
+    :class="{
+      'fit-to-width': zoom === 'width',
+      'fit-to-screen': zoom === 'screen'
+    }"
     @mousedown="$event.preventDefault()"
   >
     <!-- @todo may be support more mode later -->
     <scroll-mode 
+      :zoom="zoom"
       :gallery="gallery"
       :chapters="chapters"
       :page="page"
@@ -37,6 +42,10 @@ export default {
     mode: {
       type: String,
       default: 'scroll'
+    },
+    zoom: {
+      type: String,
+      default: 'width'
     }
   }
 }
@@ -71,9 +80,8 @@ export default {
     max-width: 100%;
     position: relative;
     margin: 0 auto; // .25rem
-    background: #2e2e2e;
-    overflow: hidden;
-
+    background: #3c4043;
+    overflow:  hidden;
 
     &.has-margin {
       margin: .25rem auto;
@@ -86,13 +94,13 @@ export default {
 
     > .img-loading {
       color: #666;
-      font-size: 8rem;
+      font-size: 6rem;
       position: absolute;
       top: 0;
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
-      font-weight: 900;
+      font-weight: 300;
     }
 
     > .img-inner img {

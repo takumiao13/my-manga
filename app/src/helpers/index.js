@@ -1,6 +1,8 @@
 import Vue from 'vue';
+//import smoothscroll from './smooth-scroll';
 
 export * from 'shared';
+
 
 const inElectron = / (?:e|E)lectron\//.test(navigator.userAgent);
 
@@ -34,5 +36,6 @@ export {
   getScrollHeight,
   getOffsetHeight,
   delay, 
-  eventHub 
+  eventHub,
+  //smoothscroll
 }

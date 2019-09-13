@@ -25,6 +25,7 @@ export default {
 
     toggle(el, binding.value);
   },
+  
   update(el, binding) {
     toggle(el, binding.value);
   }

@@ -17,6 +17,7 @@ import NestedList from './components/NestedList';
 import SideToolbar from './components/SideToolbar';
 import DataView from './components/DataView';
 import Addressbar from './components/Addressbar';
+import Dropdown from './components/Dropdown';
 
 // Third part components
 import VueLazyload from 'vue-lazyload';
@@ -24,6 +25,7 @@ import VueQriously from 'vue-qriously';
 
 // Directives
 import loadingDirective from './directives/loading';
+import clickOutSideDirective from './directives/click-out-side';
 
 // Services
 import $Service from '@/services';
@@ -36,8 +38,10 @@ Vue.component('nested-list', NestedList);
 Vue.component('side-toolbar', SideToolbar);
 Vue.component('data-view', DataView);
 Vue.component('addressbar', Addressbar);
+Vue.component('dropdown', Dropdown);
 
 Vue.directive('loading', loadingDirective);
+Vue.directive('click-out-side', clickOutSideDirective);
 
 Vue.use(VueQriously);
 Vue.use(VueLazyload, {

@@ -1,5 +1,5 @@
 <template>
-  <div class="viewer-mode">
+  <div class="viewer-mode" ref="mode">
     <div class="prev-ch"
       v-if="chIndex && chIndex > 1"
       @click="$emit('chapterChange', chIndex - 1)">
@@ -7,13 +7,12 @@
       <icon name="chevron-circle-up" />
     </div>
 
-    <!-- GALLERY -->
     <div
       ref="imgWrapper"
       v-for="(item, index) in gallery"
       :class="['img-wrapper', { 'has-margin': imageMargin }]"
       :key="item.path"
-      :style="{ width: item.width + 'px' }"
+      :style="wrapperStyle(item)"
     >
       <div class="img-loading">{{ index + 1 }}</div>
       <div 
@@ -33,7 +32,7 @@
     </div>
 
     <!-- PAGER -->
-    <div class="pager-info py-1 px-2">
+    <div class="pager-info py-1 px-2 d-md-none">
       {{ page_ }} / {{ gallery.length }}
     </div>
     <!-- /PAGER -->
@@ -41,13 +40,14 @@
 </template>
 
 <script>
-import { getScrollTop, getScrollHeight, getOffsetHeight } from '@/helpers';
+import { debounce, getScrollTop, getScrollHeight, getOffsetHeight, smoothscroll } from '@/helpers';
 import config from '@/config';
 
 export default {
   name: 'ScrollMode',
 
   props: {
+    zoom: String,
     gallery: Array,
     chapters: Array,
     page: [ Number, String ],
@@ -82,17 +82,24 @@ export default {
         this.page_ = newVal;
         this.$nextTick(() => this.scrollToCurrPage());
       }
+    },
+
+    zoom(newVal, oldVal) {
+      console.log('zoom', newVal);
+      this.refresh();
     }
   },
 
   created() {
     this._offsets = [];
     this._ignoreScrollEvent = false;
-    window.addEventListener('scroll', this.handleScroll, false);
+    window.addEventListener('scroll', this.handleScroll);
+    window.addEventListener('resize', this.handleResize);
   },
 
   destroyed() {
-    window.removeEventListener('scroll', this.handleScroll, false);
+    window.removeEventListener('scroll', this.handleScroll);
+    window.removeEventListener('resize', this.handleResize);
   },
 
   mounted() {
@@ -101,17 +108,41 @@ export default {
   },
 
   methods: {
-    refresh() {
-      const scrollTop = getScrollTop();
+    refresh() {      
       const imgWrappers = this.$refs.imgWrapper;
+
+      const viewWidth = this.$refs.mode.clientWidth;
+      const viewHeight = window.innerHeight;
       if (!imgWrappers) return;
 
-      this._offsets = [].slice.call(imgWrappers).map(item => {
-        var itemBCR = item.getBoundingClientRect();
+      this._offsets = [].slice.call(imgWrappers).map((item, index) => {
+        
+        
+          // when zoom is fit to screen we should adjust image height
+          const { width: orgWidth, height: orgHeight } = this.gallery[index];
+          const realWidth = Math.max(viewWidth, orgWidth);
+          const ratio = realWidth / orgWidth;
+          const realHeight = orgHeight * ratio;
+
+        if (this.zoom === 'screen') {
+          if (realHeight > viewHeight) {
+            const ratio = viewHeight / realHeight;
+            item.style.width = orgWidth * ratio + 'px';
+          }
+        } else {
+          item.style.width = orgWidth + 'px';
+        }
+
+        const scrollTop = getScrollTop();
+        const itemBCR = item.getBoundingClientRect();
         if (itemBCR.width || itemBCR.height) {
           return itemBCR.top + scrollTop
         }
       });
+    },
+
+    wrapperStyle(item) {
+      return { width: item.width + 'px' }
     },
 
     scrollToCurrPage() {
@@ -153,9 +184,9 @@ export default {
       }
     },
     
-    handleResize() {
+    handleResize: debounce(function() {
       this.refresh();
-    }
+    }, 500)
   }
 }
 </script>
@@ -163,7 +194,7 @@ export default {
 <style lang="scss" scoped>
 .pager-info {
   position: fixed;
-  background: rgba(#000, .6);
+  background: rgba(#202124, .6);
   right: 0;
   bottom: 0;
 }

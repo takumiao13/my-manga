@@ -4,7 +4,7 @@
       v-for="(btn, index) in leftBtns_"
       :key="`left-${index}`"
       :class="btn.className"
-      @click="btnClick($event, btn.click)"
+      @click="btnClick($event, btn)"
       :title="btn.tip"
     >
       <icon v-if="btn.icon" :name="btn.icon" />
@@ -17,7 +17,7 @@
       @click="title_.click" 
     />
 
-    <a class="btn topbar-right-btn"
+    <!-- <a class="btn topbar-right-btn"
       v-for="(btn, index) in rightBtns_"
       :key="`right-${index}`"
       :class="btn.className"
@@ -26,7 +26,33 @@
     >
       <icon v-if="btn.icon" :name="btn.icon" />
       <span v-html="btn.title"></span>
-    </a>
+    </a> -->
+
+    <ul class="navbar-nav flex-row ml-md-auto">
+      <component class="nav-item"
+        v-for="(btn, index) in rightBtns_"
+        :is="btn.dropdown ? 'dropdown' : 'li'"
+        :key="`right-${index}`"
+        :class="btn.className"
+        :as="btn.dropdown ? 'li' : null"
+        :menus="btn.dropdown ? btn.dropdown.items : null"
+      >
+        <a v-if="!btn.dropdown"
+          class="btn" 
+          @click="btnClick($event, btn)"
+          :title="btn.tip"
+        >
+          <icon v-if="btn.icon" :name="btn.icon" />
+          <span v-html="btn.title"></span>
+        </a>
+
+        <span v-if="btn.dropdown">
+          <icon v-if="btn.icon" :name="btn.icon" />
+          <span v-html="btn.title"></span>
+        </span>
+      </component>
+    </ul>
+
   </nav>
 </template>
 
@@ -66,26 +92,32 @@ export default {
     },
 
     leftBtns_() {
+      let buttons = null;
       if (typeof this.leftBtns === 'function') {
-        return this.leftBtns();  
+        buttons = this.leftBtns();  
       } else {
-        return this.leftBtns;
+        buttons = this.leftBtns;
       }
+
+      return buttons;
     },
 
     rightBtns_() {
+      let buttons = null;
       if (typeof this.rightBtns === 'function') {
-        return this.rightBtns();  
+        buttons = this.rightBtns();  
       } else {
-        return this.rightBtns;
+        buttons = this.rightBtns;
       }
+      
+      return buttons;
     }
   },
 
   methods: {
-    btnClick($event, click) {
+    btnClick($event, button) {
       $event.stopPropagation();
-      click($event);
+      button.click && button.click($event);
     }
   }
 }
@@ -108,6 +140,14 @@ export default {
     margin-left: .5rem;
     font-size: 1rem;
     line-height: 1;
+
+    &.text-center {
+      margin: 0 auto;
+      position: absolute;
+      left: 25%;
+      width: 50%;
+      text-align: center;
+    }
   }
 
   .navbar-brand-sm {
@@ -120,10 +160,15 @@ export default {
 
   .btn {
     padding: .375rem;
+    min-width: 38px;
   }
 
   .topbar-left-btn {
     margin-right: -.5rem;
+  }
+
+  .dropdown-menu.show {
+    position: absolute;
   }
 }
 </style>
