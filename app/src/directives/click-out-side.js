@@ -1,46 +1,31 @@
-// This variable will hold the reference to
-// document's click handler
-let handleOutsideClick
+let handleOutsideClick;
+
 export default {
-  bind (el, binding, vnode) {
-    // Here's the click/touchstart handler
-    // (it is registered below)
+  bind(el, binding, vnode) {
     handleOutsideClick = (e) => {
-      e.stopPropagation()
-      // Get the handler method name and the exclude array
-      // from the object used in v-closable
-      const { handler, exclude } = binding.value
-      // This variable indicates if the clicked element is excluded
-      let clickedOnExcludedEl = false
+      const { handler, exclude } = binding.value;
+
+      let clickedOnExcludedEl = exclude;
       exclude && exclude.forEach(refName => {
-        // We only run this code if we haven't detected
-        // any excluded element yet
+
         if (!clickedOnExcludedEl) {
-          // Get the element using the reference name
-          const excludedEl = vnode.context.$refs[refName]
-          // See if this excluded element
-          // is the same element the user just clicked on
-          clickedOnExcludedEl = excludedEl.contains(e.target)
+          const excludedEl = vnode.context.$refs[refName];
+          clickedOnExcludedEl = excludedEl.contains(e.target);
         }
       })
-      // We check to see if the clicked element is not
-      // the dialog element and not excluded
-      if (!el.contains(e.target) && !clickedOnExcludedEl) {
-        // If the clicked element is outside the dialog
-        // and not the button, then call the outside-click handler
-        // from the same component this directive is used in
-        handler.call(vnode.context);
+
+      // if not contains and not click on excluce element
+      if (el !== e.target && !el.contains(e.target) && !clickedOnExcludedEl) {
+        handler.call(vnode.context, e);
       }
     }
-    // Register click/touchstart event listeners on the whole page
-    document.addEventListener('mousedown', handleOutsideClick, true)
-    document.addEventListener('touchstart', handleOutsideClick, true)
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('touchstart', handleOutsideClick);
   },
 
-  unbind () {
-    // If the element that has v-closable is removed, then
-    // unbind click/touchstart listeners from the whole page
-    document.removeEventListener('mousedown', handleOutsideClick, true)
-    document.removeEventListener('touchstart', handleOutsideClick, true)
+  unbind() {
+    document.removeEventListener('mousedown', handleOutsideClick);
+    document.removeEventListener('touchstart', handleOutsideClick);
   }
 }

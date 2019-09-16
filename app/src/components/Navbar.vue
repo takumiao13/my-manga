@@ -1,15 +1,27 @@
 <template>
   <nav class="navbar" @click="$emit('click', $event)">
-    <a class="btn topbar-left-btn"
-      v-for="(btn, index) in leftBtns_"
-      :key="`left-${index}`"
-      :class="btn.className"
-      @click="btnClick($event, btn)"
-      :title="btn.tip"
-    >
-      <icon v-if="btn.icon" :name="btn.icon" />
-      <span v-html="btn.title"></span>
-    </a>
+    <ul v-if="leftBtns_ && leftBtns_.length" class="navbar-nav navbar-nav-left flex-row">
+      <component 
+        class="nav-item"
+        v-for="(btn, index) in leftBtns_"
+        :is="btn.dropdown ? 'dropdown' : 'li'"
+        :key="`left-${index}`"
+        :class="btn.className"
+        :as="btn.dropdown ? 'li' : null"
+        v-bind="btn.dropdown ? btn.dropdown.props : null"
+        v-on="btn.dropdown ? btn.dropdown.on : null"
+      >
+        <component
+          :is="btn.dropdown ? 'span' : 'a'"
+          :class="{ btn: !btn.dropdown }"
+          :title="btn.tip"
+          @click="btn.click"
+        >
+          <icon v-if="btn.icon" :name="btn.icon" />
+          <span v-html="btn.title"></span>
+        </component>
+      </component>
+    </ul>
 
     <a class="navbar-brand text-truncate" 
       :class="title_.className"
@@ -17,42 +29,28 @@
       @click="title_.click" 
     />
 
-    <!-- <a class="btn topbar-right-btn"
-      v-for="(btn, index) in rightBtns_"
-      :key="`right-${index}`"
-      :class="btn.className"
-      @click="btnClick($event, btn.click)"
-      :title="btn.tip"
-    >
-      <icon v-if="btn.icon" :name="btn.icon" />
-      <span v-html="btn.title"></span>
-    </a> -->
-
-    <ul class="navbar-nav flex-row ml-md-auto">
-      <component class="nav-item"
+    <ul v-if="rightBtns_ && rightBtns_.length" class="navbar-nav navbar-nav-right flex-row ml-md-auto">
+      <component 
+        class="nav-item"
         v-for="(btn, index) in rightBtns_"
         :is="btn.dropdown ? 'dropdown' : 'li'"
         :key="`right-${index}`"
         :class="btn.className"
         :as="btn.dropdown ? 'li' : null"
-        :menus="btn.dropdown ? btn.dropdown.items : null"
+        v-bind="btn.dropdown ? btn.dropdown.props : null"
+        v-on="btn.dropdown ? btn.dropdown.on : null"
       >
-        <a v-if="!btn.dropdown"
-          class="btn" 
-          @click="btnClick($event, btn)"
+        <component
+          :is="btn.dropdown ? 'span' : 'a'"
+          :class="{ btn: !btn.dropdown }"
           :title="btn.tip"
+          @click="btn.click"
         >
           <icon v-if="btn.icon" :name="btn.icon" />
           <span v-html="btn.title"></span>
-        </a>
-
-        <span v-if="btn.dropdown">
-          <icon v-if="btn.icon" :name="btn.icon" />
-          <span v-html="btn.title"></span>
-        </span>
+        </component>
       </component>
     </ul>
-
   </nav>
 </template>
 
@@ -60,6 +58,10 @@
 
 const DEFAULT_TITLE = {
   className: '',
+  click() {}
+};
+
+const DEFAULT_BUTTON = {
   click() {}
 };
 
@@ -99,7 +101,7 @@ export default {
         buttons = this.leftBtns;
       }
 
-      return buttons;
+      return buttons && buttons.map(btn => Object.assign({}, DEFAULT_BUTTON, btn));
     },
 
     rightBtns_() {
@@ -110,14 +112,7 @@ export default {
         buttons = this.rightBtns;
       }
       
-      return buttons;
-    }
-  },
-
-  methods: {
-    btnClick($event, button) {
-      $event.stopPropagation();
-      button.click && button.click($event);
+      return buttons && buttons.map(btn => Object.assign({}, DEFAULT_BUTTON, btn));
     }
   }
 }
@@ -156,6 +151,20 @@ export default {
 
   .navbar-brand-xs {
     font-size: .8rem;
+  }
+
+  .navbar-nav {
+    &.navbar-nav-left .nav-item {
+      margin-right: .25rem;
+
+      &:last-child {
+        margin-right: -.5rem;
+      }
+    }
+
+    &.navbar-nav-right .nav-item {
+      margin-left: .25rem;
+    }
   }
 
   .btn {

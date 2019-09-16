@@ -1,10 +1,6 @@
 <template>
   <div 
     class="viewer-viewport"
-    :class="{
-      'fit-to-width': zoom === 'width',
-      'fit-to-screen': zoom === 'screen'
-    }"
     @mousedown="$event.preventDefault()"
   >
     <!-- @todo may be support more mode later -->
@@ -23,18 +19,16 @@
 
 <script>
 import ScrollMode from './ScrollMode';
-import SwipeMode from './SwipeMode';
 
 export default {
   name: 'ViewerMode',
 
   components: {
-    ScrollMode,
-    SwipeMode
+    ScrollMode
   },
   
   props: {
-    page: [Number, String],
+    page: [ Number, String ],
     chIndex: Number,
     gallery: Array,
     chapters: Array,
@@ -44,7 +38,7 @@ export default {
       default: 'scroll'
     },
     zoom: {
-      type: String,
+      type: [ String, Number ],
       default: 'width'
     }
   }
@@ -60,6 +54,7 @@ export default {
   align-items: center;
   width: 100%;
   min-height: 100vh;
+  margin: 0 auto;
 
   @include media-breakpoint-up(md) {
     max-width: 600px;

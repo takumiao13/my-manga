@@ -1,6 +1,6 @@
 <template>
   <component :is="as" class="dropdown" v-click-out-side="{ handler: handleClickOutSide }">
-    <a class="btn dropdown-toggle" @click="handleToggle">
+    <a class="btn dropdown-toggle" @click="toggle()">
       <slot />
     </a>
     <div
@@ -9,10 +9,14 @@
     >
       <a 
         class="dropdown-item"
-        v-for="(item, index) in menus"
+        v-for="(item, index) in menu"
         :key="index"
-        @click="handleItemClick($event, item)"
+        @click="handleItemClick($event, item, index)"
       >
+        <icon v-if="type && index === selected"
+          name="check"
+          class="dropdown-item-checked-icon"
+        /> 
         {{ item.text }}    
       </a>
     </div>
@@ -24,12 +28,19 @@ export default {
   name: 'Dropdown',
 
   props: {
+    type: {
+      type: [ String, Boolean ],
+      default: false
+    },
+
+    selected: Number,
+
     visible: {
       type: Boolean,
       default: false
     },
 
-    menus: Array,
+    menu: Array,
     
     as: {
       type: String,
@@ -44,23 +55,37 @@ export default {
   },
 
   methods: {
-    handleToggle() {
-      this.visible_ = !this.visible_;
+    toggle(show) {
+      this.visible_ = show !== undefined ? !!show : !this.visible_;
+      const event = this.visible_ ? 'show' : 'hide';
+      this.$emit(event);
     },
 
-    handleClickOutSide() {
-      this.visible_ = false;
-    },
-
-    handleItemClick($event, item) {
+    handleClickOutSide($event) {
       $event.stopPropagation();
-      this.visible_ = false;
+      this.visible_ && this.toggle(false);
+    },
+
+    handleItemClick($event, item, index) {
+      $event.stopPropagation();
+      this.toggle(false);
       item.click();
     }
   }
 }
 </script>
 
-<style>
+<style lang="scss">
+.dropdown-item {
+  height: 3rem;
+  line-height: 3rem;
+  padding: 0 1.5rem 0 2.25rem;
+  cursor: pointer;
+}
+
+.dropdown-item-checked-icon {
+  margin-left: -26px;
+  margin-right: 6px;
+}
 
 </style>

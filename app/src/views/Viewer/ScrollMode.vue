@@ -1,10 +1,10 @@
 <template>
-  <div class="viewer-mode" ref="mode">
+  <div class="viewer-mode" ref="mode" :style="{ width: zoom === 100 ? 'auto' : '100%' }">
     <div class="prev-ch"
       v-if="chIndex && chIndex > 1"
       @click="$emit('chapterChange', chIndex - 1)">
       Prev Chapter
-      <icon name="chevron-circle-up" />
+      <icon name="arrow-up" />
     </div>
 
     <div
@@ -28,26 +28,18 @@
       v-if="chIndex && chIndex < chCount" 
       @click="$emit('chapterChange', chIndex + 1)">
       Next Chapter
-      <icon name="chevron-circle-down" />
+      <icon name="arrow-down" />
     </div>
-
-    <!-- PAGER -->
-    <div class="pager-info py-1 px-2 d-md-none">
-      {{ page_ }} / {{ gallery.length }}
-    </div>
-    <!-- /PAGER -->
   </div>
 </template>
 
 <script>
-import { debounce, getScrollTop, getScrollHeight, getOffsetHeight, smoothscroll } from '@/helpers';
-import config from '@/config';
+import { debounce, getScrollTop, getScrollHeight, getOffsetHeight } from '@/helpers';
 
 export default {
   name: 'ScrollMode',
 
   props: {
-    zoom: String,
     gallery: Array,
     chapters: Array,
     page: [ Number, String ],
@@ -55,18 +47,22 @@ export default {
     imageMargin: {
       type: Boolean,
       default: true
+    },
+    zoom: {
+      type: [ String, Number ],
+      default: 'width'
     }
   },
 
   data() {
     return {
-      page_: this.page, // 内部 page 值
+      page_: this.page, // internal page value
       chCount: this.chapters.length
     }
   },
 
   watch: {
-    gallery(newVal, oldVal) {
+    gallery(newVal) {
       if (newVal) {
         this.$nextTick(() => {
           this.refresh('gallery');
@@ -75,7 +71,7 @@ export default {
       }
     },
 
-    page(newVal, oldVal) {
+    page(newVal) {
       // 如果 page 和 page_ 值不一致，说明通过其他方式改变 page (seekbar)
       // 需要滚动到正确的位置
       if (newVal !== this.page_) {
@@ -84,8 +80,7 @@ export default {
       }
     },
 
-    zoom(newVal, oldVal) {
-      console.log('zoom', newVal);
+    zoom() {
       this.refresh();
     }
   },
@@ -93,16 +88,18 @@ export default {
   created() {
     this._offsets = [];
     this._ignoreScrollEvent = false;
-    window.addEventListener('scroll', this.handleScroll);
-    window.addEventListener('resize', this.handleResize);
   },
 
   destroyed() {
-    window.removeEventListener('scroll', this.handleScroll);
+    this.$container.removeEventListener('scroll', this.handleScroll);
     window.removeEventListener('resize', this.handleResize);
   },
 
   mounted() {
+    this.$container = document.querySelector('.viewer-container');
+    this.$container.addEventListener('scroll', this.handleScroll);
+    window.addEventListener('resize', this.handleResize);
+
     this.refresh()
     this.scrollToCurrPage();
   },
@@ -110,19 +107,16 @@ export default {
   methods: {
     refresh() {      
       const imgWrappers = this.$refs.imgWrapper;
-
       const viewWidth = this.$refs.mode.clientWidth;
       const viewHeight = window.innerHeight;
       if (!imgWrappers) return;
 
       this._offsets = [].slice.call(imgWrappers).map((item, index) => {
-        
-        
-          // when zoom is fit to screen we should adjust image height
-          const { width: orgWidth, height: orgHeight } = this.gallery[index];
-          const realWidth = Math.max(viewWidth, orgWidth);
-          const ratio = realWidth / orgWidth;
-          const realHeight = orgHeight * ratio;
+        // when zoom is fit to screen we should adjust image height
+        const { width: orgWidth, height: orgHeight } = this.gallery[index];
+        const realWidth = Math.max(viewWidth, orgWidth);
+        const ratio = realWidth / orgWidth;
+        const realHeight = orgHeight * ratio;
 
         if (this.zoom === 'screen') {
           if (realHeight > viewHeight) {
@@ -133,7 +127,7 @@ export default {
           item.style.width = orgWidth + 'px';
         }
 
-        const scrollTop = getScrollTop();
+        const scrollTop = getScrollTop(this.$container);
         const itemBCR = item.getBoundingClientRect();
         if (itemBCR.width || itemBCR.height) {
           return itemBCR.top + scrollTop
@@ -152,16 +146,16 @@ export default {
       window.scrollTo(0, y);
     },
 
-    handleScroll(e) {
-      // 阻止 scrollTo 触发事件，改变 page_
+    handleScroll() {
+      // prevent scrollTo trigger event，when page_ updated
       if (this._ignoreScrollEvent) {
         this._ignoreScrollEvent = false;
         return;
       }
 
-      const scrollHeight = getScrollHeight();
-      const maxScroll = scrollHeight - getOffsetHeight();
-      const scrollTop = Math.ceil(getScrollTop());
+      const scrollHeight = getScrollHeight(this.$container);
+      const maxScroll = scrollHeight - getOffsetHeight(this.$container);
+      const scrollTop = Math.ceil(getScrollTop(this.$container));
       const offsetLength = this._offsets.length;
 
       if (scrollTop >= maxScroll) {
@@ -184,21 +178,12 @@ export default {
       }
     },
     
-    handleResize: debounce(function() {
-      this.refresh();
-    }, 500)
+    handleResize: debounce(function() { this.refresh() }, 500)
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.pager-info {
-  position: fixed;
-  background: rgba(#202124, .6);
-  right: 0;
-  bottom: 0;
-}
-
 .prev-ch, .next-ch {
   padding: 1rem;
   text-align: center;

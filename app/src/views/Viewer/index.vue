@@ -9,23 +9,25 @@
       @click="$event.stopPropagation()"
     />
 
-    <viewport 
-      :mode="mode"
-      :zoom="zoom"
-      :gallery="images"
-      :chapters="chapters"
-      :page="page"
-      :chIndex="chIndex"
-      :settings="settings"
-      @pageChange="go"
-      @chapterChange="goCh" 
-    />
+    <div class="viewer-container">
+      <viewport 
+        :mode="mode"
+        :zoom="zoom"
+        :gallery="images"
+        :chapters="chapters"
+        :page="page"
+        :chIndex="chIndex"
+        :settings="settings"
+        @pageChange="go"
+        @chapterChange="goChapter" 
+      />
+    </div>
 
     <div
       class="viewer-loading"
       v-show="pending"
     >
-      <spinner class="loading-spinner" size="lg" />
+      <spinner class="loading-spinner" size="lg" tip="Loading" />
     </div>
 
     <div
@@ -34,12 +36,6 @@
       @click="handleBackdropClick" 
     />
   
-    <!-- <side-toolbar
-      class="d-none d-md-block"
-      v-show="menuOpen"
-      :actions="actions" 
-    /> -->
-
     <div
       class="viewer-toolbar fixed-bottom" 
       :class="{ open: menuOpen }"
@@ -47,17 +43,25 @@
     >
       <seekbar :value="page" :max="count" @end="go" />
     </div>
+
+    <div class="viewer-page-indicator py-1 px-2 d-md-none">
+      {{ page }} / {{ images.length }}
+    </div>
   </div>
 </template>
 
 <script>
-import config from '@/config';
-import { last, inElectron } from '@/helpers';
+import { last, isDef } from '@/helpers';
 import { mapState, mapGetters } from 'vuex';
 import { types } from '@/store/modules/viewer';
 import Viewport from './Viewport';
 import Seekbar from './Seekbar';
 import screenfull from 'screenfull';
+
+const KEY_CODE = {
+  UP: 37,
+  DOWN: 39
+};
 
 export default {
   components: {
@@ -69,8 +73,8 @@ export default {
     return {
       routePath: '',
       menuOpen: true,
-      isFullscreen: false,
-      zoom: 'width'
+      dropdownOpen: false,
+      isFullscreen: false
     }
   },
   
@@ -79,7 +83,7 @@ export default {
 
     ...mapGetters('viewer', [ 'count', 'chIndex', 'chCount', 'pending' ]),
 
-    ...mapState('viewer', [ 'path', 'mode', 'page', 'ch', 'images', 'chapters' ]),
+    ...mapState('viewer', [ 'path', 'mode', 'zoom', 'page', 'ch', 'images', 'chapters' ]),
 
     ...mapState('app', { appError: 'error' }),
 
@@ -92,10 +96,8 @@ export default {
 
         // match image margin path
         if (obj.imageMargin) {
-
-          
-          margin = obj.imageMargin['*'] || margin;
           let rest;
+          margin = obj.imageMargin['*'] || margin;
 
           Object.keys(obj.imageMargin).forEach(p => {
             if (this.path.indexOf(p) === 0) {
@@ -114,39 +116,7 @@ export default {
       }
     }),
 
-    leftBtns() {
-      return [{
-        icon: 'arrow-left',
-        title: this.backTitle,
-        click: this.handleBack
-      }];
-    },
-
-    rightBtns() {
-      const self = this;
-      return [{
-        icon: this.isFullscreen ? 'compress' : 'expand',
-        tip: 'Fullscreen',
-        click: this.handleToggleFullscreen
-      },{
-        icon: 'search-plus',
-        tip: 'Zoom',
-        dropdown: {
-          items: [{
-            text: 'Fit to width',
-            click() { self.handleZoom('width') }
-          }, {
-            text: 'Fit to screen',
-            click() { self.handleZoom('screen') }
-          },{
-            text: 'Real width',
-            click() { self.handleZoom('real') }
-          }]
-        }
-      }]
-    },
-
-    backTitle() {
+    title() {
       const maxLen = 20;
       let title = last(this.path.split('/'));
 
@@ -162,6 +132,48 @@ export default {
 
     pager() {
       return this.page + ' / ' + this.count;
+    },
+
+    leftBtns() {
+      return [{
+        icon: 'arrow-left',
+        title: this.title,
+        click: this.handleBack
+      }];
+    },
+
+    rightBtns() {
+      const menu = [{
+        zoom: 'width',
+        text: 'Fit to width'
+      }, {
+        zoom: 'screen',
+        text: 'Fit to screen'
+      }, {
+        zoom: 100,
+        text: '100%'
+      }].map(item => ({
+        ...item,
+        click: () => this.handleZoom(item.zoom)
+      }));
+
+      const selected = menu.map(item => item.zoom).indexOf(this.zoom);
+
+      return [{
+        icon: this.isFullscreen ? 'compress' : 'expand',
+        tip: 'Fullscreen',
+        click: this.handleToggleFullscreen
+      },{
+        icon: 'search-plus',
+        tip: 'Zoom',
+        dropdown: {
+          props: {
+            type: 'select',
+            selected,
+            menu
+          }
+        }
+      }]
     }
   },
 
@@ -170,66 +182,45 @@ export default {
       const { path, ch } = this.$route.params;
       const { dirId } = this.repo;
       this.$store.dispatch(types.VIEW, { dirId, path, ch });
-      
-      setTimeout(_ => { 
-        window.addEventListener('scroll', (e) => {
-          this.menuOpen = false;
-        }, false);
-      }, 300);
+
     };
   },
 
   created() {
-    setTimeout(() => {
-      window.addEventListener('scroll', this.handleScroll);
-    }, 300);
-    
+    window.addEventListener('wheel', this.handleScroll);
     window.addEventListener('keydown', this.handleKeydown);
   },
 
   destroyed() {
-    window.removeEventListener('scroll', this.handleScroll);
+    window.removeEventListener('wheel', this.handleScroll);
     window.removeEventListener('keydown', this.handleKeydown);
   },
 
-  
-
   methods: {
-    getQrval() {
-      const { hash, href } = window.location;
-      if (inElectron) {
-        const { host, port } = config;
-        // when share the qrcode we need the real ip
-        if (process.env.NODE_ENV === 'development') {
-          return href.replace('localhost', host); // replace real ip
-        } else {
-          return `http://${host}:${port}/${hash}`
-        }
-      } else {
-        return href;
-      }
-    },
-
     go(page) {
       this.$store.dispatch(types.GO, { page });
     },
 
-    goCh(chIndex) {
+    goChapter(chIndex) {
       const { dirId } = this.repo;
       this.$store.dispatch(types.GO_CH, { dirId, chIndex });
     },
 
     toggleMenu(show) {
-      this.menuOpen = show !== undefined ? 
+      this.menuOpen = isDef(show) ? 
         !!show : 
         !this.menuOpen;
     },
     
     // events
     handleBack() {
+      debugger;
       if (this.$router._routerHistory.length === 1) {
         const { dirId } = this.$router.history.current.params;
-        this.$router.push({ name: 'explorer', params: { dirId } })
+        this.$router.push({ 
+          name: 'explorer', 
+          params: { dirId } 
+        });
       } else {
         this.$router.go(-1);
       }
@@ -244,10 +235,9 @@ export default {
       const { keyCode } = $event;
       $event.stopPropagation();
       
-      if (keyCode === 37 ) {
+      if (keyCode === KEY_CODE.UP) {
         this.go(this.page - 1);
-      } else if (keyCode === 39) {
-        console.log(this.page + 1);
+      } else if (keyCode === KEY_CODE.DOWN) {
         this.go(this.page + 1);
       }
     },
@@ -258,17 +248,16 @@ export default {
     },
 
     handleZoom(zoom) {
-      this.zoom = zoom;
+      this.$store.dispatch(types.ZOOM, { zoom });
     },
 
     handleScroll() {
-      this.inOperation = false;
+      this.toggleMenu(false);
     },
 
-    handleOpenMenu() {
+    handleOpenMenu($event) {
       // only for mobile
       if (this.mode === 'scroll') {
-
         if ('ontouchstart' in window) {
           const width = window.innerWidth;
           const x = $event.pageX;
@@ -298,8 +287,16 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  min-height: 100vh;
+  flex: 1;
+}
+
+.viewer-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: auto;
 }
 
 .viewer-topbar {
@@ -340,15 +337,19 @@ export default {
   top: 0;
   right: 0;
   bottom: 0;
-  background: $black;
   z-index: 1040;
 
   .loading-spinner {
-    color: $white;
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
   }
+}
+
+.viewer-page-indicator {
+  position: fixed;
+  right: 0;
+  bottom: 0;
 }
 </style>

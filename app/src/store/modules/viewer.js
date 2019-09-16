@@ -9,16 +9,18 @@ const LOAD = 'LOAD';
 const GO = 'GO';
 const GO_CH = 'GO_CH';
 const VIEW = 'VIEW';
+const ZOOM = 'ZOOM';
 
 const statusHelper = createRequestStatus('status');
 
-export const types = createTypesWithNs([ LOAD, GO, GO_CH, VIEW ], ns);
+export const types = createTypesWithNs([ LOAD, GO, GO_CH, VIEW, ZOOM ], ns);
 
 export default {
   namespaced: true,
 
   state: {
     mode: 'scroll',
+    zoom: 'width',
     path: '',
     images: [],
     chapters: [],
@@ -125,6 +127,10 @@ export default {
       if (page < 1 || page > getters.count) return;
       // should empty ch
       commit(GO, payload);
+    },
+
+    [ZOOM]({ commit }, payload = {}) {
+      commit(ZOOM, payload);
     }
   },
 
@@ -135,6 +141,10 @@ export default {
 
     [GO](state, payload) {
       assign(state, payload);
+    },
+
+    [ZOOM](state, payload) {
+      state.zoom = payload.zoom;
     },
 
     ...statusHelper.mutation()

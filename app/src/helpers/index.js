@@ -12,21 +12,22 @@ const eventHub = new Vue();
 
 const byId = document.getElementById.bind(document);
 
-const getScrollTop = () => {
-  return window.pageYOffset || 
+const getScrollTop = (elem) => {
+  return elem ? elem.scrollTop : 
+        window.pageYOffset || 
         document.documentElement.scrollTop || 
         document.body.scrollTop;
 }
 
-const getScrollHeight = () => {
-  return Math.max(
+const getScrollHeight = (elem) => {
+  return elem ? elem.scrollHeight : Math.max(
     document.body.scrollHeight,
     document.documentElement.scrollHeight
   );
 }
 
-const getOffsetHeight = () => {
-  return window.innerHeight;
+const getOffsetHeight = (elem) => {
+  return elem ? elem.clientHeight : window.innerHeight;
 }
 
 export { 
