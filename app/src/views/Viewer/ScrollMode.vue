@@ -10,7 +10,7 @@
     <div
       ref="imgWrapper"
       v-for="(item, index) in gallery"
-      :class="['img-wrapper', { 'has-margin': imageMargin }]"
+      :class="['img-wrapper', { gaps: gaps }]"
       :key="item.path"
       :style="wrapperStyle(item)"
     >
@@ -35,6 +35,7 @@
 
 <script>
 import { debounce, getScrollTop, getScrollHeight, getOffsetHeight } from '@/helpers';
+import { types } from '@/store/modules/viewer';
 
 export default {
   name: 'ScrollMode',
@@ -44,14 +45,16 @@ export default {
     chapters: Array,
     page: [ Number, String ],
     chIndex: Number,
-    imageMargin: {
+    gaps: {
       type: Boolean,
       default: true
     },
     zoom: {
       type: [ String, Number ],
       default: 'width'
-    }
+    },
+    autoScrolling: Boolean,
+    locking: Boolean
   },
 
   data() {
@@ -82,12 +85,61 @@ export default {
 
     zoom() {
       this.refresh();
+    },
+
+    // TODO: 锁住 ...
+    locking(val) {
+
+    },
+
+    autoScrolling(val) {
+      console.log('auto scrolling ', val);
+      const $cntr = this.$container;
+      const self = this;
+
+      // start
+      if (val) {
+        start();
+      // stop
+      } else {
+        stop();
+      }
+
+      function start() {
+        step();
+      }
+
+      function step() {
+        setTimeout(() => {
+          $cntr.scrollTop += 5;
+          if (isBottom() || self.locking) {
+            stop();
+          } else {
+            step();
+          }
+        }, 100);
+      }
+
+      function stop() {
+        // when locking dont change auto scrolling
+        // just pause it
+        if (self.autoScrolling && !self.locking) {
+          self.$store.dispatch(types.TOGGLE_AUTO_SCROLLING, { autoScrolling: false });
+        }
+      }
+
+      function isBottom() {
+        const scrollH = $cntr.scrollHeight;
+        const h = $cntr.scrollTop + $cntr.clientHeight;
+        return scrollH < h + 1 && scrollH > h - 1;
+      }
     }
   },
 
   created() {
     this._offsets = [];
     this._ignoreScrollEvent = false;
+    this._startScrolling = false;
   },
 
   destroyed() {
@@ -146,6 +198,7 @@ export default {
       window.scrollTo(0, y);
     },
 
+    // events
     handleScroll() {
       // prevent scrollTo trigger event，when page_ updated
       if (this._ignoreScrollEvent) {

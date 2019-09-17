@@ -13,7 +13,7 @@
         :key="index"
         @click="handleItemClick($event, item, index)"
       >
-        <icon v-if="type && index === selected"
+        <icon v-if="isShowCheckIcon(item, index)"
           name="check"
           class="dropdown-item-checked-icon"
         /> 
@@ -61,6 +61,11 @@ export default {
       this.$emit(event);
     },
 
+    isShowCheckIcon(item, index) {
+      return (this.type === 'select' && index === this.selected) || 
+             (item.type === 'check' && item.checked);
+    },
+
     handleClickOutSide($event) {
       $event.stopPropagation();
       this.visible_ && this.toggle(false);
@@ -81,6 +86,10 @@ export default {
   line-height: 3rem;
   padding: 0 1.5rem 0 2.25rem;
   cursor: pointer;
+}
+
+.dropdown-toggle:after {
+  content: none; // remove caret
 }
 
 .dropdown-item-checked-icon {

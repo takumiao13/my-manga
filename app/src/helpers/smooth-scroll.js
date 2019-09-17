@@ -1,10 +1,10 @@
 (function(root, factory) {
   if (typeof module === 'object' && module.exports) {
-    module.exports = factory(root); // for csj
+    module.exports = factory(); // for csj
   } else {
-    root.smoothscroll = factory(root); // for Browser
+    root.smoothscroll = factory(); // for Browser
   }
-}(this, function(root) {
+}(this, function() {
   var SCROLL_TIME = 468;
   var isScrolling = false;
   var shortcut = {

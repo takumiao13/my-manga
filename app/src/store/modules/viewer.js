@@ -10,10 +10,14 @@ const GO = 'GO';
 const GO_CH = 'GO_CH';
 const VIEW = 'VIEW';
 const ZOOM = 'ZOOM';
+const TOGGLE_GAPS = 'TOGGLE_GAPS';
+const TOGGLE_AUTO_SCROLLING = 'TOGGLE_AUTO_SCROLLING';
 
 const statusHelper = createRequestStatus('status');
 
-export const types = createTypesWithNs([ LOAD, GO, GO_CH, VIEW, ZOOM ], ns);
+export const types = createTypesWithNs([ 
+  LOAD, GO, GO_CH, VIEW, ZOOM, TOGGLE_GAPS, TOGGLE_AUTO_SCROLLING 
+], ns);
 
 export default {
   namespaced: true,
@@ -21,6 +25,8 @@ export default {
   state: {
     mode: 'scroll',
     zoom: 'width',
+    gaps: true,
+    autoScrolling: false,
     path: '',
     images: [],
     chapters: [],
@@ -131,6 +137,14 @@ export default {
 
     [ZOOM]({ commit }, payload = {}) {
       commit(ZOOM, payload);
+    },
+
+    [TOGGLE_GAPS]({ commit }, payload = {}) {
+      commit(TOGGLE_GAPS, payload);
+    },
+
+    [TOGGLE_AUTO_SCROLLING]({ commit }, payload = {}) {
+      commit(TOGGLE_AUTO_SCROLLING, payload);
     }
   },
 
@@ -145,6 +159,14 @@ export default {
 
     [ZOOM](state, payload) {
       state.zoom = payload.zoom;
+    },
+
+    [TOGGLE_GAPS](state) {
+      state.gaps = !state.gaps;
+    },
+
+    [TOGGLE_AUTO_SCROLLING](state) {
+      state.autoScrolling = !state.autoScrolling;
     },
 
     ...statusHelper.mutation()

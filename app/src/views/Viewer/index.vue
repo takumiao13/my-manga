@@ -10,7 +10,7 @@
     />
 
     <div class="viewer-container">
-      <viewport 
+      <viewport
         :mode="mode"
         :zoom="zoom"
         :gallery="images"
@@ -18,6 +18,8 @@
         :page="page"
         :chIndex="chIndex"
         :settings="settings"
+        :auto-scrolling="autoScrolling"
+        :locking="menuOpen"
         @pageChange="go"
         @chapterChange="goChapter" 
       />
@@ -83,7 +85,7 @@ export default {
 
     ...mapGetters('viewer', [ 'count', 'chIndex', 'chCount', 'pending' ]),
 
-    ...mapState('viewer', [ 'path', 'mode', 'zoom', 'page', 'ch', 'images', 'chapters' ]),
+    ...mapState('viewer', [ 'path', 'mode', 'zoom', 'gaps', 'autoScrolling', 'page', 'ch', 'images', 'chapters' ]),
 
     ...mapState('app', { appError: 'error' }),
 
@@ -92,27 +94,25 @@ export default {
         state = state[this.repo.dirId]; // find nested state
         if (!state) return {}
         const obj = state.data.viewer || {};
-        let margin = true;
+        let gaps = this.gaps; // user viewer gaps as default
 
         // match image margin path
         if (obj.imageMargin) {
           let rest;
-          margin = obj.imageMargin['*'] || margin;
+          gaps = obj.imageMargin['*'] || gaps;
 
           Object.keys(obj.imageMargin).forEach(p => {
             if (this.path.indexOf(p) === 0) {
               let r = this.path.slice(p).length;
               if (!rest || r < rest) {
                 rest = r;
-                margin = obj.imageMargin[p];
+                gaps = obj.imageMargin[p];
               }
             }
           });
         }
 
-        return {
-          imageMargin: margin
-        }
+        return { gaps }
       }
     }),
 
@@ -163,7 +163,26 @@ export default {
         icon: this.isFullscreen ? 'compress' : 'expand',
         tip: 'Fullscreen',
         click: this.handleToggleFullscreen
-      },{
+      }, {
+        icon: 'page-alt',
+        tip: 'Page Display',
+        dropdown: {
+          props: {
+            type: 'select',
+            menu: [{
+              type: 'check',
+              checked: this.gaps,
+              text: 'Show Gaps Between Pages',
+              click: this.handleToggleGaps
+            }, {
+              type: 'check',
+              checked: this.autoScrolling,
+              text: 'Auto Scrolling',
+              click: this.handleAutoScrolling
+            }]
+          }
+        }
+      }, {
         icon: 'search-plus',
         tip: 'Zoom',
         dropdown: {
@@ -214,7 +233,6 @@ export default {
     
     // events
     handleBack() {
-      debugger;
       if (this.$router._routerHistory.length === 1) {
         const { dirId } = this.$router.history.current.params;
         this.$router.push({ 
@@ -242,6 +260,7 @@ export default {
       }
     },
 
+    // toolbar events
     handleToggleFullscreen() {
       screenfull.toggle();
       this.isFullscreen = !this.isFullscreen;
@@ -249,6 +268,15 @@ export default {
 
     handleZoom(zoom) {
       this.$store.dispatch(types.ZOOM, { zoom });
+    },
+
+    handleToggleGaps() {
+      this.$store.dispatch(types.TOGGLE_GAPS);
+    },
+
+    handleAutoScrolling() {
+      this.toggleMenu(false);
+      this.$store.dispatch(types.TOGGLE_AUTO_SCROLLING);
     },
 
     handleScroll() {

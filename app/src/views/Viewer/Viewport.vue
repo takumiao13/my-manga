@@ -10,7 +10,9 @@
       :chapters="chapters"
       :page="page"
       :chIndex="chIndex"
-      :image-margin="settings.imageMargin"
+      :gaps="settings.gaps"
+      :auto-scrolling="autoScrolling"
+      :locking="locking"
       @pageChange="$emit('pageChange', $event)"
       @chapterChange="$emit('chapterChange', $event)" 
     />
@@ -40,7 +42,9 @@ export default {
     zoom: {
       type: [ String, Number ],
       default: 'width'
-    }
+    },
+    autoScrolling: Boolean,
+    locking: Boolean
   }
 }
 </script>
@@ -78,7 +82,7 @@ export default {
     background: #3c4043;
     overflow:  hidden;
 
-    &.has-margin {
+    &.gaps {
       margin: .25rem auto;
 
       @include media-breakpoint-up(md) {
