@@ -217,6 +217,15 @@ $viewer-toolbar-bg: #333;
 
   .viewer-container {
     background: $viewer-bg !important;
+
+
+    &::-webkit-scrollbar-track {
+      background-color: $viewer-bg;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background-color: #666;
+    }
   }
 
   .viewer-topbar,

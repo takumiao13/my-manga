@@ -60,13 +60,14 @@ export default {
   data() {
     return {
       page_: this.page, // internal page value
-      chCount: this.chapters.length
+      chCount: this.chapters.length,
+      scrolling: false
     }
   },
 
   watch: {
-    gallery(newVal) {
-      if (newVal) {
+    gallery(val) {
+      if (val) {
         this.$nextTick(() => {
           this.refresh('gallery');
           this.scrollToCurrPage(); 
@@ -74,11 +75,11 @@ export default {
       }
     },
 
-    page(newVal) {
+    page(val) {
       // 如果 page 和 page_ 值不一致，说明通过其他方式改变 page (seekbar)
       // 需要滚动到正确的位置
-      if (newVal !== this.page_) {
-        this.page_ = newVal;
+      if (val !== this.page_) {
+        this.page_ = val;
         this.$nextTick(() => this.scrollToCurrPage());
       }
     },
@@ -87,59 +88,18 @@ export default {
       this.refresh();
     },
 
-    // TODO: 锁住 ...
     locking(val) {
-
+      this.autoScrolling && this[val ? 'pauseScroll' : 'startScroll']();
     },
 
     autoScrolling(val) {
-      console.log('auto scrolling ', val);
-      const $cntr = this.$container;
-      const self = this;
-
-      // start
-      if (val) {
-        start();
-      // stop
-      } else {
-        stop();
-      }
-
-      function start() {
-        step();
-      }
-
-      function step() {
-        setTimeout(() => {
-          $cntr.scrollTop += 5;
-          if (isBottom() || self.locking) {
-            stop();
-          } else {
-            step();
-          }
-        }, 100);
-      }
-
-      function stop() {
-        // when locking dont change auto scrolling
-        // just pause it
-        if (self.autoScrolling && !self.locking) {
-          self.$store.dispatch(types.TOGGLE_AUTO_SCROLLING, { autoScrolling: false });
-        }
-      }
-
-      function isBottom() {
-        const scrollH = $cntr.scrollHeight;
-        const h = $cntr.scrollTop + $cntr.clientHeight;
-        return scrollH < h + 1 && scrollH > h - 1;
-      }
+      this[val ? 'startScroll' : 'stopScroll']();
     }
   },
 
   created() {
     this._offsets = [];
     this._ignoreScrollEvent = false;
-    this._startScrolling = false;
   },
 
   destroyed() {
@@ -196,6 +156,45 @@ export default {
       const y = this._offsets[this.page - 1];
       console.log('scrollTo', this.page, y);
       window.scrollTo(0, y);
+    },
+
+    startScroll() {   
+      const self = this;
+      if (!this.scrolling) {
+        console.log('start');
+        this.scrolling = true;
+        step();
+      }
+
+      function step() {
+        setTimeout(() => {
+          self.$container.scrollTop += 5;
+          if (isBottom(self.$container) || !self.scrolling) {
+            self.stopScroll();
+          } else {
+            step();
+          }
+        }, 100);
+      }
+
+      function isBottom(elem) {
+        const scrollH = elem.scrollHeight;
+        const h = elem.scrollTop + elem.clientHeight;
+        return scrollH < h + 1 && scrollH > h - 1;
+      }
+    },
+
+    stopScroll() {
+      if (this.autoScrolling && this.scrolling) {
+        console.log('stop');
+        this.$store.dispatch(types.TOGGLE_AUTO_SCROLLING, { autoScrolling: false });
+        this.scrolling = false;
+      }
+    },
+
+    pauseScroll() {
+      console.log('pause');
+      this.scrolling = false;
     },
 
     // events

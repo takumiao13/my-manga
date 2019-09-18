@@ -3,18 +3,12 @@
     class="viewer-viewport"
     @mousedown="$event.preventDefault()"
   >
-    <!-- @todo may be support more mode later -->
-    <scroll-mode 
-      :zoom="zoom"
-      :gallery="gallery"
-      :chapters="chapters"
-      :page="page"
-      :chIndex="chIndex"
-      :gaps="settings.gaps"
-      :auto-scrolling="autoScrolling"
-      :locking="locking"
-      @pageChange="$emit('pageChange', $event)"
-      @chapterChange="$emit('chapterChange', $event)" 
+    <!-- TODO: may be support more mode later -->
+    <scroll-mode
+      v-if="mode === 'scroll'"
+      v-bind="options"
+      @pageChange="handlePageChange"
+      @chapterChange="handleChapterChange"
     />
   </div>
 </template>
@@ -23,28 +17,22 @@
 import ScrollMode from './ScrollMode';
 
 export default {
-  name: 'ViewerMode',
+  name: 'Viewport',
 
   components: {
     ScrollMode
   },
   
-  props: {
-    page: [ Number, String ],
-    chIndex: Number,
-    gallery: Array,
-    chapters: Array,
-    settings: Object,
-    mode: {
-      type: String,
-      default: 'scroll'
+  props: [ 'mode', 'options' ],
+
+  methods: {
+    handlePageChange(page) {
+      this.$emit('pageChange', page);
     },
-    zoom: {
-      type: [ String, Number ],
-      default: 'width'
-    },
-    autoScrolling: Boolean,
-    locking: Boolean
+
+    handleChapterChange(chIndex) {
+      this.$emit('chapterChange', chIdex);
+    }
   }
 }
 </script>

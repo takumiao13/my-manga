@@ -12,14 +12,16 @@
     <div class="viewer-container">
       <viewport
         :mode="mode"
-        :zoom="zoom"
-        :gallery="images"
-        :chapters="chapters"
-        :page="page"
-        :chIndex="chIndex"
-        :settings="settings"
-        :auto-scrolling="autoScrolling"
-        :locking="menuOpen"
+        :options="{
+          gallery: images,
+          chapters: chapters,
+          page: page,
+          chIndex: chIndex,
+          zoom: zoom,
+          settings: settings,
+          autoScrolling: autoScrolling,
+          locking: menuOpen
+        }"
         @pageChange="go"
         @chapterChange="goChapter" 
       />
@@ -216,7 +218,7 @@ export default {
   },
 
   methods: {
-    go(page) {
+    go(page, a, b, c) {
       this.$store.dispatch(types.GO, { page });
     },
 
