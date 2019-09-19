@@ -18,6 +18,10 @@ my-manga start
 # or
 
 my-manga start --dir your/manga/dir
+
+# or
+
+my-manga start --settings settings.json
 ```
 
 ### options
@@ -29,8 +33,24 @@ start my manga server
 
 Options:
   -o, --open                 open browser
-  -d, --dir <dir>            specify dir (default: pwd)
-  -p, --port <port>          port used for server (default: 3033)
+  -p, --port <port>          port used for server (default: 3033)  
+  -d, --dir <dir>            specify dir as manga repo
+  -s, --settings <settings>  settings file
+  -h, --help                 output usage information
+```
+
+### settings
+
+**settings.json**
+```json
+{
+  // multiple repos support
+  "repos": [
+    "C:\\repo-a",
+    "D:\\repo-b"
+    "E:\\repo-c"
+  ]
+}
 ```
 
 ## Browsers support
