@@ -86,9 +86,13 @@ async function traverse({ path = '', baseDir, maxDepth = 1, onlyDir = true, skip
   // handle size (W & H)
   if (!isDir || (isDir && cover)) {
     const imgPath = cover || path;
-    const size = sizeOf(pathFn.resolve(baseDir, imgPath));
-    width = size.width;
-    height = size.height;
+
+    try {
+      const size = sizeOf(pathFn.resolve(baseDir, imgPath));
+      width = size.width;
+      height = size.height;
+    } catch (e) {}
+    
   }
 
   // merge info
