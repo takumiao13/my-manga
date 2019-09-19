@@ -28,7 +28,7 @@ class MangaService extends Service {
 
 // Private Methods
 async function traverse({ path = '', baseDir, maxDepth = 1, onlyDir = true, skipMeta = false }) {
-  let err, stat;
+  let err, stat, files;
   const absPath = pathFn.resolve(baseDir, path);
   // basic info
   const children = [];
@@ -50,7 +50,10 @@ async function traverse({ path = '', baseDir, maxDepth = 1, onlyDir = true, skip
       cover = pathFn.posix.join(path, metadata.cover);
     }
   
-    const files = await fs.readdir(absPath).then(sortFiles);
+    [ err, files ] = await to(fs.readdir(absPath))
+    if (err) return null; // simple check operation not permitted
+    files = sortFiles(files);
+
     for (let i = 0; i < files.length; i++) {
       let child;
       const childPath = pathFn.posix.join(path, files[i]);
@@ -93,7 +96,7 @@ async function traverse({ path = '', baseDir, maxDepth = 1, onlyDir = true, skip
 }
 
 async function simpleTraverse({ path, baseDir }) {
-  let err, stat;
+  let err, stat, files;
   const absPath = pathFn.resolve(baseDir, path);
   [ err, stat ] = await to(fs.stat(absPath));
   
@@ -107,7 +110,8 @@ async function simpleTraverse({ path, baseDir }) {
 
   if (!ret.isDir) return imgRE.test(extname(path)) ? ret : null;
 
-  const files = await fs.readdir(absPath);
+  [ err, files ] = await to(fs.readdir(absPath));
+  if (err) return null; // simple check operation not permitted
 
   for (let i = 0; i < files.length; i++) {
     const childPath = pathFn.resolve(absPath, files[i]);
