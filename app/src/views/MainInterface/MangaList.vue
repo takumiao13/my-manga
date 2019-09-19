@@ -471,10 +471,12 @@ export default {
     handleBackToParent() {
       const { dirId } = this.repo;
       const path = this.path.split(PATH_SEP).slice(0, -1).join(PATH_SEP);
-
+      const params = { dirId };
+      if (path) params.path = path;
+ 
       this.$router.navigate({
         name: 'explorer',
-        params: { dirId, path }
+        params
       });
     },
 
