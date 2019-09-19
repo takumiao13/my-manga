@@ -63,7 +63,7 @@ class SettingsService extends Service {
     } else if (baseDir) {
       // single dir
       this.setPath('repo', pathFn.resolve(baseDir, FILE_NAME));
-      const name = pathFn.basename(baseDir);
+      const name = pathFn.basename(baseDir) || pathFn.dirname(baseDir).replace(pathFn.sep, '');
       const dirId = this.hashBaseDir(baseDir);
 
       this._singleRepoId = dirId;
