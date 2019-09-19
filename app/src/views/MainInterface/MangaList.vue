@@ -572,7 +572,10 @@ export default {
     },
 
     handleShareManga() {
-      const payload = { url: window.location.href }
+      const { host, port } = config;
+      const { protocol, pathname, search, hash } = window.location;
+      const url = `${protocol}//${host}:${port}${pathname}${search}${hash}`;
+      const payload = { url }
       this.$store.dispatch(mangaTypes.SHARE, payload).then(() => {
         this.sharing = true;
       }); 
