@@ -1,4 +1,3 @@
-
 #app,
 #app-error {
   background: $app-bg !important;
@@ -195,11 +194,6 @@
   background-color: $app-scrollbar-track;
 }
 
-:hover::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
 :hover::-webkit-scrollbar-thumb {
   background-color: $app-scrollbar-thumb;
 }
@@ -212,12 +206,60 @@ body::-webkit-scrollbar-thumb {
 // Viewer
 // ==
 // may be need not support themes
+
+$viewer-bg: $black;
+$viewer-color: #eee;
+$viewer-toolbar-bg: #333;
+
 #viewer {
-  background: $black !important;
-  color: $white !important;
+  
+  color: $viewer-color !important;
+
+  .viewer-container {
+    background: $viewer-bg !important;
+
+
+    &::-webkit-scrollbar-track {
+      background-color: $viewer-bg;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background-color: #666;
+    }
+  }
 
   .viewer-topbar,
   .viewer-toolbar > .navbar {
-    background: rgba($black, .6) !important;
+    background: $viewer-toolbar-bg !important;
+    box-shadow: 0px 1px 2px 0px rgba($black, 0.3);
+  
+    .dropdown-menu {
+      background: $viewer-toolbar-bg !important;
+      color: $viewer-color !important;
+      box-shadow: 0 2px 4px -1px rgba($black, 0.2), 
+                  0 4px 5px 0 rgba($black, 0.14), 
+                  0 1px 10px 0 rgba($black, 0.12);
+
+      .dropdown-item:hover {
+        background: rgba($white, .1);      
+      }
+    }
+  }
+
+  .viewer-loading {
+    background: $viewer-bg;
+
+    .loading-spinner {
+      color: $viewer-color;
+    }
+  }
+
+  .viewer-seekbar-container,
+  .viewer-seekbar-tip {
+    background: rgba($viewer-bg, .8);
+  }
+
+  .viewer-page-indicator {
+    background: rgba($viewer-bg, .8);
   }
 }

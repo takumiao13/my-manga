@@ -1,6 +1,6 @@
 <template>
   <div class="viewer-seekbar">
-    <div class="viewer-seekbar-tips" v-show="shouldTipsShown">
+    <div class="viewer-seekbar-tip" v-show="tipShown">
       <strong>{{ value_ }}</strong> / {{ max }}
     </div>  
     <div class="viewer-seekbar-container">
@@ -25,15 +25,15 @@ export default {
 
   data() {
     return {
-      shouldTipsShown: false,
+      tipShown: false,
+      min: 1,
       value_: this.value, // internal immediate value
-      min: 1
     }
   },
 
   watch: {
     // prop value
-    value(newVal, oldVal) {
+    value() {
       this.value_ = this.value;
     },
   },
@@ -41,7 +41,7 @@ export default {
   methods: {
     handleInput: function($event) {
       this.value_ = $event.target.value;
-      if (!this.shouldTipsShown) this.shouldTipsShown = true;
+      if (!this.tipShown) this.tipShown = true;
     },
 
     handleChange: function($event) {
@@ -54,28 +54,24 @@ export default {
 <style lang="scss">
 @import '../../assets/style/base';
 
-.viewer-seekbar {
-  .viewer-seekbar-tips {
-    margin: 1rem auto;
-    max-width: 100px;
-    text-align: center;
-    padding: .5rem 0;
-    background: rgba(#000, .6);
+.viewer-seekbar-tip {
+  margin: 1rem auto;
+  max-width: 100px;
+  text-align: center;
+  padding: .5rem 0;
+}
+
+.viewer-seekbar-container {
+  max-width: 100%;
+  padding: .5rem .5rem 1rem .5rem;
+  margin: 0 auto;
+
+  @include media-breakpoint-up(md) {
+    max-width: 600px;
   }
 
-  .viewer-seekbar-container {
-    max-width: 100%;
-    padding: .5rem .5rem 1rem .5rem;
-    margin: 0 auto;
-    background: rgba(#000, .6);
-
-    @include media-breakpoint-up(md) {
-      max-width: 600px;
-    }
-
-    @include media-breakpoint-up(lg) {
-      max-width: 800px;
-    }
+  @include media-breakpoint-up(lg) {
+    max-width: 800px;
   }
 }
 </style>

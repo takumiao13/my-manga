@@ -26,8 +26,7 @@ export default {
 
 <style lang="scss">
 
-$side-toolbar-border:     1px solid #dcdcdc !default;
-$side-toolbar-bg:         #ddd !default;
+$side-toolbar-bg:         #eee !default;
 $side-toolbar-color:      #333 !default;
 $side-toolbar-btn-width:  3rem !default;
 $side-toolbar-btn-height: 3rem !default;
@@ -45,7 +44,6 @@ $side-toolbar-btn-height: 3rem !default;
     padding: 0;
 
     > li {
-      border: $side-toolbar-border;
       border-radius: 100%;
       background: $side-toolbar-bg;
       transition: .1s ease-in;

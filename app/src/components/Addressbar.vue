@@ -169,18 +169,23 @@ export default {
   .svg-icon {
     vertical-align: -0.2em;
   }
+
+  &:last-child.address-link {
+    padding-right: .25rem;
+  }
 }
 
 .address-link {
   padding: 0 .25rem 0 .5rem;
   cursor: pointer;
 
-  &:last-child {
-    padding-right: .25rem;
+  &.address-back {
+    padding: 0 .625rem;
   }
 }
 
 .address-separator {
-  padding-left: .25rem;
+  display: inline-block;
+  padding-right: .25rem;
 }
 </style>

@@ -1,15 +1,27 @@
 <template>
   <nav class="navbar" @click="$emit('click', $event)">
-    <a class="btn topbar-left-btn"
-      v-for="(btn, index) in leftBtns_"
-      :key="`left-${index}`"
-      :class="btn.className"
-      @click="btnClick($event, btn.click)"
-      :title="btn.tip"
-    >
-      <icon v-if="btn.icon" :name="btn.icon" />
-      <span v-html="btn.title"></span>
-    </a>
+    <ul v-if="leftBtns_ && leftBtns_.length" class="navbar-nav navbar-nav-left flex-row">
+      <component 
+        class="nav-item"
+        v-for="(btn, index) in leftBtns_"
+        :is="btn.dropdown ? 'dropdown' : 'li'"
+        :key="`left-${index}`"
+        :class="btn.className"
+        :as="btn.dropdown ? 'li' : null"
+        v-bind="btn.dropdown ? btn.dropdown.props : null"
+        v-on="btn.dropdown ? btn.dropdown.on : null"
+      >
+        <component
+          :is="btn.dropdown ? 'span' : 'a'"
+          :class="{ btn: !btn.dropdown }"
+          :title="btn.tip"
+          @click="btn.click"
+        >
+          <icon v-if="btn.icon" :name="btn.icon" />
+          <span v-html="btn.title"></span>
+        </component>
+      </component>
+    </ul>
 
     <a class="navbar-brand text-truncate" 
       :class="title_.className"
@@ -17,16 +29,28 @@
       @click="title_.click" 
     />
 
-    <a class="btn topbar-right-btn"
-      v-for="(btn, index) in rightBtns_"
-      :key="`right-${index}`"
-      :class="btn.className"
-      @click="btnClick($event, btn.click)"
-      :title="btn.tip"
-    >
-      <icon v-if="btn.icon" :name="btn.icon" />
-      <span v-html="btn.title"></span>
-    </a>
+    <ul v-if="rightBtns_ && rightBtns_.length" class="navbar-nav navbar-nav-right flex-row ml-md-auto">
+      <component 
+        class="nav-item"
+        v-for="(btn, index) in rightBtns_"
+        :is="btn.dropdown ? 'dropdown' : 'li'"
+        :key="`right-${index}`"
+        :class="btn.className"
+        :as="btn.dropdown ? 'li' : null"
+        v-bind="btn.dropdown ? btn.dropdown.props : null"
+        v-on="btn.dropdown ? btn.dropdown.on : null"
+      >
+        <component
+          :is="btn.dropdown ? 'span' : 'a'"
+          :class="{ btn: !btn.dropdown }"
+          :title="btn.tip"
+          @click="btn.click"
+        >
+          <icon v-if="btn.icon" :name="btn.icon" />
+          <span v-html="btn.title"></span>
+        </component>
+      </component>
+    </ul>
   </nav>
 </template>
 
@@ -34,6 +58,10 @@
 
 const DEFAULT_TITLE = {
   className: '',
+  click() {}
+};
+
+const DEFAULT_BUTTON = {
   click() {}
 };
 
@@ -66,26 +94,25 @@ export default {
     },
 
     leftBtns_() {
+      let buttons = null;
       if (typeof this.leftBtns === 'function') {
-        return this.leftBtns();  
+        buttons = this.leftBtns();  
       } else {
-        return this.leftBtns;
+        buttons = this.leftBtns;
       }
+
+      return buttons && buttons.map(btn => Object.assign({}, DEFAULT_BUTTON, btn));
     },
 
     rightBtns_() {
+      let buttons = null;
       if (typeof this.rightBtns === 'function') {
-        return this.rightBtns();  
+        buttons = this.rightBtns();  
       } else {
-        return this.rightBtns;
+        buttons = this.rightBtns;
       }
-    }
-  },
-
-  methods: {
-    btnClick($event, click) {
-      $event.stopPropagation();
-      click($event);
+      
+      return buttons && buttons.map(btn => Object.assign({}, DEFAULT_BUTTON, btn));
     }
   }
 }
@@ -108,6 +135,14 @@ export default {
     margin-left: .5rem;
     font-size: 1rem;
     line-height: 1;
+
+    &.text-center {
+      margin: 0 auto;
+      position: absolute;
+      left: 25%;
+      width: 50%;
+      text-align: center;
+    }
   }
 
   .navbar-brand-sm {
@@ -118,12 +153,31 @@ export default {
     font-size: .8rem;
   }
 
+  .navbar-nav {
+    &.navbar-nav-left .nav-item {
+      margin-right: .25rem;
+
+      &:last-child {
+        margin-right: -.5rem;
+      }
+    }
+
+    &.navbar-nav-right .nav-item {
+      margin-left: .25rem;
+    }
+  }
+
   .btn {
     padding: .375rem;
+    min-width: 38px;
   }
 
   .topbar-left-btn {
     margin-right: -.5rem;
+  }
+
+  .dropdown-menu.show {
+    position: absolute;
   }
 }
 </style>

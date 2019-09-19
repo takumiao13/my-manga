@@ -35,9 +35,7 @@
       }
     },
     async created () {
-      if (!this.name) {
-        return
-      }
+      if (!this.name) { return }
       this.xml = await import(/* webpackMode: 'lazy-once', webpackChunkName: 'icon-svg' */ '@/assets/icons/' + this.name + '.svg')
     },
     computed: {
@@ -108,9 +106,7 @@
     },
     watch: {
       async name (val) {
-        if (!val) {
-          return
-        }
+        if (!val) { return }
         this.xml = await import(/* webpackMode: 'lazy-once', webpackChunkName: 'icon-svg' */ '@/assets/icons/' + this.name + '.svg')
       }
     }

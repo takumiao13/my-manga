@@ -3,40 +3,35 @@
     class="viewer-viewport"
     @mousedown="$event.preventDefault()"
   >
-    <!-- @todo may be support more mode later -->
-    <scroll-mode 
-      :gallery="gallery"
-      :chapters="chapters"
-      :page="page"
-      :chIndex="chIndex"
-      :image-margin="settings.imageMargin"
-      @pageChange="$emit('pageChange', $event)"
-      @chapterChange="$emit('chapterChange', $event)" 
+    <!-- TODO: may be support more mode later -->
+    <scroll-mode
+      v-if="mode === 'scroll'"
+      v-bind="options"
+      @pageChange="handlePageChange"
+      @chapterChange="handleChapterChange"
     />
   </div>
 </template>
 
 <script>
 import ScrollMode from './ScrollMode';
-import SwipeMode from './SwipeMode';
 
 export default {
-  name: 'ViewerMode',
+  name: 'Viewport',
 
   components: {
-    ScrollMode,
-    SwipeMode
+    ScrollMode
   },
   
-  props: {
-    page: [Number, String],
-    chIndex: Number,
-    gallery: Array,
-    chapters: Array,
-    settings: Object,
-    mode: {
-      type: String,
-      default: 'scroll'
+  props: [ 'mode', 'options' ],
+
+  methods: {
+    handlePageChange(page) {
+      this.$emit('pageChange', page);
+    },
+
+    handleChapterChange(chIndex) {
+      this.$emit('chapterChange', chIdex);
     }
   }
 }
@@ -51,6 +46,7 @@ export default {
   align-items: center;
   width: 100%;
   min-height: 100vh;
+  margin: 0 auto;
 
   @include media-breakpoint-up(md) {
     max-width: 600px;
@@ -71,11 +67,10 @@ export default {
     max-width: 100%;
     position: relative;
     margin: 0 auto; // .25rem
-    background: #2e2e2e;
-    overflow: hidden;
+    background: #3c4043;
+    overflow:  hidden;
 
-
-    &.has-margin {
+    &.gaps {
       margin: .25rem auto;
 
       @include media-breakpoint-up(md) {
@@ -86,13 +81,13 @@ export default {
 
     > .img-loading {
       color: #666;
-      font-size: 8rem;
+      font-size: 6rem;
       position: absolute;
       top: 0;
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
-      font-weight: 900;
+      font-weight: 300;
     }
 
     > .img-inner img {
