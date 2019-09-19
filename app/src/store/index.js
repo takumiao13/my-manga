@@ -51,7 +51,7 @@ export function resetStore() {
 export const loadSettingsState = (scope) => {
   // first we should check the scope is valid
   const repos = store.getters['settings/user/repos'];
-  const isExists = repos.map(repo => repo.dirId).indexOf(scope) > -1;
+  const isExists = repos ? repos.map(repo => repo.dirId).indexOf(scope) > -1 : true;
   
   if (!isExists) {
     const code = ERR_CODE.REPO_UNACCESSED;

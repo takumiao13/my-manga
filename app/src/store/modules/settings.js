@@ -40,7 +40,9 @@ export const createSettings = (scope) => ({
     },
 
     repos(state) {
-      return (get(state, 'data.repos') || []).map(parseRepo);
+      const repos = get(state, 'data.repos')
+      if (!repos) return null;
+      return repos.map(parseRepo);
     }
   },
 
