@@ -20,6 +20,7 @@
 
       <div class="list-group mt-3">
         <div class="list-group-item text-truncate"
+          :class="{ disabled: !repo.accessed }"
           v-for="(repo, index) in repos"
           :key="index"
           @click="handleToggleRepo($event, repo)"
@@ -66,7 +67,7 @@ export default {
   data() {
     return {
       inElectron,
-      title: 'My Repository',
+      title: 'Manga Repository',
       leftBtns: [{
         icon: 'back',
         click: this.handleBack
@@ -111,13 +112,17 @@ export default {
     },
 
     handleToggleRepo($event, repo) {      
-      if (repo.dirId === this.repoId && 
-        this.$router._routerHistory.length > 1) {
+      // 1.not from error page
+      // 2.repo is not changed 
+      // 3.can go back
+      // then we just back it
+      debugger;
+      if (repo.dirId === this.repoId && this.$router.canGoBack()) {
         this.$router.go(-1);
         return;
       }
     
-      // we should reset store
+      // we should reset store to change repo 
       eventHub.$emit('store.reset', repo);
     },
 

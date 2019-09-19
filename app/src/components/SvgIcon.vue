@@ -35,9 +35,7 @@
       }
     },
     async created () {
-      if (!this.name) {
-        return
-      }
+      if (!this.name) { return }
       this.xml = await import(/* webpackMode: 'lazy-once', webpackChunkName: 'icon-svg' */ '@/assets/icons/' + this.name + '.svg')
     },
     computed: {
@@ -108,9 +106,7 @@
     },
     watch: {
       async name (val) {
-        if (!val) {
-          return
-        }
+        if (!val) { return }
         this.xml = await import(/* webpackMode: 'lazy-once', webpackChunkName: 'icon-svg' */ '@/assets/icons/' + this.name + '.svg')
       }
     }
@@ -118,12 +114,24 @@
 </script>
 
 <style>
-  .svg-icon {
-    display: inline-block;
-    fill: currentColor;
-    font-size: inherit;
-    min-height: 1em;
-    overflow: visible;
-    vertical-align: -0.125em;
-  }
+.svg-icon {
+  display: inline-block;
+  fill: currentColor;
+  font-size: inherit;
+  min-height: 1em;
+  overflow: visible;
+  vertical-align: -0.125em;
+}
+
+.svg-inline--fa .fa-secondary {
+  fill: var(--fa-secondary-color, currentColor);
+  opacity: 0.4;
+  opacity: var(--fa-secondary-opacity, 0.4);
+}
+
+.svg-inline--fa .fa-primary {
+  fill: var(--fa-primary-color, currentColor);
+  opacity: 1;
+  opacity: var(--fa-primary-opacity, 1);
+}
 </style>

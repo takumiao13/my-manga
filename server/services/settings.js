@@ -2,7 +2,8 @@ const Service = require('./_base');
 const pathFn = require('path');
 const fs = require('fs-extra');
 const to = require('await-to-js').default;
-const { isUndef, isDef, set, get, unset, has, md5, cloneDeep } = require('../helpers');
+const { CustomError} = require('../error');
+const { isUndef, isDef, set, get, unset, has, md5, cloneDeep, pathAccess, ERR_CODE } = require('../helpers');
 
 const FILE_NAME = 'settings.json';
 
@@ -49,13 +50,13 @@ class SettingsService extends Service {
       this.setPath('user', settings); // 全局 settings 需要获取 repos
       const repos = this.get('user', 'repos', false);
       const cryptoedRepos = [];
-      
+    
       repos.forEach(baseDir => {
         const name = pathFn.basename(baseDir);
         const dirId = this.hashBaseDir(baseDir);
 
         repoMap[dirId] = { name, baseDir };
-        cryptoedRepos.push({ name, dirId });
+        cryptoedRepos.push({ name, dirId, accessed: pathAccess(baseDir) });
       });
 
       this._cryptoedRepos = cryptoedRepos;
@@ -64,6 +65,8 @@ class SettingsService extends Service {
       this.setPath('repo', pathFn.resolve(baseDir, FILE_NAME));
       const name = pathFn.basename(baseDir);
       const dirId = this.hashBaseDir(baseDir);
+
+      this._singleRepoId = dirId;
       repoMap[dirId] = { name, baseDir };
     }
 
@@ -103,9 +106,11 @@ class SettingsService extends Service {
     } else if (repoMap[scope]) {
       const { baseDir } = repoMap[scope]; // get real dir
       settings = this._settings[scope];
-      if (!settings && baseDir) {
+      if (!settings) {
         settings = this.setPath(scope, pathFn.resolve(baseDir, FILE_NAME));
       }
+    } else {
+      throw new CustomError(ERR_CODE.REPO_UNACCESSED);
     }
 
     return settings;
@@ -121,7 +126,8 @@ class SettingsService extends Service {
         data.get(key) : 
         this.encode(data.get(key), key);
     
-    if (scope !== 'user' && scope !== 'repo') {
+    if (scope !== 'user') {
+      if (scope === 'repo') scope = this._singleRepoId;
       const repo = repoMap[scope]
       if (isUndef(key) && repo) {      
         Object.assign(value, {

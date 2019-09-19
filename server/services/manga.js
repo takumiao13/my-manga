@@ -18,21 +18,11 @@ const imgRE = /(jpe?g|png|webp|gif|bmp)/i;
 class MangaService extends Service {
 
   async list(path = '', baseDir) {
-    const [ err, result ] = await to(traverse({ path, baseDir, onlyDir: false }));
-    if (err) { 
-      err.message = `get [${path}] file list error`;
-      throw err;
-    }
-    return result;
+    return await traverse({ path, baseDir, onlyDir: false });
   }
 
   async folder(path = '', baseDir) {
-    const [ err, result ] = await to(traverse({ path, baseDir, skipMeta: true }));
-    if (err) { 
-      err.message = `get [${path}] sub folder error`;
-      throw err;
-    }
-    return result;
+    return await traverse({ path, baseDir, skipMeta: true });
   }
 }
 

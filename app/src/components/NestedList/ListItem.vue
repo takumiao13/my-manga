@@ -1,7 +1,7 @@
 <template>
   <div 
     class="list-nested-item" 
-    :class="[ {open: isOpen}, itemClassName ]"
+    :class="[ {open: open}, itemClassName ]"
   >
     <div 
       class="list-group-item" 
@@ -31,7 +31,7 @@
     <div class="list-group-loading" v-show="isLoading">
       <spinner />
     </div>
-    <div class="list-group" v-show="isOpen && !isLoading" v-if="isBranch">
+    <div class="list-group" v-show="open && !isLoading" v-if="isBranch">
       <list-item
         v-for="item in item[props.children]"
         :key="item[props.key]"
@@ -68,7 +68,7 @@ export default {
 
   data() {
     return {
-      isOpen: false,
+      open: false,
       status: '',
       indent: .8 * (this.depth-1)
     }
@@ -100,7 +100,7 @@ export default {
     },
 
     toggleIcon() {
-      return 'chevron-' + (['right', 'down'][+this.isOpen]);
+      return 'chevron-' + (['right', 'down'][+this.open]);
     },
 
     isLoading() {
@@ -111,8 +111,8 @@ export default {
   methods: {
     toggle() {
       if (this.isBranch) {
-        this.isOpen = !this.isOpen
-        if (this.isOpen) {
+        this.open = !this.open
+        if (this.open) {
           this.$emit('expand-item', this.item, this);
         }
       }

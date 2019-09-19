@@ -5,9 +5,10 @@ import mangaAPI from '@/apis/manga';
 // types for internal
 const ns = 'manga';
 const LIST = 'LIST';
+const SHARE = 'SHARE';
 const statusHelper = createRequestStatus('status');
 
-export const types = createTypesWithNs([ LIST ], ns);
+export const types = createTypesWithNs([ LIST, SHARE ], ns);
 
 export const cacheStack = {
   _value: [],
@@ -38,6 +39,7 @@ export default {
 
   state: {
     inited: false,
+    cover: '',
     type: '',
     path: '',
     metadata: null,
@@ -47,16 +49,17 @@ export default {
     chapters: [],
     images: [],
     activePath: '',
+    shortId: false,
     ...statusHelper.state()
   },
 
   getters: {
-    isPending(state) {
+    pending(state) {
       return statusHelper.is.pending(state);
     },
 
-    isSuccess(state) {
-      return statusHelper.is.success(state);
+    isSuccess: (state) => (immediately) => {
+      return statusHelper.is.success(state, immediately);
     },
 
     empty(state) {
@@ -67,24 +70,27 @@ export default {
   actions: {
     [LIST]({ commit }, payload = {}) { 
       let index = -1;
-      const { path, isBack, dirId } = payload;
-      if (isBack) index = cacheStack.find(dirId, path);
-      console.log(cacheStack);
+      const { path, isBack, dirId, random } = payload;
+      if (isBack && !random) index = cacheStack.find(dirId, path);
+      // console.log(cacheStack);
 
-      statusHelper.pending(commit);
+      // hack no flashing when random manga
+      if (!random) statusHelper.pending(commit);
       // if cannot find cache
       if (index === -1) {
-        return mangaAPI.list({ dirId, path })
+        return mangaAPI[random ? 'pick' : 'list']({ dirId, path })
           .then(res => {
-            cacheStack.push(Object.assign(res, { 
-              _prevPath: path,
-              _dirId: dirId
-            }));
+            if (!random) {
+              cacheStack.push(Object.assign(res, { 
+                _prevPath: path,
+                _dirId: dirId
+              }));
+            }
             commit(LIST, res);
             return statusHelper.success(commit);
           })
           .catch(error => {
-            statusHelper.error(commit, { error });
+            statusHelper.error(commit, error);
           });
       // get result from cache
       } else {
@@ -92,13 +98,29 @@ export default {
         commit(LIST, result);
         return statusHelper.success(commit);
       }
+    },
+
+    [SHARE]({ commit }, payload = {}) {
+      const { url } = payload;
+      return mangaAPI.share(url).then(res => {
+        commit(SHARE, res);
+      })
     }
   },
   
   mutations: {
     [LIST](state, payload) {
       state.inited || (state.inited = true);
-      assign(state, payload);
+      assign(state, { 
+        ...payload, 
+        error: null,
+        shortId: false
+      });
+    },
+
+    [SHARE](state, payload) {
+      const { shortId } = payload;
+      assign(state, { shortId });
     },
 
     ...statusHelper.mutation()

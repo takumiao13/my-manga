@@ -1,22 +1,52 @@
+import { isArray } from '@/helpers';
 import Service from './_base';
 
 const DEFAULT = {
-  ratio: 141.4
+  vRatio: 141.4,
+  hRatio: 70.1
 };
 
 class ImageService extends Service {
 
-  makeSrc(...paths) {
+  makeSrc(paths, escape) {
     const { baseURL } = this.$config;
     const { dirId } = this.$store.getters['app/repo'];
+    const path = isArray(paths) ? paths.join('/') : paths;
+    let src = dirId && path && `${baseURL}img/${dirId}/${encodeURIComponent(path)}`;
+    
+    if (src && escape) {
+      src = src.replace(/(\(|\))/g, "\\$1");
+    }
+  
+    return src;
+  }
+  
+  coverStyle({ width, height }) {
+    let ratio = (height / width) * 100;
+    let adjust = false;
+    const bounding = 8;
+    
+    if (ratio >= DEFAULT.vRatio - bounding && ratio <= DEFAULT.vRatio + bounding) {
+      ratio = DEFAULT.vRatio;
+      adjust = true;
+    } else if (ratio >= DEFAULT.hRatio - bounding && ratio <= DEFAULT.hRatio + bounding) {
+      ratio = DEFAULT.hRatio;
+      adjust = true;
+    }
 
-    const path = paths.join('/');
-    return path && `${baseURL}img/${dirId}/${encodeURIComponent(path)}`;
+    if (ratio > DEFAULT.vRatio + bounding) {
+      ratio = DEFAULT.vRatio;
+    }
+
+    return {
+      class: { adjust },
+      style: { padding:'0 0 ' + ratio + '%' }
+    }
   }
 
-  coverStyle({ width, height }, limit) {
+  style({ width, height }, maxRatio) {
     let ratio = (height / width) * 100;
-    if (limit) ratio = Math.min(ratio, DEFAULT.ratio);
+    if (maxRatio) ratio = Math.min(ratio, maxRatio);
     return { padding:'0 0 ' + ratio + '%' }
   }
 

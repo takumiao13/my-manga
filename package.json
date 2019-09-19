@@ -35,6 +35,7 @@
     "address": "^1.1.0",
     "await-to-js": "^2.1.1",
     "chalk": "^2.4.2",
+    "colorthief": "^2.3.0",
     "commander": "^2.20.0",
     "default-gateway": "^5.0.2",
     "fs-extra": "^8.1.0",
@@ -47,6 +48,7 @@
     "koa-static": "^5.0.0",
     "koa2-cors": "^2.0.6",
     "lodash": "^4.17.14",
+    "nanoid": "^2.1.0",
     "open": "^6.4.0",
     "portfinder": "^1.0.20"
   },

@@ -1,4 +1,4 @@
-import { assign, get, unset, isIndex, isArray, last, isDef, isUndef, stringToPath } from '@/helpers';
+import { assign, get, unset, isIndex, isArray, isDef, isUndef, stringToPath } from '@/helpers';
 import { createTypesWithNs } from '../helpers';
 import Vue from 'vue';
 import settingsAPI from '@/apis/settings';
@@ -10,25 +10,8 @@ const SET = 'SET';
 
 export const types = {};
 
-const parseRepoPath = (repo) => {
-  // const seq = /\/|\\/;
-  // if (path) {
-  //   const fragments = path.split(seq);
-  //   return {
-  //     path,
-  //     name: last(fragments).toUpperCase(),
-  //     dir: fragments.slice(0, -1).join('/')
-  //   }
-  // } else {
-  //   return {};
-  // }
-
-  const { name, dirId } = repo;
-
-  return {
-    name: name.toUpperCase(),
-    dirId
-  }
+const parseRepo = (repo) => {
+  return Object.assign(repo, { name: repo.name.toUpperCase()})
 }
 
 export const createTypes = (scope) => {
@@ -49,14 +32,15 @@ export const createSettings = (scope) => ({
 
     repo(state, getters) {
       const settings = getters.settings;
-      return settings ? {
+
+      return (scope !== 'user' && settings) ? {
          name: settings.name.toUpperCase(),
          dirId: settings.dirId
       } : {}
     },
 
     repos(state) {
-      return (get(state, 'data.repos') || []).map(parseRepoPath);
+      return (get(state, 'data.repos') || []).map(parseRepo);
     }
   },
 

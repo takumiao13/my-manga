@@ -1,69 +1,71 @@
 <template>
-  <div id="viewer" @click="handleOperation">
+  <div id="viewer" @click="handleOpenMenu">
     <navbar 
       class="viewer-topbar fixed-top"
-      :class="{ in: inOperation }"
+      :class="{ open: menuOpen }"
+      :title="{ content: pager, className: 'text-center d-none d-md-block' }"
       :left-btns="leftBtns"
+      :right-btns="rightBtns"
       @click="$event.stopPropagation()"
     />
 
-    <viewport 
-      :mode="mode"
-      :gallery="images"
-      :chapters="chapters"
-      :page="page"
-      :chIndex="chIndex"
-      :settings="settings"
-      @pageChange="go"
-      @chapterChange="goCh" 
-    />
+    <div class="viewer-container">
+      <viewport
+        :mode="mode"
+        :options="{
+          gallery: images,
+          chapters: chapters,
+          page: page,
+          chIndex: chIndex,
+          zoom: zoom,
+          settings: settings,
+          autoScrolling: autoScrolling,
+          locking: menuOpen
+        }"
+        @pageChange="go"
+        @chapterChange="goChapter" 
+      />
+    </div>
 
     <div
       class="viewer-loading"
       v-show="pending"
     >
-      <spinner class="loading-spinner" size="lg" />
+      <spinner class="loading-spinner" size="lg" tip="Loading" />
     </div>
 
     <div
       class="viewer-backdrop" 
-      v-show="inOperation" 
+      v-show="menuOpen" 
       @click="handleBackdropClick" 
     />
   
-    <side-toolbar
-      class="d-none d-md-block"
-      v-show="inOperation"
-      :actions="actions" 
-    />
-
     <div
       class="viewer-toolbar fixed-bottom" 
-      :class="{ in: inOperation }"
+      :class="{ open: menuOpen }"
       @click="$event.stopPropagation()"
     >
       <seekbar :value="page" :max="count" @end="go" />
     </div>
 
-    <div 
-      class="qrcode-container" 
-      v-if="isQrcodeShown" 
-      @click="handleQrcodeToggle"
-    >
-      <div class="qrcode">
-        <qriously :value="getQrval()" :size="200" />
-      </div>
+    <div class="viewer-page-indicator py-1 px-2 d-md-none">
+      {{ page }} / {{ images.length }}
     </div>
   </div>
 </template>
 
 <script>
-import config from '@/config';
-import { last, inElectron } from '@/helpers';
+import { last, isDef } from '@/helpers';
 import { mapState, mapGetters } from 'vuex';
 import { types } from '@/store/modules/viewer';
 import Viewport from './Viewport';
 import Seekbar from './Seekbar';
+import screenfull from 'screenfull';
+
+const KEY_CODE = {
+  UP: 37,
+  DOWN: 39
+};
 
 export default {
   components: {
@@ -74,12 +76,9 @@ export default {
   data() {
     return {
       routePath: '',
-      inOperation: true,
-      isQrcodeShown: false,
-      actions: [{
-        icon: 'qrcode',
-        click: this.handleQrcodeToggle
-      }]
+      menuOpen: true,
+      dropdownOpen: false,
+      isFullscreen: false
     }
   },
   
@@ -88,51 +87,38 @@ export default {
 
     ...mapGetters('viewer', [ 'count', 'chIndex', 'chCount', 'pending' ]),
 
-    ...mapState('viewer', [ 'path', 'mode', 'page', 'ch', 'images', 'chapters' ]),
+    ...mapState('viewer', [ 'path', 'mode', 'zoom', 'gaps', 'autoScrolling', 'page', 'ch', 'images', 'chapters' ]),
+
+    ...mapState('app', { appError: 'error' }),
 
     ...mapState('settings', {
       settings(state) {
         state = state[this.repo.dirId]; // find nested state
+        if (!state) return {}
         const obj = state.data.viewer || {};
-        let margin = true;
+        let gaps = this.gaps; // user viewer gaps as default
 
         // match image margin path
         if (obj.imageMargin) {
-
-          
-          margin = obj.imageMargin['*'] || margin;
           let rest;
+          gaps = obj.imageMargin['*'] || gaps;
 
           Object.keys(obj.imageMargin).forEach(p => {
             if (this.path.indexOf(p) === 0) {
               let r = this.path.slice(p).length;
               if (!rest || r < rest) {
                 rest = r;
-                margin = obj.imageMargin[p];
+                gaps = obj.imageMargin[p];
               }
             }
           });
         }
 
-        return {
-          imageMargin: margin
-        }
+        return { gaps }
       }
     }),
 
-    leftBtns() {
-      return [{
-        icon: 'back',
-        title: this.title,
-        click: this.handleBack
-      }];
-    },
-
     title() {
-      return ` <small>${this.baseTitle} - ${this.pager}</small>`
-    },
-
-    baseTitle() {
       const maxLen = 20;
       let title = last(this.path.split('/'));
 
@@ -143,61 +129,118 @@ export default {
 
       // addon chapter name
       if (this.ch) title += ` - ${this.ch}`
-      return title;
+      return ' ' + title;
     },
 
     pager() {
       return this.page + ' / ' + this.count;
+    },
+
+    leftBtns() {
+      return [{
+        icon: 'arrow-left',
+        title: this.title,
+        click: this.handleBack
+      }];
+    },
+
+    rightBtns() {
+      const menu = [{
+        zoom: 'width',
+        text: 'Fit to width'
+      }, {
+        zoom: 'screen',
+        text: 'Fit to screen'
+      }, {
+        zoom: 100,
+        text: '100%'
+      }].map(item => ({
+        ...item,
+        click: () => this.handleZoom(item.zoom)
+      }));
+
+      const selected = menu.map(item => item.zoom).indexOf(this.zoom);
+
+      return [{
+        icon: this.isFullscreen ? 'compress' : 'expand',
+        tip: 'Fullscreen',
+        click: this.handleToggleFullscreen
+      }, {
+        icon: 'page-alt',
+        tip: 'Page Display',
+        dropdown: {
+          props: {
+            type: 'select',
+            menu: [{
+              type: 'check',
+              checked: this.gaps,
+              text: 'Show Gaps Between Pages',
+              click: this.handleToggleGaps
+            }, {
+              type: 'check',
+              checked: this.autoScrolling,
+              text: 'Auto Scrolling',
+              click: this.handleAutoScrolling
+            }]
+          }
+        }
+      }, {
+        icon: 'search-plus',
+        tip: 'Zoom',
+        dropdown: {
+          props: {
+            type: 'select',
+            selected,
+            menu
+          }
+        }
+      }]
     }
   },
 
   mounted() {
-    const { path, ch } = this.$route.params;
-    const { dirId } = this.repo
-    this.$store.dispatch(types.VIEW, { dirId, path, ch });
-    
-    setTimeout(_ => { 
-      window.addEventListener('scroll', (e) => {
-        this.inOperation = false;
-      }, false);
-    }, 300);
+    if (!this.appError) {  
+      const { path, ch } = this.$route.params;
+      const { dirId } = this.repo;
+      this.$store.dispatch(types.VIEW, { dirId, path, ch });
+
+    };
+  },
+
+  created() {
+    window.addEventListener('wheel', this.handleScroll);
+    window.addEventListener('keydown', this.handleKeydown);
+  },
+
+  destroyed() {
+    window.removeEventListener('wheel', this.handleScroll);
+    window.removeEventListener('keydown', this.handleKeydown);
   },
 
   methods: {
-    getQrval() {
-      const { hash, href } = window.location;
-      if (inElectron) {
-        const { host, port } = config;
-        // when share the qrcode we need the real ip
-        if (process.env.NODE_ENV === 'development') {
-          return href.replace('localhost', host); // replace real ip
-        } else {
-          return `http://${host}:${port}/${hash}`
-        }
-      } else {
-        return href;
-      }
-    },
-
-    go(page) {
+    go(page, a, b, c) {
       this.$store.dispatch(types.GO, { page });
     },
 
-    goCh(chIndex) {
+    goChapter(chIndex) {
       const { dirId } = this.repo;
       this.$store.dispatch(types.GO_CH, { dirId, chIndex });
     },
 
-    toggleOperation(show) {
-      this.inOperation = show !== undefined ? 
+    toggleMenu(show) {
+      this.menuOpen = isDef(show) ? 
         !!show : 
-        !this.inOperation;
+        !this.menuOpen;
     },
     
     // events
-    handleBack($event) {
+    handleBack() {
       if (this.$router._routerHistory.length === 1) {
-        this.$router.push({ name: 'explorer' })
+        const { dirId } = this.$router.history.current.params;
+        this.$router.push({ 
+          name: 'explorer', 
+          params: { dirId } 
+        });
       } else {
         this.$router.go(-1);
       }
@@ -205,37 +248,63 @@ export default {
 
     handleBackdropClick($event) {
       $event.stopPropagation();
-      this.toggleOperation(false);
+      this.toggleMenu(false);
     },
 
-    handleQrcodeToggle($event) {
+    handleKeydown($event) {
+      const { keyCode } = $event;
       $event.stopPropagation();
-      this.isQrcodeShown = !this.isQrcodeShown;
+      
+      if (keyCode === KEY_CODE.UP) {
+        this.go(this.page - 1);
+      } else if (keyCode === KEY_CODE.DOWN) {
+        this.go(this.page + 1);
+      }
     },
 
-    handleOperation($event) {
+    // toolbar events
+    handleToggleFullscreen() {
+      screenfull.toggle();
+      this.isFullscreen = !this.isFullscreen;
+    },
+
+    handleZoom(zoom) {
+      this.$store.dispatch(types.ZOOM, { zoom });
+    },
+
+    handleToggleGaps() {
+      this.$store.dispatch(types.TOGGLE_GAPS);
+    },
+
+    handleAutoScrolling() {
+      this.toggleMenu(false);
+      this.$store.dispatch(types.TOGGLE_AUTO_SCROLLING);
+    },
+
+    handleScroll() {
+      this.toggleMenu(false);
+    },
+
+    handleOpenMenu($event) {
+      // only for mobile
       if (this.mode === 'scroll') {
-        this.toggleOperation(true);
-        return;
-      }
+        if ('ontouchstart' in window) {
+          const width = window.innerWidth;
+          const x = $event.pageX;
+          const wHalf = width / 2;
+          const left = wHalf - 120;
+          const right = wHalf + 120;
 
-      // @todo sipe mode support later
-      if (this.mode === 'swipe') {
-        const width = window.innerWidth;
-        const x = $event.pageX;
-        const wHalf = width / 2;
-        const left = wHalf - 120;
-        const right = wHalf + 120;
-
-        if (x > 0 && x < left) {
-          this.go(this.page - 1);
-        } else if (x >= left && x <= right) {
-          this.toggleOperation(true);
-        } else if (x > right) {
-          this.go(this.page + 1);
+          if (x > 0 && x < left) {
+            this.go(this.page - 1);
+          } else if (x >= left && x <= right) {
+            this.toggleMenu(true);
+          } else if (x > right) {
+            this.go(this.page + 1);
+          }
+        } else {
+          this.toggleMenu(true);
         }
-
-        return;
       }
     }
   }
@@ -248,16 +317,29 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
-  min-height: 100vh;
+  flex: 1;
+}
+
+.viewer-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: auto;
 }
 
 .viewer-topbar {
   transform: translateY(-100%);
   transition: transform .3s ease-in;
 
-  &.in {
+  &.open {
     transform: translateY(0);
+  }
+
+  @include media-breakpoint-up(md) {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
   }
 }
 
@@ -265,7 +347,7 @@ export default {
   transform: translateY(100%);
   transition: transform .3s ease-in;
 
-  &.in {
+  &.open {
     transform: translateY(0);
   }
 }
@@ -285,11 +367,9 @@ export default {
   top: 0;
   right: 0;
   bottom: 0;
-  background: $black;
   z-index: 1040;
 
   .loading-spinner {
-    color: $white;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -297,23 +377,9 @@ export default {
   }
 }
 
-.qrcode-container {
+.viewer-page-indicator {
   position: fixed;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  z-index: 2000;
-  cursor: pointer;
-  
-  .qrcode {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    padding: .25rem;
-    border-radius: .25rem;
-  }
+  right: 0;
+  bottom: 0;
 }
 </style>

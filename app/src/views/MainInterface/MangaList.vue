@@ -1,31 +1,98 @@
 <template>
   <div>
-    <div class="main-explorer">
-      <div class="topbar">
-        <navbar :class="{'no-shadow': breadcrumb.length > 1 }" :title="title" :left-btns="leftBtns" />
-        <breadcrumb
-          :class="{ collapsed: isCollapsed }"
-          v-show="breadcrumb.length > 1" 
-          :navs="breadcrumb"
+    <div class="main-explorer" :class="{ dark: isManga && darkBg }">
+      <div class="topbar" ref="topbar">
+        <navbar
+          :class="{
+            'no-shadow': !isManga && navs.length > 1,
+            'manga-title-shown': titleShown,
+            'manga-title-hidden': isManga && !empty && !titleShown
+          }" 
+          :title="title" 
+          :left-btns="leftBtns"
+          :right-btns="rightBtns"
+          @click="handleBackToTop"
+        />
+        
+        <addressbar
+          v-show="navs.length > 1 && !isManga" 
+          :class="{ collapsed: addressbarCollapsed }"
+          :navs="navs"
           @back="handleNavigateBack"
           @navigate="handleNavigate"
         />
       </div>    
-      <data-view class="main-explorer-container" :loading="isPending" :empty="empty">
-        <div class="row" v-show="isSuccess">
+      <data-view 
+        class="main-explorer-container" 
+        :loading="loading"
+        :empty="empty"
+        :error="error"
+      >
+        <div class="row" v-show="success">
 
           <!-- META DATA -->
-          <div v-if="metadata" id="metadata" class="col-12 col-sm-3">
-            <div class="metadata-inner">
-              <img class="cover" :src="$service.image.makeSrc(path, metadata.cover)" />  
-              <div class="description">
-                {{ metadata.description }}
+          <div id="metadata" v-if="isManga && !empty" class="col-12" ref="metadata">
+            <div class="metadata-banner" ref="banner" />
+                     
+            <div class="metadata-share metadata-inner" v-if="sharing">
+              <div class="modal" tabindex="-1" role="dialog">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">Share: {{ title }}</h5>
+                      <button type="button" class="close" 
+                        data-dismiss="modal" aria-label="Close"
+                        @click="sharing = false"
+                      >
+                        <span aria-hidden="true">×</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      <qriously class="mb-3 qr-code" :value="qrcodeValue" :size="160" />
+                      <p class="text-center text-muted">Scan it to get link</p>                    
+                      <hr/>
+                      <p class="text-center">
+                        Link: 
+                        <a :href="qrcodeValue" target="_blank">{{ qrcodeValue }}</a>
+                      </p>                    
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="metadata-main metadata-inner" v-show="!sharing">
+              <img class="metadata-cover mb-3" ref="cover" />
+              <h4 class="metadata-title mb-4">
+                {{ title }} <br />
+                <small v-if="chapters.length">{{ chapters.length }} chapters</small>
+                <small v-if="!chapters.length">{{ images.length }} pages</small> 
+              </h4>
+              <div class="metadata-footer">
+                <div class="metadata-btn">
+                  <a @click="handleViewManga($event, chapters[0] || images[0], 0)">
+                    <icon name="book-open" />
+                  </a>
+                  <span>Read Now</span>
+                </div>
+                <div class="metadata-btn">
+                  <a @click="handleViewGallery">
+                    <icon name="gallery" />
+                  </a>
+                  <span>Gallery</span>
+                </div>
+                <div class="metadata-btn">
+                  <a @click="handleShareManga">
+                    <icon name="share-alt" size="36" />
+                  </a>
+                  <span>Share</span>
+                </div>
               </div>
             </div>
           </div>
           <!-- / META DATA -->
 
-          <div class="col-12" :class="{ 'col-sm-9': metadata }">
+          <div class="col-12 area-container" v-show="!sharing">
 
             <!-- FOLDER AREA -->
             <div class="folder-area mb-4" v-show="folders.length">
@@ -52,10 +119,10 @@
 
             <!-- MANGA AREA -->
             <div class="manga-area mb-4" v-show="mangas.length">
-              <p class="area-header">MANGA</p>
+              <p class="area-header">MANGA - {{ mangas.length }} items</p>
               <div class="row">
                 <div 
-                  class="col-6 col-sm-3 col-xl-2 manga-item"
+                  class="col-6 col-sm-4 col-md-3 col-xl-2 area-item"
                   :class="{ active: item.path === activePath }"      
                   v-for="item in mangas" 
                   :key="item.path"
@@ -63,12 +130,15 @@
 
                   <router-link 
                     class="cover"
-                    :style="$service.image.coverStyle(item, true)"
+                    v-bind="$service.image.coverStyle(item)"
                     :to="{
                       name: 'explorer', 
-                      params:{ 
+                      params: { 
                         dirId: repo.dirId,
                         path: item.path 
+                      },
+                      query: {
+                        type: 'manga'
                       }
                     }"
                   >
@@ -86,7 +156,7 @@
               <p class="area-header">CHAPTERS</p>
               <div class="list-group">
                 <a class="list-group-item list-group-item-action chapter-item"
-                  :class="{ active: item.name === activeCh}"
+                  :class="{ active: item.name === activeChapter}"
                   v-for="(item, index) in chapters" 
                   :key="item.path"
                   @click="handleViewManga($event, item, 0)"
@@ -104,14 +174,14 @@
 
             <!-- GALLERY AREA -->
             <div class="gallery-area mb-4" v-show="images.length">
-              <p class="area-header">GALLERY</p>
+              <p class="area-header">GALLERY - {{ images.length }} pages</p>
               <div class="row">
-                <div class="col-6 col-sm-3 col-xl-2 gallery-item" 
+                <div class="col-6 col-sm-3 col-xl-2 area-item" 
                   v-for="(item, index) in images" 
                   :key="item.path">
 
                   <div class="cover"
-                    :style="$service.image.coverStyle(item, true)"
+                    :style="$service.image.style(item, 240)"
                     @click="handleViewManga($event, item, index)">
                     <img v-lazy="$service.image.makeSrc(item.path)" />
                   </div>
@@ -129,38 +199,45 @@
 </template>
 
 <script>
-import { isUndef, last, debounce } from '@/helpers';
+import { isUndef, last, debounce, getScrollTop } from '@/helpers';
 import config from '@/config';
 import { types as appTypes } from '@/store/modules/app';
 import { types as mangaTypes } from '@/store/modules/manga';
 import { types as viewerTypes } from '@/store/modules/viewer';
 import { mapState, mapGetters } from 'vuex';
+import ColorThief from 'colorthief/dist/color-thief.mjs';
 
-const getScrollTop = () => {
-  return window.pageYOffset || 
-        document.documentElement.scrollTop || 
-        document.body.scrollTop;
-}
-
+const colorThief = new ColorThief();
 const PATH_SEP = '/';
 
 export default {
   data() {
     return {
-      activeCh: '',
-      isCollapsed: false,
-      leftBtns: [{
-        icon: 'bars',
-        className: 'd-inline-block d-md-none',
-        click: this.handleToggleSidebar
-      }]
+      activeChapter: '',
+      addressbarCollapsed: false,
+      titleShown: false,
+      isManga: false,
+      darkBg: false,
+      sharing: false,
+      immediately: true,
+      coverLoaded: false,
     }
   },
 
   computed: {
+    ...mapState('app', { appError: 'error' }),
+
     ...mapState('manga', [
-      'path', 'metadata', 'list', 'folders', 'mangas', 'chapters', 'images', 'activePath'
+      'inited', 'path', 'list', 'cover', 'folders', 
+      'mangas', 'chapters', 'images', 'activePath', 
+      'error', 'shortId'
     ]),
+
+    ...mapState('manga', {
+      metadata(state) {
+        return state.metadata || {}
+      }
+    }),
 
     ...mapState('viewer', {
       viewerPath: 'path',
@@ -169,16 +246,32 @@ export default {
 
     ...mapGetters('app', [ 'repo' ]),
 
-    ...mapGetters('manga', [ 'isPending', 'isSuccess', 'empty' ]),
+    ...mapGetters('manga', [ 'pending', 'isSuccess', 'empty' ]),
 
-    title() {
-      const title = this.repo.name;
-      const { path } = this.$route.params;
-      return path ? last(path.split(PATH_SEP)) : title;
+    loading() {
+      return this.immediately ? 
+        this.pending :
+        this.pending || !this.coverLoaded;
+    },
+    
+    success() {
+      return this.isManga ?
+        this.isSuccess(this.immediately) && this.coverLoaded :
+        this.isSuccess(this.immediately)
     },
 
-    breadcrumb() {
-      const name = this.repo.name;
+    title() {
+      const repoName = this.repo.name;
+      const path = this.immediately ? this.$route.params.path : this.path;
+      const title = path ? 
+        this.metadata.title || last(path.split(PATH_SEP)) : 
+        repoName;
+      
+      return title;
+    },
+
+    navs() {
+      const { name } = this.repo;
       const { path } = this.$route.params;
       const items = [{ name }];
 
@@ -187,79 +280,225 @@ export default {
         fragments.forEach((item, idx) => {
           // make path (the last ignore click)
           const path = idx < fragments.length - 1 ? 
-            fragments.slice(0, idx + 1).join(PATH_SEP) : false;
+            fragments.slice(0, idx + 1).join(PATH_SEP) : 
+            false;
           const data = { name: item, path };
           items.push(data);
         });
       }
       
       return items;
-    }
+    },
+
+    leftBtns() {
+      return this.isManga ? [{
+        icon: 'arrow-left',
+        tip: 'back',
+        click: this.handleBack
+      }] : [{
+        icon: 'bars',
+        className: 'd-inline-block d-md-none',
+        click: this.handleToggleSidebar
+      }];
+    },
+
+    rightBtns() {
+      return this.isManga ? [{
+        icon: 'level-up-alt',
+        tip: 'back to parent',
+        click: this.handleBackToParent
+      }] : null;
+    },
+    
+    qrcodeValue() {
+      const { host, port } = config;
+      const { protocol } = window.location;
+      // if (inElectron && process.env.NODE_ENV === 'development') {
+      //   const { host, port, baseURL } = config;
+      //   // when share the qrcode we need the real ip
+  
+      //   return href.replace('localhost', host); // replace real ip
+      // } else {
+      //   return `http://${host}:${port}/manga/share/${this.shortId}`
+      // }
+      return `${protocol}//${host}:${port}/s/${this.shortId}`
+    },
   },
 
   watch: {
     $route(to, from) {
       if (from.name === 'viewer') {
-        this.activeCh = this.viewerCh;
+        this.activeChapter = this.viewerCh;
       }
     }
   },
 
   activated() {
-    if (this.$route.meta.isBack || this.$router._reset) return;
+    if (this.appError || (this.$route.meta.isBack && this.inited) || this.$router._reset) return;
+    this.titleShown = false;
+    this.sharing = false;
+    this.coverLoaded = false;
+    this.isManga = this.$route.query.type === 'manga';
     this.fetchMangas(this.$route.params.path);
   },
 
   beforeRouteUpdate(to, from, next) {
     const { isBack } = to.meta;
-    to.meta.scrollPromise = this.fetchMangas(to.params.path, isBack);
+    if (!this.appError) {
+      
+      this.isManga = to.query.type === 'manga';
+      this.sharing = false;
+      setTimeout(() => this.titleShown = false);
+
+      const fromManga = from.query.type === 'manga';
+
+      // when manga to mange ensure 200ms delay
+      if (this.isManga && fromManga) {
+        this.immediately = false;
+        this.coverLoaded = true;
+      } else {
+        this.immediately = true;
+        this.coverLoaded = false;
+      }
+
+      to.meta.scrollPromise = this.fetchMangas(to.params.path, isBack);
+    }
+    
     next();
   },
 
   created() {
     this._prevScrollTop;
-    window.addEventListener('scroll', this.handleScroll, false);
+    window.addEventListener('scroll', this.handleScroll);
   },
 
   destroyed() {
-    window.removeEventListener('scroll', this.handleScroll, false);
+    window.removeEventListener('scroll', this.handleScroll);
   },
 
   methods: {
     fetchMangas(path = '', isBack) {
       const { dirId } = this.repo;
       const payload = { path, dirId, isBack }
-      return this.$store.dispatch(mangaTypes.LIST, payload)
+
+      let timer = null;
+
+      // delay hide content when is not immediately change
+      if (!this.immediately) {
+        timer = setTimeout(() => {
+          this.coverLoaded = false;
+          timer = null;
+        }, 200);
+      }
+
+      return this.$store.dispatch(mangaTypes.LIST, payload).then(() => {
+        clearTimeout(timer);
+        if (this.isManga && !this.empty) {
+          this.changeBanner()
+        } else {
+          this.coverLoaded = true;
+        }
+      })
     },
 
-    toggleLocationCollapsed: debounce(function(scrollTop, prevScrollTop) {
-      if (isUndef(prevScrollTop) || scrollTop > prevScrollTop) {
-        this.isCollapsed = true;
-      } else {
-        this.isCollapsed = false;
-      }
+    toggleAddressbar: debounce(function(scrollTop, prevScrollTop) {
+      this.addressbarCollapsed = scrollTop >= 160 ? 
+        isUndef(prevScrollTop) || scrollTop > prevScrollTop :
+        false;
     }, 500, {
       maxWait: 1500,
       leading: true,
       trailing: false
     }),
 
+    changeBanner() {
+      const img = new Image();
+      const src = this.$service.image.makeSrc(this.cover);
+  
+      const changeCoverDelayed = () => {
+        // when slow
+        if (timer === null) {
+          setTimeout(() => changeCover(), 360);
+          return;
+        }
+
+        clearTimeout(timer);
+        changeCover();
+      }
+
+      const changeCover = () => {
+        const [ r, g, b ] = colorThief.getColor(img);
+        const bg = `rgb(${r},${g},${b})`;
+        const grayLevel = r * 0.299 + g * 0.587 + b * 0.114;
+
+        // fix background transition
+        setTimeout(() => this.$refs.banner.style.backgroundColor = bg);
+        this.$refs.cover.style.backgroundColor = bg;
+        this.$refs.cover.src = src;
+        this.darkBg = grayLevel < 192;
+        this.coverLoaded = true;
+      }
+
+      let timer = setTimeout(() => {
+        timer = null;
+
+        // when change cover is slow, reset main color
+        this.$refs.banner.style.backgroundColor = '';
+        this.$refs.cover.src = '';
+        this.darkBg = false;
+        this.coverLoaded = true;
+      }, 1000);
+
+      img.onload = () => changeCoverDelayed(img);
+      img.setAttribute('crossOrigin', '');
+      img.src = src;
+    },
+
     // events
-    handleToggleSidebar($event) {
+    handleToggleSidebar() {
       this.$store.dispatch(appTypes.TOGGLE_SIDEBAR);
     },
 
-    handleScroll($event) {
-      const scrollTop = getScrollTop();
-      if (scrollTop < 160) {
-        this.isCollapsed = false;
+    handleBack() {
+     if (this.$router._routerHistory.length === 1) {
+        const { dirId } = this.$router.history.current.params;
+        this.$router.push({ name: 'explorer', params: { dirId } })
       } else {
-        this.toggleLocationCollapsed(scrollTop, this._prevScrollTop);
+        this.$router.go(-1);
       }
+    },
+
+    handleBackToParent() {
+      const { dirId } = this.repo;
+      const path = this.path.split(PATH_SEP).slice(0, -1).join(PATH_SEP);
+
+      this.$router.navigate({
+        name: 'explorer',
+        params: { dirId, path }
+      });
+    },
+
+    handleBackToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    },
+
+    handleScroll() {
+      const scrollTop = getScrollTop();
+
+      // handle navs show or hide
+      if (!this.isManga) {  
+        this.toggleAddressbar(scrollTop, this._prevScrollTop);
+
+      // handle mange title show or hide
+      } else {
+        const metaH = this.$refs.metadata.clientHeight - 48;
+        this.titleShown = scrollTop >= metaH;
+      }
+
       this._prevScrollTop = scrollTop;
     },
 
-    handleNavigateBack($event) {
+    handleNavigateBack() {
       this.$router.back();
     },
 
@@ -272,13 +511,6 @@ export default {
       this.$router.navigate({
         name: 'explorer',
         params: { dirId, path }
-      });
-    },
-
-    handleViewList($event, item) {
-      this.$router.push({
-        name: 'explorer',
-        params:{ path: item.path }
       });
     },
 
@@ -301,7 +533,7 @@ export default {
       };
 
       // activate chapter
-      item.type === 'CHAPTER' && (this.activeCh = item.name)
+      item.type === 'CHAPTER' && (this.activeChapter = item.name)
 
       // sync state to viewer store
       if (shouldSyncState()) {
@@ -321,6 +553,27 @@ export default {
         name: 'viewer',
         params: { dirId, path, ch }
       });
+    },
+
+    handleViewGallery() {
+      const y = this.$refs.metadata.clientHeight - 48;
+
+      // fix ios metadata overwrite bug
+      this.$refs.topbar.style.zIndex = 1031;
+      setTimeout(() => {
+        window.scrollTo({
+          top: y,
+          behavior: 'smooth'
+        });
+        this.$refs.topbar.style.zIndex = 1030;
+      });
+    },
+
+    handleShareManga() {
+      const payload = { url: window.location.href }
+      this.$store.dispatch(mangaTypes.SHARE, payload).then(() => {
+        this.sharing = true;
+      }); 
     }
   }
 }
@@ -329,7 +582,7 @@ export default {
 <style lang="scss">
 @import '../../assets/style/base';
 
-.location {
+.addressbar {
   transition-duration: .3s;
 
   &.collapsed {
@@ -338,7 +591,7 @@ export default {
 }
 
 .main-explorer-container {
-  min-height: calc(100vh - 4.8rem);
+  min-height: calc(100vh - 5rem);
 }
 
 .area-header {
@@ -370,47 +623,37 @@ export default {
 
 .chapter-area .list-group {
   @include media-breakpoint-up(md) {
+    margin: -.2rem;
     flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-start;
 
     .list-group-item {
       width: 50%;
-      margin-left: -.5px;
+      margin: .2rem;
+      width: calc(50% - .4rem);
     }
   }
 
   @include media-breakpoint-up(lg) {
     .list-group-item {
-      width: 33.3%;
+      width: calc(33.3% - .4rem);
     }
   }
 }
 
 .manga-area,
 .gallery-area {
-
-  > .row {
-    padding: 1rem .5rem;
-    border-width: .5px 0;
-    border-style: solid;
-
-    @include media-breakpoint-up(md) {
-      margin-left: 0;
-      margin-right: 0;
-      border-width: .5px;
-    }
-  }
-  
-  .manga-item,
-  .gallery-item {
+  .area-item {
     padding: .5rem;
-    margin-bottom: 4rem;
+    margin-bottom: 3rem;
 
     &:hover {
-      z-index: 1;
+      z-index: 2;
+
       .caption {
-        max-height: none;
+        min-height: 2.8625rem;
+        height: auto;
         overflow: visible;
       }
     }
@@ -422,14 +665,13 @@ export default {
     display: block;
     position: relative;
     overflow: hidden;
-    transform: translateY(-50%);
-    top: 50%;
-
+    
     img {
       position: absolute;
       width: 100%;
       height: 100%;
       display: block;
+      z-index: 1; // covered box-shadow
     }
 
     img[lazy="loaded"] {
@@ -440,76 +682,236 @@ export default {
   }
 
   .caption {
-    left: 0;
-    right: 0;
-    top: 100%;
+    left: .5rem;
+    right: .5rem;
     position: absolute;
     overflow: hidden;
-    width: 100%;
-    max-height: 3rem;
-    padding: .3rem .5rem;
+    height: 2.8625rem;
+    padding: .2rem .4rem;
     display: block;
-    text-align: center;
-    font-size: .85rem;
+    font-size: 13px;
+    word-wrap: break-word;
+    word-break:break-all;
+  }
+}
+
+.manga-area {
+  > .row {
+    padding: 0 .5rem;
+
+    @include media-breakpoint-up(md) {
+      margin-left: -.5rem;
+      margin-right: -.5rem;
+      padding: 0;
+    }
+  }
+  
+  .cover {
+    border-radius: .5rem .5rem 0 0;
+
+    &.adjust img[lazy="loaded"] {
+      height: 100%;
+    }
   }
 
-  .manga-item {
-    .caption {
-      font-weight: 700;
-      text-align: left;
+  .caption {
+    border-radius: 0 0 .5rem .5rem;
+    font-weight: 600;
+    text-align: left;
+  }
+}
+
+.gallery-area {
+
+  > .row {
+    padding: .5rem .5rem;
+    border-width: .5px 0;
+    border-style: solid;
+
+    @include media-breakpoint-up(md) {
+      margin-left: 0;
+      margin-right: 0;
+      border-width: .5px;
     }
+  }
+
+  .cover {
+    transform: translateY(-50%);
+    top: 50%;
+  }
+
+  .caption {
+    top: 100%;
   }
 }
 
 #metadata {
-  position: relative;
-  height: auto;
-  top: auto;
-  margin-bottom: 0;
+  height: 100vh;
+  margin-top: -3rem;
   display: flex;
-
-  @include media-breakpoint-up(md) {
-    @supports (position: sticky) {
-      position: sticky;
-      top: 4.8rem;
-      height: calc(100vh - 4.8rem);
-    }
-  }
+  overflow: hidden;
+  position: sticky;
+  top: 0;
 
   .metadata-inner {
+    padding: 3rem 0 1rem 0;
+    width: 100%;
     display: flex;
-    align-items: flex-start;
-    padding-top: 15px;
-    padding-bottom: 15px;
-    
-    @include media-breakpoint-up(md) {
-      flex-direction: column;
-      align-items: center;
-      padding-left: 15px;
-      padding-top: 30px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .metadata-banner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: .8;
+    transition: .25s linear;
+  }
+
+  .metadata-share {
+
+    .metadata-share-inner {
+      padding: 1rem 0;
+      background: #fff;
+      border-radius: .5rem;
+      width: 100%;
+      max-width: 360px;
     }
-  } 
 
-  .cover {
-    width: 140px;
-    display: block;
-    border-radius: .25rem;
-    margin: 0 1rem 0 0;
+    .modal {
+      position: relative;
+      top: auto;
+      right: auto;
+      bottom: auto;
+      left: auto;
+      z-index: 1;
+      display: block;
+      height: auto;
+      overflow: visible;
 
-    @include media-breakpoint-up(md) {
-      width: auto;
-      max-width: 100%;
-      font-size: 100%;
-      margin: 0 0 1rem 0;
+      .modal-header {
+        padding: .5rem 1rem;
+      }
+      
+      .modal-dialog {
+        margin-top: 0;
+        max-width: 420px;
+      }
+
+      p {
+        word-wrap: break-word;
+        word-break:break-all;     
+      }
+    }
+
+    .qr-code {
+      canvas {
+        display: block;
+        margin: 0 auto;
+      }
+    }
+
+    input {
+      text-align: center;
+    }
+
+    .close-share-btn {
+      position: absolute;
+      right: 0;
+      top: 0;
     }
   }
 
-  .description {
-    font-size: 80%;
-    text-indent: 1rem;
+  .metadata-cover {
+    display: block;
+    position: relative;
+    border-radius: .5rem;
+    max-width: 50%;
+    max-height: 50%;
+  }
 
-    @include media-breakpoint-up(md) {  
-      line-height: 1.6;
+  .metadata-title {
+    font-size: 1.1rem;
+    text-align: center;
+
+    @include media-breakpoint-up(md) {
+      font-size: 1.2rem;
+    }
+  }
+
+  .metadata-footer {
+    width: 100%;
+    max-width: 300px;
+    display: flex;
+    justify-items: center;
+    font-size: 1rem;
+    flex-wrap: wrap;
+
+    > div {
+      width: 33.3%;
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+  }
+
+  .metadata-btn {
+    text-align: center;
+
+    > a {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 100%;
+      display: block;
+      margin: 0 auto .5rem auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      background: rgba(0,0,0, .1);
+    
+      .svg-icon {
+        width: 28px;
+        height: 28px;
+      }
+    }
+
+    @include media-breakpoint-up(md) {
+      > a {
+        width: 4rem;
+        height: 4rem;
+
+        .svg-icon {
+          width: 36px;
+          height: 36px;
+        }
+      }
+    }
+  }
+}
+
+.topbar {
+  .manga-title-shown {
+    color: '';
+
+    .navbar-brand {
+      opacity: 1
+    }
+  }
+
+  .manga-title-hidden {
+    background: transparent !important;
+    border-bottom-color: transparent;
+    box-shadow: none;
+    
+    .navbar-brand {
+      opacity: 0;
     }
   }
 }

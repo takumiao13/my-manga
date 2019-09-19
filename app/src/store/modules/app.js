@@ -4,9 +4,10 @@ import { createTypesWithNs } from '../helpers';
 const ns = 'app';
 const TOGGLE_SIDEBAR = 'TOGGLE_SIDEBAR';
 const TOGGLE_REPO = 'TOGGLE_REPO';
+const ERROR = 'ERROR';
 
 export const types = createTypesWithNs([
-  TOGGLE_SIDEBAR, TOGGLE_REPO
+  TOGGLE_SIDEBAR, TOGGLE_REPO, ERROR
 ], ns);
 
 const CLASS_NAMES = {
@@ -19,6 +20,7 @@ export default {
   state: {
     isSidebarOpen: false,
     repoId: '',
+    error: null,
   },
 
   getters: {
@@ -34,6 +36,10 @@ export default {
 
     [TOGGLE_REPO]({ commit }, payload = {}) {
       commit(TOGGLE_REPO, payload);
+    },
+
+    [ERROR]({ commit }, payload) {
+      commit(ERROR, payload);
     }
   },
 
@@ -54,6 +60,10 @@ export default {
 
     [TOGGLE_REPO](state, payload) {
       state.repoId = payload.repo;
+    },
+
+    [ERROR](state, payload) {
+      state.error = payload;
     }
   }
 };
