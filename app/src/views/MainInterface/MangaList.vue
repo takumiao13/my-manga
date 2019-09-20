@@ -11,7 +11,7 @@
           :title="title" 
           :left-btns="leftBtns"
           :right-btns="rightBtns"
-          @click="handleBackToTop"
+          @click.native="handleBackToTop"
         />
         
         <addressbar
@@ -206,6 +206,7 @@ import { types as mangaTypes } from '@/store/modules/manga';
 import { types as viewerTypes } from '@/store/modules/viewer';
 import { mapState, mapGetters } from 'vuex';
 import ColorThief from 'colorthief/dist/color-thief.mjs';
+import animatescroll from 'animatescroll';
 
 const colorThief = new ColorThief();
 const PATH_SEP = '/';
@@ -481,7 +482,7 @@ export default {
     },
 
     handleBackToTop() {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      animatescroll.to(0);
     },
 
     handleScroll() {
@@ -560,13 +561,10 @@ export default {
     handleViewGallery() {
       const y = this.$refs.metadata.clientHeight - 48;
 
-      // fix ios metadata overwrite bug
+      // fix ios metadata overwrite gallery bug
       this.$refs.topbar.style.zIndex = 1031;
       setTimeout(() => {
-        window.scrollTo({
-          top: y,
-          behavior: 'smooth'
-        });
+        animatescroll.to(y);
         this.$refs.topbar.style.zIndex = 1030;
       });
     },

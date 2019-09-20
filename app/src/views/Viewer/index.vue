@@ -1,49 +1,52 @@
 <template>
-  <div id="viewer" @click="handleOpenMenu">
-    <navbar 
-      class="viewer-topbar fixed-top"
-      :class="{ open: menuOpen }"
-      :title="{ content: pager, className: 'text-center d-none d-md-block' }"
-      :left-btns="leftBtns"
-      :right-btns="rightBtns"
-      @click="$event.stopPropagation()"
-    />
-
-    <div class="viewer-container">
-      <viewport
-        :mode="mode"
-        :options="{
-          gallery: images,
-          chapters: chapters,
-          page: page,
-          chIndex: chIndex,
-          zoom: zoom,
-          settings: settings,
-          autoScrolling: autoScrolling,
-          locking: menuOpen
-        }"
-        @pageChange="go"
-        @chapterChange="goChapter" 
+  <div id="viewer">
+    <div class="topbar fixed-top" :class="{ open: locking }">
+      <navbar
+        :title="{ content: pager, className: 'text-center d-none d-md-block' }"
+        :left-btns="leftBtns"
+        :right-btns="rightBtns"
       />
     </div>
+    <div 
+      v-show="!locking"
+      class="viewer-topbar-placeholder" 
+      @mouseenter="locking = true"
+    />
 
-    <div
-      class="viewer-loading"
-      v-show="pending"
-    >
+    <viewport
+      :class="{ 'viewer-locking': locking }"
+      :mode="mode"
+      :hand="handMode"
+      :options="{
+        gallery: images,
+        chapters: chapters,
+        page: page,
+        chIndex: chIndex,
+        settings: settings,
+        zoom: zoom,
+        autoScrolling: autoScrolling,
+        locking: locking
+      }"
+      @click.native="lockToggle()"
+      @prev="prev"
+      @next="next"
+      @pageChange="go"
+      @chapterChange="goChapter" 
+    />
+
+    <div class="viewer-loading" v-show="pending">
       <spinner class="loading-spinner" size="lg" tip="Loading" />
     </div>
 
-    <div
-      class="viewer-backdrop" 
-      v-show="menuOpen" 
-      @click="handleBackdropClick" 
+    <hand-mode
+      v-show="handModeOpen"
+      :hand="handMode"
+      @click.native="handModeOpen = false"
     />
-  
+
     <div
       class="viewer-toolbar fixed-bottom" 
-      :class="{ open: menuOpen }"
-      @click="$event.stopPropagation()"
+      :class="{ open: locking }"
     >
       <seekbar :value="page" :max="count" @end="go" />
     </div>
@@ -58,27 +61,55 @@
 import { last, isDef } from '@/helpers';
 import { mapState, mapGetters } from 'vuex';
 import { types } from '@/store/modules/viewer';
+import screenfull from 'screenfull';
+import animatescroll from 'animatescroll';
+
+// Components
 import Viewport from './Viewport';
 import Seekbar from './Seekbar';
-import screenfull from 'screenfull';
+import HandMode from './HandMode';
 
 const KEY_CODE = {
-  UP: 37,
-  DOWN: 39
+  LEFT: 37,
+  RIGHT: 39,
+  UP: 38,
+  DOWN: 40,
+  A: 65,
+  D: 68,
+  W: 87,
+  S: 83,
+  F11: 122
 };
+
+const HAND_ACTION = {
+  left: {
+    prev: KEY_CODE.A,
+    next: KEY_CODE.D,
+    up: KEY_CODE.W,
+    down: KEY_CODE.S
+  },
+
+  right: {
+    prev: KEY_CODE.LEFT,
+    next: KEY_CODE.RIGHT,
+    up: KEY_CODE.UP,
+    down: KEY_CODE.DOWN
+  }
+}
 
 export default {
   components: {
     Viewport,
-    Seekbar
+    Seekbar,
+    HandMode
   },
 
   data() {
     return {
-      routePath: '',
-      menuOpen: true,
-      dropdownOpen: false,
-      isFullscreen: false
+      locking: true,
+      isFullscreen: false,
+      handMode: 'right',
+      handModeOpen: false
     }
   },
   
@@ -122,10 +153,10 @@ export default {
       const maxLen = 20;
       let title = last(this.path.split('/'));
 
-      // truncate title
-      if (title.length > maxLen) {
-        title = title.substring(0, maxLen - 3) + '...';
-      }
+      // // truncate title
+      // if (title.length > maxLen) {
+      //   title = title.substring(0, maxLen - 3) + '...';
+      // }
 
       // addon chapter name
       if (this.ch) title += ` - ${this.ch}`
@@ -140,7 +171,8 @@ export default {
       return [{
         icon: 'arrow-left',
         title: this.title,
-        click: this.handleBack
+        click: this.handleBack,
+        className: 'text-truncate viewer-title'
       }];
     },
 
@@ -172,6 +204,9 @@ export default {
           props: {
             type: 'select',
             menu: [{
+              text: 'Hand Mode: ' + this.handMode.toUpperCase(),
+              click: this.handleToggleHandMode
+            }, {
               type: 'check',
               checked: this.gaps,
               text: 'Show Gaps Between Pages',
@@ -202,23 +237,20 @@ export default {
     if (!this.appError) {  
       const { path, ch } = this.$route.params;
       const { dirId } = this.repo;
+      
       this.$store.dispatch(types.VIEW, { dirId, path, ch });
-
-    };
-  },
-
-  created() {
-    window.addEventListener('wheel', this.handleScroll);
-    window.addEventListener('keydown', this.handleKeydown);
+      window.addEventListener('keydown', this.handleKeydown);
+      window.addEventListener('scroll', this.handleScroll);
+    }
   },
 
   destroyed() {
-    window.removeEventListener('wheel', this.handleScroll);
     window.removeEventListener('keydown', this.handleKeydown);
+    window.removeEventListener('scroll', this.handleScroll);
   },
 
   methods: {
-    go(page, a, b, c) {
+    go(page) {
       this.$store.dispatch(types.GO, { page });
     },
 
@@ -226,13 +258,23 @@ export default {
       const { dirId } = this.repo;
       this.$store.dispatch(types.GO_CH, { dirId, chIndex });
     },
-
-    toggleMenu(show) {
-      this.menuOpen = isDef(show) ? 
-        !!show : 
-        !this.menuOpen;
-    },
     
+    prev() {
+      console.log('prev');
+      this.go(this.page - 1);
+    },
+
+    next() {
+      console.log('next');
+      this.go(this.page + 1);
+    },
+
+    lockToggle(val) {
+      this.locking = isDef(val) ?
+        !!val :
+        !this.locking;
+    },
+
     // events
     handleBack() {
       if (this.$router._routerHistory.length === 1) {
@@ -246,19 +288,39 @@ export default {
       }
     },
 
-    handleBackdropClick($event) {
-      $event.stopPropagation();
-      this.toggleMenu(false);
+    handleScroll() {
+      if (window._ignoreScrollEvent || this.autoScrolling) return;
+      this.locking = false;
     },
 
     handleKeydown($event) {
-      const { keyCode } = $event;
       $event.stopPropagation();
-      
-      if (keyCode === KEY_CODE.UP) {
-        this.go(this.page - 1);
-      } else if (keyCode === KEY_CODE.DOWN) {
-        this.go(this.page + 1);
+      const keyCode = $event.keyCode;  
+      const action = HAND_ACTION[this.handMode];
+
+      switch (keyCode) {
+        case action.prev:
+          $event.preventDefault();
+          this.prev();
+          break;
+        case action.next:
+          $event.preventDefault();
+          this.next();
+          break;  
+        case action.up:
+          $event.preventDefault();
+          animatescroll.by({
+            y: -50,
+            animate: false
+          });
+          break;
+        case action.down:
+          $event.preventDefault();
+          animatescroll.by({
+            y: +50,
+            animate: false
+          });
+          break;
       }
     },
 
@@ -276,71 +338,82 @@ export default {
       this.$store.dispatch(types.TOGGLE_GAPS);
     },
 
+    handleToggleHandMode() {
+      this.locking = false;
+      this.handModeOpen = true;
+      if (this.handMode === 'left') {
+        this.handMode = 'right';
+      } else {
+        this.handMode = 'left';
+      } 
+    },
+
     handleAutoScrolling() {
-      this.toggleMenu(false);
+      this.locking = false;
       this.$store.dispatch(types.TOGGLE_AUTO_SCROLLING);
     },
 
-    handleScroll() {
-      this.toggleMenu(false);
-    },
+    // handleOperation($event) {
+    //   if (this.locking) {
+    //     this.locking = false;
+    //     return;
+    //   }
 
-    handleOpenMenu($event) {
-      // only for mobile
-      if (this.mode === 'scroll') {
-        if ('ontouchstart' in window) {
-          const width = window.innerWidth;
-          const x = $event.pageX;
-          const wHalf = width / 2;
-          const left = wHalf - 120;
-          const right = wHalf + 120;
+    //   if (this.mode === 'scroll') {
+    //     // only for mobile
+    //     const x = $event.pageX;
+        
+    //     // |-- left --|-- middle --|-- right --|
+    //     const width = window.innerWidth;
+    //     const justifyWidth = width / 3;
+        
+    //     const left = justifyWidth;
+    //     const right = justifyWidth * 2;
 
-          if (x > 0 && x < left) {
-            this.go(this.page - 1);
-          } else if (x >= left && x <= right) {
-            this.toggleMenu(true);
-          } else if (x > right) {
-            this.go(this.page + 1);
-          }
-        } else {
-          this.toggleMenu(true);
-        }
-      }
-    }
+    //     if (x > 0 && x < left) {
+    //       this.go(this.page - 1);
+    //     } else if (x >= left && x <= right) {
+    //       this.locking = true;
+    //     } else if (x > right) {
+    //       this.go(this.page + 1);
+    //     }
+    //   }
+    // }
   }
 }
 </script>
 
 <style lang="scss">
 @import '../../assets/style/base';
-#viewer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex: 1;
+
+.viewer-title {
+  max-width: 50vw;
+
+  @include media-breakpoint-up(md) {
+    max-width: 40vw;
+  }
 }
 
 .viewer-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: auto;
+  position: relative;
 }
 
-.viewer-topbar {
+#viewer > .topbar {
   transform: translateY(-100%);
   transition: transform .3s ease-in;
 
   &.open {
     transform: translateY(0);
   }
+}
 
-  @include media-breakpoint-up(md) {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
+.viewer-topbar-placeholder {
+  height: 3rem;
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 1040;
+  top: 0;
 }
 
 .viewer-toolbar {
@@ -350,15 +423,6 @@ export default {
   &.open {
     transform: translateY(0);
   }
-}
-
-.viewer-backdrop {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
 }
 
 .viewer-loading {

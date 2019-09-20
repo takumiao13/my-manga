@@ -212,13 +212,10 @@ $viewer-color: #eee;
 $viewer-toolbar-bg: #333;
 
 #viewer {
-  
+  background: $viewer-bg !important;
   color: $viewer-color !important;
 
-  .viewer-container {
-    background: $viewer-bg !important;
-
-
+  .viewer-viewport {
     &::-webkit-scrollbar-track {
       background-color: $viewer-bg;
     }
@@ -228,22 +225,14 @@ $viewer-toolbar-bg: #333;
     }
   }
 
-  .viewer-topbar,
+  .topbar > .navbar,
   .viewer-toolbar > .navbar {
     background: $viewer-toolbar-bg !important;
     box-shadow: 0px 1px 2px 0px rgba($black, 0.3);
-  
-    .dropdown-menu {
-      background: $viewer-toolbar-bg !important;
-      color: $viewer-color !important;
-      box-shadow: 0 2px 4px -1px rgba($black, 0.2), 
-                  0 4px 5px 0 rgba($black, 0.14), 
-                  0 1px 10px 0 rgba($black, 0.12);
+  }
 
-      .dropdown-item:hover {
-        background: rgba($white, .1);      
-      }
-    }
+  .topbar > .navbar {
+    background: $viewer-toolbar-bg !important;
   }
 
   .viewer-loading {
@@ -261,5 +250,17 @@ $viewer-toolbar-bg: #333;
 
   .viewer-page-indicator {
     background: rgba($viewer-bg, .8);
+  }
+
+  .dropdown-menu {
+    background: $viewer-toolbar-bg !important;
+    color: $viewer-color !important;
+    box-shadow: 0 2px 4px -1px rgba($black, 0.2), 
+                0 4px 5px 0 rgba($black, 0.14), 
+                0 1px 10px 0 rgba($black, 0.12);
+
+    .dropdown-item:hover {
+      background: rgba($white, .1);      
+    }
   }
 }

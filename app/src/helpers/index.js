@@ -1,5 +1,4 @@
 import Vue from 'vue';
-//import smoothscroll from './smooth-scroll';
 
 export * from 'shared';
 

@@ -1,19 +1,18 @@
 <template>
-  <nav class="navbar" @click="$emit('click', $event)">
+  <nav class="navbar">
     <ul v-if="leftBtns_ && leftBtns_.length" class="navbar-nav navbar-nav-left flex-row">
       <component 
         class="nav-item"
         v-for="(btn, index) in leftBtns_"
         :is="btn.dropdown ? 'dropdown' : 'li'"
         :key="`left-${index}`"
-        :class="btn.className"
         :as="btn.dropdown ? 'li' : null"
         v-bind="btn.dropdown ? btn.dropdown.props : null"
         v-on="btn.dropdown ? btn.dropdown.on : null"
       >
         <component
           :is="btn.dropdown ? 'span' : 'a'"
-          :class="{ btn: !btn.dropdown }"
+          :class="[btn.className, { btn: !btn.dropdown }]"
           :title="btn.tip"
           @click="btn.click"
         >

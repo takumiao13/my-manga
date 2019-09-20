@@ -1,8 +1,13 @@
 <template>
-  <div class="viewer-mode" ref="mode" :style="{ width: zoom === 100 ? 'auto' : '100%' }">
+  <div class="viewer-mode" ref="mode" 
+    :style="{ 
+      'max-width': zoom === 100 ? 'none' : null, 
+      width: zoom === 100 ? 'auto' : null  
+    }"
+  >
     <div class="prev-ch"
       v-if="chIndex && chIndex > 1"
-      @click="$emit('chapterChange', chIndex - 1)">
+      @click.stop="$emit('chapterChange', chIndex - 1)">
       Prev Chapter
       <icon name="arrow-up" />
     </div>
@@ -10,9 +15,12 @@
     <div
       ref="imgWrapper"
       v-for="(item, index) in gallery"
-      :class="['img-wrapper', { gaps: gaps }]"
+      :class="['img-wrapper', { gaps: settings.gaps }]"
       :key="item.path"
-      :style="wrapperStyle(item)"
+      :style="{ 
+        width: item.width + 'px',
+        'max-width': zoom === 100 ? 'none' : null
+      }"
     >
       <div class="img-loading">{{ index + 1 }}</div>
       <div 
@@ -26,7 +34,7 @@
 
     <div class="next-ch"
       v-if="chIndex && chIndex < chCount" 
-      @click="$emit('chapterChange', chIndex + 1)">
+      @click.stop="$emit('chapterChange', chIndex + 1)">
       Next Chapter
       <icon name="arrow-down" />
     </div>
@@ -36,6 +44,7 @@
 <script>
 import { debounce, getScrollTop, getScrollHeight, getOffsetHeight } from '@/helpers';
 import { types } from '@/store/modules/viewer';
+import animatescroll from 'animatescroll';
 
 export default {
   name: 'ScrollMode',
@@ -45,10 +54,7 @@ export default {
     chapters: Array,
     page: [ Number, String ],
     chIndex: Number,
-    gaps: {
-      type: Boolean,
-      default: true
-    },
+    settings: Object,
     zoom: {
       type: [ String, Number ],
       default: 'width'
@@ -60,8 +66,7 @@ export default {
   data() {
     return {
       page_: this.page, // internal page value
-      chCount: this.chapters.length,
-      scrolling: false
+      chCount: this.chapters.length
     }
   },
 
@@ -88,36 +93,38 @@ export default {
       this.refresh();
     },
 
-    locking(val) {
-      this.autoScrolling && this[val ? 'pauseScroll' : 'startScroll']();
+    autoScrolling(val) {
+      console.log('autoScrolling', val);
+      this[val ? 'startScroll' : 'stopScroll']();
     },
 
-    autoScrolling(val) {
-      this[val ? 'startScroll' : 'stopScroll']();
+    locking(val) {
+      console.log('locking', val);
+      this.autoScrolling && this[val ? 'pauseScroll' : 'resumeScroll']();
     }
   },
 
   created() {
+    console.log(this._scroller);
     this._offsets = [];
     this._ignoreScrollEvent = false;
   },
 
   destroyed() {
-    this.$container.removeEventListener('scroll', this.handleScroll);
+    window.removeEventListener('scroll', this.handleScroll);
     window.removeEventListener('resize', this.handleResize);
   },
 
   mounted() {
-    this.$container = document.querySelector('.viewer-container');
-    this.$container.addEventListener('scroll', this.handleScroll);
     window.addEventListener('resize', this.handleResize);
-
+    window.addEventListener('scroll', this.handleScroll);
+  
     this.refresh()
     this.scrollToCurrPage();
   },
 
   methods: {
-    refresh() {      
+    refresh() {
       const imgWrappers = this.$refs.imgWrapper;
       const viewWidth = this.$refs.mode.clientWidth;
       const viewHeight = window.innerHeight;
@@ -139,7 +146,7 @@ export default {
           item.style.width = orgWidth + 'px';
         }
 
-        const scrollTop = getScrollTop(this.$container);
+        const scrollTop = getScrollTop();
         const itemBCR = item.getBoundingClientRect();
         if (itemBCR.width || itemBCR.height) {
           return itemBCR.top + scrollTop
@@ -147,67 +154,54 @@ export default {
       });
     },
 
-    wrapperStyle(item) {
-      return { width: item.width + 'px' }
-    },
-
     scrollToCurrPage() {
-      this._ignoreScrollEvent = true;
       const y = this._offsets[this.page - 1];
       console.log('scrollTo', this.page, y);
+      window._ignoreScrollEvent = true;
       window.scrollTo(0, y);
     },
 
-    startScroll() {   
-      const self = this;
-      if (!this.scrolling) {
-        console.log('start');
-        this.scrolling = true;
-        step();
-      }
-
-      function step() {
-        setTimeout(() => {
-          self.$container.scrollTop += 5;
-          if (isBottom(self.$container) || !self.scrolling) {
-            self.stopScroll();
-          } else {
-            step();
-          }
-        }, 100);
-      }
-
-      function isBottom(elem) {
-        const scrollH = elem.scrollHeight;
-        const h = elem.scrollTop + elem.clientHeight;
-        return scrollH < h + 1 && scrollH > h - 1;
+    startScroll() {
+      console.log('start');
+      if (!this._scroller) {
+        this._scroller = animatescroll.to({
+          y: 'bottom',
+          speed: 50
+        });
+      } else {
+        this._scroller.resume();
       }
     },
 
     stopScroll() {
-      if (this.autoScrolling && this.scrolling) {
+      if (this.autoScrolling && !this._scroller.isPaused()) {
         console.log('stop');
+        this._scroller.pause();
         this.$store.dispatch(types.TOGGLE_AUTO_SCROLLING, { autoScrolling: false });
-        this.scrolling = false;
       }
     },
 
     pauseScroll() {
       console.log('pause');
-      this.scrolling = false;
+      this._scroller.pause();
+    },
+
+    resumeScroll() {
+      console.log('resume');
+      this._scroller.resume();
     },
 
     // events
     handleScroll() {
       // prevent scrollTo trigger event，when page_ updated
-      if (this._ignoreScrollEvent) {
-        this._ignoreScrollEvent = false;
+      if (window._ignoreScrollEvent) {
+        setTimeout(() => window._ignoreScrollEvent = false);
         return;
       }
 
-      const scrollHeight = getScrollHeight(this.$container);
-      const maxScroll = scrollHeight - getOffsetHeight(this.$container);
-      const scrollTop = Math.ceil(getScrollTop(this.$container));
+      const scrollHeight = getScrollHeight();
+      const maxScroll = scrollHeight - getOffsetHeight();
+      const scrollTop = Math.ceil(getScrollTop());
       const offsetLength = this._offsets.length;
 
       if (scrollTop >= maxScroll) {

@@ -1,15 +1,16 @@
 <template>
-  <div 
-    class="viewer-viewport"
-    @mousedown="$event.preventDefault()"
-  >
-    <!-- TODO: may be support more mode later -->
-    <scroll-mode
-      v-if="mode === 'scroll'"
-      v-bind="options"
-      @pageChange="handlePageChange"
-      @chapterChange="handleChapterChange"
-    />
+  <div class="viewer-container">
+    <div class="viewer-viewport-left" @click="handleLeft"/>
+    <div class="viewer-viewport">
+      <!-- TODO: may be support more mode later -->
+      <scroll-mode
+        v-if="mode === 'scroll'"
+        v-bind="options"
+        @pageChange="handlePageChange"
+        @chapterChange="handleChapterChange"
+      />
+    </div>
+    <div class="viewer-viewport-right" @click="handleRight" />
   </div>
 </template>
 
@@ -23,9 +24,21 @@ export default {
     ScrollMode
   },
   
-  props: [ 'mode', 'options' ],
+  props: [ 'mode', 'hand', 'options' ],
 
   methods: {
+    handleLeft($event) {
+      if (this.options.locking) return;
+      $event.stopPropagation();
+      this.$emit(this.hand === 'right' ? 'prev' : 'next');
+    },
+
+    handleRight($event) {
+      if (this.options.locking) return;
+      $event.stopPropagation();
+      this.$emit(this.hand === 'right' ? 'next' : 'prev');
+    },
+
     handlePageChange(page) {
       this.$emit('pageChange', page);
     },
@@ -40,27 +53,30 @@ export default {
 <style lang="scss">
 @import '../../assets/style/base';
 
-.viewer-viewport {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  min-height: 100vh;
-  margin: 0 auto;
-
-  @include media-breakpoint-up(md) {
-    max-width: 600px;
-    .viewer-mode {
-      margin-top: 3rem;
-    }
+.viewer-viewport.viewer-locking {
+  &::after {
+    content: '';
   }
+}
 
-  @include media-breakpoint-up(lg) {
-    max-width: 800px;
+.viewer-viewport {
+  position: relative;
+  min-height: 100vh;
+
+  &:after {
+    content: none;
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
   }
 
   .viewer-mode {
     width: 100%;
+    margin: 0 auto;
+    border: 1px solid transparent; // for BFC
   }
 
   .img-wrapper {
@@ -75,7 +91,7 @@ export default {
 
       @include media-breakpoint-up(md) {
         margin-top: .5rem;
-        margin-bottom: 1rem;
+        margin-bottom: .5rem;
       }
     }
 
@@ -95,6 +111,50 @@ export default {
       width: 100%;
       max-height: 100%;
     }
+  }
+}
+
+.viewer-viewport-left,
+.viewer-viewport-right {
+  width: 33.3%;
+  opacity: .5;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.viewer-viewport-left {
+  background: red;
+  left: 0;
+  cursor: url('../../assets/prev_page.cur'), auto;
+}
+
+.viewer-viewport-right {
+  background: green;
+  right: 0;
+  cursor: url('../../assets/next_page.cur'), auto;
+}
+
+@include media-breakpoint-up(md) {
+  .viewer-mode {
+    max-width: 600px;
+  }
+
+  .viewer-viewport-left,
+  .viewer-viewport-right {
+    width: calc(50% -  300px);
+  }
+}
+
+@include media-breakpoint-up(lg) {
+  .viewer-mode {
+    max-width: 800px;
+  }
+
+  .viewer-viewport-left,
+  .viewer-viewport-right {
+    width: calc(50% -  400px);
   }
 }
 </style>
