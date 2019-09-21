@@ -10,6 +10,7 @@
   "main": "main.js",
   "dependencies": {
     "bootstrap": "^4.3.1",
+    "colorthief": "^2.3.0",
     "core-js": "^2.6.5",
     "lodash": "^4.17.11",
     "screenfull": "^5.0.0",
