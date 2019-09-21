@@ -16,7 +16,7 @@ module.exports = {
     config.plugin('define').use(DefinePlugin, [
       {
         'process.env': { 
-          PORT: 8000,
+          PORT: 8000, // dev server port
           NODE_NEV: JSON.stringify(env.NODE_ENV),
           IS_ELECTRON: JSON.stringify(env.IS_ELECTRON)
         }
