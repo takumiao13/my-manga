@@ -1,7 +1,9 @@
 <template>
-  <div class="viewer-container">
-    <div class="viewer-viewport-left" @click="handleLeft"/>
-    <div class="viewer-viewport">
+  <div class="viewer-container" :class="hand">
+    <div class="viewer-viewport-left" @click.stop="handleLeft"/>
+    <div class="viewer-viewport" 
+      :class="{ 'viewer-locking': shouldLock() }"
+    >
       <!-- TODO: may be support more mode later -->
       <scroll-mode
         v-if="mode === 'scroll'"
@@ -10,7 +12,7 @@
         @chapterChange="handleChapterChange"
       />
     </div>
-    <div class="viewer-viewport-right" @click="handleRight" />
+    <div class="viewer-viewport-right" @click.stop="handleRight" />
   </div>
 </template>
 
@@ -27,15 +29,16 @@ export default {
   props: [ 'mode', 'hand', 'options' ],
 
   methods: {
+    shouldLock() {
+      const { autoScrolling, locking } = this.options;
+      return (autoScrolling && !locking) || (!autoScrolling && locking);
+    },
+
     handleLeft($event) {
-      if (this.options.locking) return;
-      $event.stopPropagation();
       this.$emit(this.hand === 'right' ? 'prev' : 'next');
     },
 
     handleRight($event) {
-      if (this.options.locking) return;
-      $event.stopPropagation();
       this.$emit(this.hand === 'right' ? 'next' : 'prev');
     },
 
@@ -44,7 +47,7 @@ export default {
     },
 
     handleChapterChange(chIndex) {
-      this.$emit('chapterChange', chIdex);
+      this.$emit('chapterChange', chIndex);
     }
   }
 }
@@ -60,8 +63,11 @@ export default {
 }
 
 .viewer-viewport {
+  cursor: pointer;
   position: relative;
   min-height: 100vh;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
 
   &:after {
     content: none;
@@ -71,6 +77,7 @@ export default {
     top: 0;
     width: 100%;
     height: 100%;
+    z-index: 2;
   }
 
   .viewer-mode {
@@ -119,28 +126,41 @@ export default {
   width: 33.3%;
   opacity: .5;
   position: fixed;
-  top: 0;
-  bottom: 0;
+  top: 3rem;
+  bottom: 3rem;
   z-index: 1;
 }
 
 .viewer-viewport-left {
-  background: red;
   left: 0;
-  cursor: url('../../assets/prev_page.cur'), auto;
 }
 
 .viewer-viewport-right {
-  background: green;
   right: 0;
-  cursor: url('../../assets/next_page.cur'), auto;
+}
+
+.left {
+  .viewer-viewport-left {
+    cursor: url('../../assets/right_arrow.cur'), auto;
+  }
+
+  .viewer-viewport-right {
+    cursor: url('../../assets/left_arrow.cur'), auto;
+  }
+}
+
+.right {
+  .viewer-viewport-left {
+    cursor: url('../../assets/left_arrow.cur'), auto;
+  }
+
+  .viewer-viewport-right {
+    cursor: url('../../assets/right_arrow.cur'), auto;
+  }
 }
 
 @include media-breakpoint-up(md) {
-  .viewer-mode {
-    max-width: 600px;
-  }
-
+  .viewer-mode { max-width: 600px }
   .viewer-viewport-left,
   .viewer-viewport-right {
     width: calc(50% -  300px);
@@ -148,10 +168,7 @@ export default {
 }
 
 @include media-breakpoint-up(lg) {
-  .viewer-mode {
-    max-width: 800px;
-  }
-
+  .viewer-mode { max-width: 800px }
   .viewer-viewport-left,
   .viewer-viewport-right {
     width: calc(50% -  400px);

@@ -11,7 +11,8 @@
         :min="min"
         :max="max"
         @input="handleInput"
-        @change="handleChange" />
+        @change="handleChange" 
+      />
     </div>
   </div>
 </template>
@@ -39,12 +40,12 @@ export default {
   },
 
   methods: {
-    handleInput: function($event) {
+    handleInput($event) {
       this.value_ = $event.target.value;
       if (!this.tipShown) this.tipShown = true;
     },
 
-    handleChange: function($event) {
+    handleChange($event) {
       this.$emit('end', $event.target.value);
     }
   }

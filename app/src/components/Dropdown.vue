@@ -16,8 +16,9 @@
         <icon v-if="isShowCheckIcon(item, index)"
           name="check"
           class="dropdown-item-checked-icon"
-        /> 
-        {{ item.text }}    
+        />
+        <template v-if="item.text">{{ item.text }}</template>
+        <div v-if="item.html" v-html="item.html"></div>    
       </a>
     </div>
   </component> 

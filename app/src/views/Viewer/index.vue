@@ -1,6 +1,11 @@
 <template>
   <div id="viewer">
-    <div class="topbar fixed-top" :class="{ open: locking }">
+    <div class="topbar viewer-topbar fixed-top" 
+      :class="{ 
+        'viewer-autoscrolling': autoScrolling,
+        open: locking 
+      }"
+    >
       <navbar
         :title="{ content: pager, className: 'text-center d-none d-md-block' }"
         :left-btns="leftBtns"
@@ -14,7 +19,6 @@
     />
 
     <viewport
-      :class="{ 'viewer-locking': locking }"
       :mode="mode"
       :hand="handMode"
       :options="{
@@ -24,6 +28,7 @@
         chIndex: chIndex,
         settings: settings,
         zoom: zoom,
+        isFullscreen: isFullscreen,
         autoScrolling: autoScrolling,
         locking: locking
       }"
@@ -38,10 +43,10 @@
       <spinner class="loading-spinner" size="lg" tip="Loading" />
     </div>
 
-    <hand-mode
-      v-show="handModeOpen"
+    <help-overlay
+      v-show="helpOpen"
       :hand="handMode"
-      @click.native="handModeOpen = false"
+      @click.native="helpOpen = false"
     />
 
     <div
@@ -58,7 +63,7 @@
 </template>
 
 <script>
-import { last, isDef } from '@/helpers';
+import { last, isDef, capitalize } from '@/helpers';
 import { mapState, mapGetters } from 'vuex';
 import { types } from '@/store/modules/viewer';
 import screenfull from 'screenfull';
@@ -67,7 +72,7 @@ import animatescroll from 'animatescroll';
 // Components
 import Viewport from './Viewport';
 import Seekbar from './Seekbar';
-import HandMode from './HandMode';
+import HelpOverlay from './HelpOverlay';
 
 const KEY_CODE = {
   LEFT: 37,
@@ -78,22 +83,25 @@ const KEY_CODE = {
   D: 68,
   W: 87,
   S: 83,
+  F1: 112,
   F11: 122
 };
 
-const HAND_ACTION = {
+const KEYBOARD_ACTION = {
   left: {
     prev: KEY_CODE.A,
     next: KEY_CODE.D,
     up: KEY_CODE.W,
-    down: KEY_CODE.S
+    down: KEY_CODE.S,
+    help: KEY_CODE.F1
   },
 
   right: {
     prev: KEY_CODE.LEFT,
     next: KEY_CODE.RIGHT,
     up: KEY_CODE.UP,
-    down: KEY_CODE.DOWN
+    down: KEY_CODE.DOWN,
+    help: KEY_CODE.F1
   }
 }
 
@@ -101,15 +109,16 @@ export default {
   components: {
     Viewport,
     Seekbar,
-    HandMode
+    HelpOverlay
   },
 
   data() {
     return {
       locking: true,
+
       isFullscreen: false,
-      handMode: 'right',
-      handModeOpen: false
+
+      helpOpen: false
     }
   },
   
@@ -118,7 +127,7 @@ export default {
 
     ...mapGetters('viewer', [ 'count', 'chIndex', 'chCount', 'pending' ]),
 
-    ...mapState('viewer', [ 'path', 'mode', 'zoom', 'gaps', 'autoScrolling', 'page', 'ch', 'images', 'chapters' ]),
+    ...mapState('viewer', [ 'path', 'mode', 'zoom', 'gaps', 'handMode', 'autoScrolling', 'page', 'ch', 'images', 'chapters' ]),
 
     ...mapState('app', { appError: 'error' }),
 
@@ -150,13 +159,7 @@ export default {
     }),
 
     title() {
-      const maxLen = 20;
       let title = last(this.path.split('/'));
-
-      // // truncate title
-      // if (title.length > maxLen) {
-      //   title = title.substring(0, maxLen - 3) + '...';
-      // }
 
       // addon chapter name
       if (this.ch) title += ` - ${this.ch}`
@@ -170,6 +173,7 @@ export default {
     leftBtns() {
       return [{
         icon: 'arrow-left',
+        tip: 'Back',
         title: this.title,
         click: this.handleBack,
         className: 'text-truncate viewer-title'
@@ -188,15 +192,19 @@ export default {
         text: '100%'
       }].map(item => ({
         ...item,
-        click: () => this.handleZoom(item.zoom)
+        click: () => this.zoomToggle(item.zoom)
       }));
 
       const selected = menu.map(item => item.zoom).indexOf(this.zoom);
 
-      return [{
+      return this.autoScrolling ? [{
+        icon: 'pause',
+        title: 'stop scrolling',
+        click: () => this.autoScrollToggle(false)
+      }] : [{
         icon: this.isFullscreen ? 'compress' : 'expand',
         tip: 'Fullscreen',
-        click: this.handleToggleFullscreen
+        click: () => this.fullscreenToggle()
       }, {
         icon: 'page-alt',
         tip: 'Page Display',
@@ -204,18 +212,21 @@ export default {
           props: {
             type: 'select',
             menu: [{
-              text: 'Hand Mode: ' + this.handMode.toUpperCase(),
-              click: this.handleToggleHandMode
+              html: `
+                Hand Mode: 
+                <strong class="text-primary">
+                  ${capitalize(this.handMode)}
+                </strong>
+              `,
+              click: this.handModeToggle
             }, {
               type: 'check',
               checked: this.gaps,
               text: 'Show Gaps Between Pages',
-              click: this.handleToggleGaps
+              click: this.gapsToggle
             }, {
-              type: 'check',
-              checked: this.autoScrolling,
               text: 'Auto Scrolling',
-              click: this.handleAutoScrolling
+              click: () => this.autoScrollToggle(true)
             }]
           }
         }
@@ -229,27 +240,41 @@ export default {
             menu
           }
         }
-      }]
+      }];
     }
+  },
+
+  beforeRouteUpdate (to, from, next) {
+    this.autoScrollToggle(false);
+    next();
+  },
+
+  beforeRouteLeave (to, from, next) {
+    this.autoScrollToggle(false);
+    setTimeout(() => screenfull.exit());
+    next();
   },
 
   mounted() {
     if (!this.appError) {  
       const { path, ch } = this.$route.params;
       const { dirId } = this.repo;
-      
       this.$store.dispatch(types.VIEW, { dirId, path, ch });
-      window.addEventListener('keydown', this.handleKeydown);
-      window.addEventListener('scroll', this.handleScroll);
     }
   },
 
-  destroyed() {
-    window.removeEventListener('keydown', this.handleKeydown);
-    window.removeEventListener('scroll', this.handleScroll);
-  },
+  created() { this._$effects(true) },
+
+  destroyed() { this._$effects(false) },
 
   methods: {
+    // private
+    _$effects(val) {
+      window[val ? 'addEventListener' : 'removeEventListener']('keydown', this.handleKeydown);
+      window[val ? 'addEventListener' : 'removeEventListener']('scroll', this.handleScroll);
+    },
+
+    // public
     go(page) {
       this.$store.dispatch(types.GO, { page });
     },
@@ -260,12 +285,10 @@ export default {
     },
     
     prev() {
-      console.log('prev');
       this.go(this.page - 1);
     },
 
     next() {
-      console.log('next');
       this.go(this.page + 1);
     },
 
@@ -273,6 +296,31 @@ export default {
       this.locking = isDef(val) ?
         !!val :
         !this.locking;
+    },
+
+    fullscreenToggle() {
+      screenfull.toggle();
+      this.isFullscreen = !this.isFullscreen;
+    },
+
+    zoomToggle(zoom) {
+      this.$store.dispatch(types.ZOOM, { zoom });
+    },
+
+    gapsToggle() {
+      this.$store.dispatch(types.TOGGLE_GAPS);
+    },
+
+    handModeToggle() {
+      this.helpOpen = true;
+      this.$store.dispatch(types.TOGGLE_HAND_MODE);
+    },
+
+    autoScrollToggle(val) {
+      this.locking = false;
+      this.$store.dispatch(types.TOGGLE_AUTO_SCROLLING, { 
+        autoScrolling: val 
+      });
     },
 
     // events
@@ -291,14 +339,22 @@ export default {
     handleScroll() {
       if (window._ignoreScrollEvent || this.autoScrolling) return;
       this.locking = false;
+      this.helpOpen = false;
     },
 
     handleKeydown($event) {
+      // when autoScrolling (no-pause) should disable keyboard events
+      if (this.autoScrolling && !this.locking) return;
+      
       $event.stopPropagation();
-      const keyCode = $event.keyCode;  
-      const action = HAND_ACTION[this.handMode];
+      const keyCode = $event.keyCode;
+      const action = KEYBOARD_ACTION[this.handMode];
 
       switch (keyCode) {
+        case action.help:
+          $event.preventDefault();
+          this.helpOpen = !this.helpOpen;
+          break;
         case action.prev:
           $event.preventDefault();
           this.prev();
@@ -309,76 +365,14 @@ export default {
           break;  
         case action.up:
           $event.preventDefault();
-          animatescroll.by({
-            y: -50,
-            animate: false
-          });
+          animatescroll('-=50', { animate: false });
           break;
         case action.down:
           $event.preventDefault();
-          animatescroll.by({
-            y: +50,
-            animate: false
-          });
+          animatescroll('+=50', { animate: false });
           break;
       }
-    },
-
-    // toolbar events
-    handleToggleFullscreen() {
-      screenfull.toggle();
-      this.isFullscreen = !this.isFullscreen;
-    },
-
-    handleZoom(zoom) {
-      this.$store.dispatch(types.ZOOM, { zoom });
-    },
-
-    handleToggleGaps() {
-      this.$store.dispatch(types.TOGGLE_GAPS);
-    },
-
-    handleToggleHandMode() {
-      this.locking = false;
-      this.handModeOpen = true;
-      if (this.handMode === 'left') {
-        this.handMode = 'right';
-      } else {
-        this.handMode = 'left';
-      } 
-    },
-
-    handleAutoScrolling() {
-      this.locking = false;
-      this.$store.dispatch(types.TOGGLE_AUTO_SCROLLING);
-    },
-
-    // handleOperation($event) {
-    //   if (this.locking) {
-    //     this.locking = false;
-    //     return;
-    //   }
-
-    //   if (this.mode === 'scroll') {
-    //     // only for mobile
-    //     const x = $event.pageX;
-        
-    //     // |-- left --|-- middle --|-- right --|
-    //     const width = window.innerWidth;
-    //     const justifyWidth = width / 3;
-        
-    //     const left = justifyWidth;
-    //     const right = justifyWidth * 2;
-
-    //     if (x > 0 && x < left) {
-    //       this.go(this.page - 1);
-    //     } else if (x >= left && x <= right) {
-    //       this.locking = true;
-    //     } else if (x > right) {
-    //       this.go(this.page + 1);
-    //     }
-    //   }
-    // }
+    }
   }
 }
 </script>

@@ -59,3 +59,5 @@ exports.qs = (url) => {
   }
   return params;
 }
+
+exports.capitalize = require('lodash/capitalize');

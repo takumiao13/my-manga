@@ -12,6 +12,10 @@ $theme-colors: (
   position: sticky;
   top: 0;
   z-index: 1030;
+
+  &.fixed-top {
+    position: fixed;
+  }
 }
 
 .loading-mask {

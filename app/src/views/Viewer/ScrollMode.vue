@@ -59,6 +59,7 @@ export default {
       type: [ String, Number ],
       default: 'width'
     },
+    isFullscreen: Boolean,
     autoScrolling: Boolean,
     locking: Boolean
   },
@@ -75,7 +76,7 @@ export default {
       if (val) {
         this.$nextTick(() => {
           this.refresh('gallery');
-          this.scrollToCurrPage(); 
+          this.scrollToCurrPage(true); 
         });
       }
     },
@@ -93,37 +94,62 @@ export default {
       this.refresh();
     },
 
+    isFullscreen() {
+      this.refresh();
+    },
+
+    settings(newVal, oldVal) {
+      if (newVal.gaps !== oldVal.gaps) {
+        this.refresh();
+      }
+    },
+
     autoScrolling(val) {
-      console.log('autoScrolling', val);
       this[val ? 'startScroll' : 'stopScroll']();
+      this._$preventScroll(val);
     },
 
     locking(val) {
-      console.log('locking', val);
-      this.autoScrolling && this[val ? 'pauseScroll' : 'resumeScroll']();
+      if (this.autoScrolling) {
+        this[val ? 'pauseScroll' : 'resumeScroll']();
+        this._$preventScroll(!val);
+      } 
     }
   },
 
   created() {
-    console.log(this._scroller);
     this._offsets = [];
-    this._ignoreScrollEvent = false;
+    this._$effects(true);
   },
 
   destroyed() {
-    window.removeEventListener('scroll', this.handleScroll);
-    window.removeEventListener('resize', this.handleResize);
+    this._$effects(false);
   },
 
   mounted() {
-    window.addEventListener('resize', this.handleResize);
-    window.addEventListener('scroll', this.handleScroll);
-  
-    this.refresh()
-    this.scrollToCurrPage();
+    if (this.gallery.length) {
+      this.refresh()
+      this.scrollToCurrPage(true);
+    }
   },
 
   methods: {
+    _$preventScroll(val) {
+      const options = { passive: false };
+      window[val ? 'addEventListener' : 'removeEventListener']('wheel', this._$handlePreventScroll, options);
+      document.body[val ? 'addEventListener' : 'removeEventListener']('touchmove', this._$handlePreventScroll, options);
+    },
+
+    _$handlePreventScroll($event) {
+      $event.preventDefault();
+    },
+
+    _$effects(val) {
+      document.body.classList[val ? 'add' : 'remove']('viewer-active');
+      window[val ? 'addEventListener' : 'removeEventListener']('scroll', this.handleScroll);
+      window[val ? 'addEventListener' : 'removeEventListener']('resize', this.handleResize);
+    },
+
     refresh() {
       const imgWrappers = this.$refs.imgWrapper;
       const viewWidth = this.$refs.mode.clientWidth;
@@ -137,7 +163,7 @@ export default {
         const ratio = realWidth / orgWidth;
         const realHeight = orgHeight * ratio;
 
-        if (this.zoom === 'screen') {
+        if (this.zoom !== 'width') {
           if (realHeight > viewHeight) {
             const ratio = viewHeight / realHeight;
             item.style.width = orgWidth * ratio + 'px';
@@ -154,19 +180,22 @@ export default {
       });
     },
 
-    scrollToCurrPage() {
-      const y = this._offsets[this.page - 1];
-      console.log('scrollTo', this.page, y);
+    scrollToCurrPage(margin) {
+      let y = this._offsets[this.page - 1];
+      if (margin) y -= 48
+      console.log('scrollTo', this.page, y, margin);
       window._ignoreScrollEvent = true;
       window.scrollTo(0, y);
     },
 
+    // handle auto scrolling
     startScroll() {
       console.log('start');
       if (!this._scroller) {
-        this._scroller = animatescroll.to({
-          y: 'bottom',
+        this._scroller = animatescroll('bottom', {
           speed: 50
+        }, () => {
+          this.stopScroll();
         });
       } else {
         this._scroller.resume();
@@ -174,7 +203,7 @@ export default {
     },
 
     stopScroll() {
-      if (this.autoScrolling && !this._scroller.isPaused()) {
+      if (this.autoScrolling) {
         console.log('stop');
         this._scroller.pause();
         this.$store.dispatch(types.TOGGLE_AUTO_SCROLLING, { autoScrolling: false });
@@ -192,7 +221,7 @@ export default {
     },
 
     // events
-    handleScroll() {
+    handleScroll($event) {
       // prevent scrollTo trigger event，when page_ updated
       if (window._ignoreScrollEvent) {
         setTimeout(() => window._ignoreScrollEvent = false);
@@ -231,10 +260,10 @@ export default {
 
 <style lang="scss" scoped>
 .prev-ch, .next-ch {
-  padding: 1rem;
+  height: 3rem;
+  line-height: 3rem;
+  font-size: 110%;
   text-align: center;
-  color: #999;
-  font-weight: bold;
   cursor: pointer;
 
   &:hover {

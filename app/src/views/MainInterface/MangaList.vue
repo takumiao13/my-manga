@@ -199,8 +199,8 @@
 </template>
 
 <script>
-import { isUndef, last, debounce, getScrollTop } from '@/helpers';
 import config from '@/config';
+import { isUndef, last, debounce, getScrollTop } from '@/helpers';
 import { types as appTypes } from '@/store/modules/app';
 import { types as mangaTypes } from '@/store/modules/manga';
 import { types as viewerTypes } from '@/store/modules/viewer';
@@ -482,7 +482,7 @@ export default {
     },
 
     handleBackToTop() {
-      animatescroll.to(0);
+      animatescroll(0);
     },
 
     handleScroll() {
@@ -564,14 +564,14 @@ export default {
       // fix ios metadata overwrite gallery bug
       this.$refs.topbar.style.zIndex = 1031;
       setTimeout(() => {
-        animatescroll.to(y);
+        animatescroll(y);
         this.$refs.topbar.style.zIndex = 1030;
       });
     },
 
     handleShareManga() {
-      const { host, port } = config;
-      const { protocol, pathname, search, hash } = window.location;
+      const { host } = config;
+      const { protocol, pathname, search, hash, port } = window.location;
       const url = `${protocol}//${host}:${port}${pathname}${search}${hash}`;
       const payload = { url }
       this.$store.dispatch(mangaTypes.SHARE, payload).then(() => {

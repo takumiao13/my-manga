@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { assign } from '@/helpers';
+import { assign, isDef } from '@/helpers';
 import { createTypesWithNs, createRequestStatus } from '../helpers';
 import mangaAPI from '@/apis/manga';
 
@@ -12,11 +12,12 @@ const VIEW = 'VIEW';
 const ZOOM = 'ZOOM';
 const TOGGLE_GAPS = 'TOGGLE_GAPS';
 const TOGGLE_AUTO_SCROLLING = 'TOGGLE_AUTO_SCROLLING';
+const TOGGLE_HAND_MODE = 'TOGGLE_HAND_MODE';
 
 const statusHelper = createRequestStatus('status');
 
 export const types = createTypesWithNs([ 
-  LOAD, GO, GO_CH, VIEW, ZOOM, TOGGLE_GAPS, TOGGLE_AUTO_SCROLLING 
+  LOAD, GO, GO_CH, VIEW, ZOOM, TOGGLE_GAPS, TOGGLE_AUTO_SCROLLING, TOGGLE_HAND_MODE
 ], ns);
 
 export default {
@@ -27,6 +28,7 @@ export default {
     zoom: 'width',
     gaps: true,
     autoScrolling: false,
+    handMode: 'right',
     path: '',
     images: [],
     chapters: [],
@@ -103,7 +105,7 @@ export default {
         }
   
         commit(LOAD, { path, images, chapters });
-        commit(GO, { ch });
+        commit(GO, { page: 1, ch });
         Vue.nextTick(() => statusHelper.success(commit));
       }).catch(error => {
         statusHelper.error(commit, { error });
@@ -145,7 +147,11 @@ export default {
 
     [TOGGLE_AUTO_SCROLLING]({ commit }, payload = {}) {
       commit(TOGGLE_AUTO_SCROLLING, payload);
-    }
+    },
+
+    [TOGGLE_HAND_MODE]({ commit }, payload = {}) {
+      commit(TOGGLE_HAND_MODE, payload);
+    },
   },
 
   mutations: {
@@ -165,8 +171,19 @@ export default {
       state.gaps = !state.gaps;
     },
 
-    [TOGGLE_AUTO_SCROLLING](state) {
-      state.autoScrolling = !state.autoScrolling;
+    [TOGGLE_AUTO_SCROLLING](state, payload) {
+      const { autoScrolling } = payload;
+      state.autoScrolling = isDef(autoScrolling) ? 
+       !!autoScrolling :
+       !state.autoScrolling;
+    },
+
+    [TOGGLE_HAND_MODE](state) {
+      if (state.handMode === 'right') {
+        state.handMode = 'left';
+      } else if (state.handMode === 'left') {
+        state.handMode = 'right';
+      }
     },
 
     ...statusHelper.mutation()

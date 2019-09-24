@@ -17,6 +17,7 @@
           @click="btn.click"
         >
           <icon v-if="btn.icon" :name="btn.icon" />
+          <template v-if="btn.icon && btn.title">&nbsp;</template>
           <span v-html="btn.title"></span>
         </component>
       </component>
@@ -46,6 +47,7 @@
           @click="btn.click"
         >
           <icon v-if="btn.icon" :name="btn.icon" />
+          <template v-if="btn.icon && btn.title">&nbsp;</template>
           <span v-html="btn.title"></span>
         </component>
       </component>

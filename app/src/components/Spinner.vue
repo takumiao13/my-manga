@@ -3,7 +3,7 @@
     <div class="la-ball-clip-rotate" :class="[ size_, className ]">
       <div></div>
     </div>
-    <p v-show="tip">{{ tip }}</p>
+    <p class="text-center" v-show="tip">{{ tip }}</p>
   </div>
 </template>
 

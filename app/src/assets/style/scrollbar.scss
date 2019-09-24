@@ -4,22 +4,22 @@
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 0;
+  height: 0;
   //transform: scaleX(10);
   background-color: transparent;
 }
 
-// :hover::-webkit-scrollbar {
-//   width: 8px;
-//   height: 8px;
-// }
+:hover::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
 
 ::-webkit-scrollbar-corner {
   background: none;
 }
 
-// ::-webkit-scrollbar-thumb {
-//   border: none;
-//   box-shadow: none !important;
-// }
+::-webkit-scrollbar-thumb {
+  border: none;
+  box-shadow: none !important;
+}

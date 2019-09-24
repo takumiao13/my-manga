@@ -211,10 +211,14 @@ $viewer-bg: $black;
 $viewer-color: #eee;
 $viewer-toolbar-bg: #333;
 
-#viewer {
+
+body.viewer-active,
+.viewer-active #app {
   background: $viewer-bg !important;
   color: $viewer-color !important;
+} 
 
+#viewer {
   .viewer-viewport {
     &::-webkit-scrollbar-track {
       background-color: $viewer-bg;
@@ -225,14 +229,14 @@ $viewer-toolbar-bg: #333;
     }
   }
 
-  .topbar > .navbar,
+  .viewer-topbar > .navbar,
   .viewer-toolbar > .navbar {
     background: $viewer-toolbar-bg !important;
     box-shadow: 0px 1px 2px 0px rgba($black, 0.3);
   }
 
-  .topbar > .navbar {
-    background: $viewer-toolbar-bg !important;
+  .viewer-topbar.viewer-autoscrolling > .navbar {
+    background: $app-main !important;
   }
 
   .viewer-loading {
