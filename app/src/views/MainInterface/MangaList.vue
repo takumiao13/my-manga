@@ -1,21 +1,17 @@
 <template>
   <div>
-    <div class="main-explorer" :class="{ dark: isManga && darkBg }">
+    <div class="main-explorer">
       <div class="topbar" ref="topbar">
         <navbar
-          :class="{
-            'no-shadow': !isManga && navs.length > 1,
-            'manga-title-shown': titleShown,
-            'manga-title-hidden': isManga && !empty && !titleShown
-          }" 
-          :title="title" 
+          :class="{'no-shadow': !isManga && navs.length > 1}" 
+          :title="isManga ? '' : title" 
           :left-btns="leftBtns"
           :right-btns="rightBtns"
           @click="handleBackToTop"
         />
         
         <addressbar
-          v-show="navs.length > 1 && !isManga" 
+          v-show="!isManga && navs.length > 1 " 
           :class="{ collapsed: addressbarCollapsed }"
           :navs="navs"
           @back="handleNavigateBack"
@@ -24,16 +20,14 @@
       </div>    
       <data-view 
         class="main-explorer-container" 
-        :loading="loading"
+        :loading="pending"
         :empty="empty"
         :error="error"
       >
-        <div class="row" v-show="success">
+        <div class="row" v-show="isSuccess(immediatelyChange)">
 
           <!-- META DATA -->
-          <div id="metadata" v-if="isManga && !empty" class="col-12" ref="metadata">
-            <div class="metadata-banner" ref="banner" />
-                     
+          <div id="metadata" v-if="isManga && !empty" class="col-12" ref="metadata"> 
             <div class="metadata-share metadata-inner" v-if="sharing">
               <div class="modal" tabindex="-1" role="dialog">
                 <div class="modal-dialog">
@@ -59,40 +53,27 @@
                   </div>
                 </div>
               </div>
+              <div class="metadata-btn">
+                <a @click="sharing = false">
+                  <icon name="times" size="36" />
+                </a>
+                <span>Close</span>
+              </div>
             </div>
 
             <div class="metadata-main metadata-inner" v-show="!sharing">
-              <img class="metadata-cover mb-3" ref="cover" />
-              <h4 class="metadata-title mb-4">
-                {{ title }} <br />
-                <small v-if="chapters.length">{{ chapters.length }} chapters</small>
-                <small v-if="!chapters.length">{{ images.length }} pages</small> 
-              </h4>
-              <div class="metadata-footer">
-                <div class="metadata-btn">
-                  <a @click="handleViewManga($event, chapters[0] || images[0], 0)">
-                    <icon name="book-open" />
-                  </a>
-                  <span>Read Now</span>
-                </div>
-                <div class="metadata-btn">
-                  <a @click="handleViewGallery">
-                    <icon name="gallery" />
-                  </a>
-                  <span>Gallery</span>
-                </div>
-                <div class="metadata-btn">
-                  <a @click="handleShareManga">
-                    <icon name="share-alt" size="36" />
-                  </a>
-                  <span>Share</span>
-                </div>
-              </div>
+
+              <a class="metadata-title" href="javascript:void 0;" title="Read Now" 
+                @click="readManga(chapters[0] || images[0], 0)"
+              >
+                {{ title }}
+                <span>&rarr;</span>
+              </a>
             </div>
           </div>
           <!-- / META DATA -->
 
-          <div class="col-12 area-container" v-show="!sharing">
+          <div class="area-container col-12" v-show="!sharing">
 
             <!-- FOLDER AREA -->
             <div class="folder-area mb-4" v-show="folders.length">
@@ -159,7 +140,7 @@
                   :class="{ active: item.name === activeChapter}"
                   v-for="(item, index) in chapters" 
                   :key="item.path"
-                  @click="handleViewManga($event, item, 0)"
+                  @click="readManga(item, 0)"
                 >
 
                   <small class="float-right">
@@ -182,7 +163,7 @@
 
                   <div class="cover"
                     :style="$service.image.style(item, 240)"
-                    @click="handleViewManga($event, item, index)">
+                    @click="readManga(item, index)">
                     <img v-lazy="$service.image.makeSrc(item.path)" />
                   </div>
 
@@ -199,15 +180,13 @@
 </template>
 
 <script>
-import { isUndef, last, debounce, getScrollTop } from '@/helpers';
 import config from '@/config';
+import { isUndef, last, debounce, getScrollTop } from '@/helpers';
 import { types as appTypes } from '@/store/modules/app';
 import { types as mangaTypes } from '@/store/modules/manga';
 import { types as viewerTypes } from '@/store/modules/viewer';
 import { mapState, mapGetters } from 'vuex';
-import ColorThief from 'colorthief/dist/color-thief.mjs';
 
-const colorThief = new ColorThief();
 const PATH_SEP = '/';
 
 export default {
@@ -215,12 +194,10 @@ export default {
     return {
       activeChapter: '',
       addressbarCollapsed: false,
+      immediatelyChange: true, // immediately show / hide date-view
       titleShown: false,
       isManga: false,
-      darkBg: false,
-      sharing: false,
-      immediately: true,
-      coverLoaded: false,
+      sharing: false
     }
   },
 
@@ -248,21 +225,9 @@ export default {
 
     ...mapGetters('manga', [ 'pending', 'isSuccess', 'empty' ]),
 
-    loading() {
-      return this.immediately ? 
-        this.pending :
-        this.pending || !this.coverLoaded;
-    },
-    
-    success() {
-      return this.isManga ?
-        this.isSuccess(this.immediately) && this.coverLoaded :
-        this.isSuccess(this.immediately)
-    },
-
     title() {
       const repoName = this.repo.name;
-      const path = this.immediately ? this.$route.params.path : this.path;
+      const path = this.$route.params.path;
       const title = path ? 
         this.metadata.title || last(path.split(PATH_SEP)) : 
         repoName;
@@ -293,7 +258,8 @@ export default {
     leftBtns() {
       return this.isManga ? [{
         icon: 'arrow-left',
-        tip: 'back',
+        tip: 'Back',
+        title: 'Back',
         click: this.handleBack
       }] : [{
         icon: 'bars',
@@ -303,9 +269,19 @@ export default {
     },
 
     rightBtns() {
+
+      // {
+      //   icon: 'book-open',
+      //   tip: 'Read Now',
+      //   click: ($event) => this.readManga(this.chapters[0] || this.images[0], 0)
+      // }
       return this.isManga ? [{
+        icon: 'share-alt',
+        tip: 'Share Manga',
+        click: this.handleShareManga
+      }, {
         icon: 'level-up-alt',
-        tip: 'back to parent',
+        tip: 'Back to parent',
         click: this.handleBackToParent
       }] : null;
     },
@@ -335,32 +311,18 @@ export default {
 
   activated() {
     if (this.appError || (this.$route.meta.isBack && this.inited) || this.$router._reset) return;
-    this.titleShown = false;
     this.sharing = false;
-    this.coverLoaded = false;
     this.isManga = this.$route.query.type === 'manga';
+    this.immediatelyChange = true;
     this.fetchMangas(this.$route.params.path);
   },
 
   beforeRouteUpdate(to, from, next) {
     const { isBack } = to.meta;
     if (!this.appError) {
-      
-      this.isManga = to.query.type === 'manga';
       this.sharing = false;
-      setTimeout(() => this.titleShown = false);
-
-      const fromManga = from.query.type === 'manga';
-
-      // when manga to mange ensure 200ms delay
-      if (this.isManga && fromManga) {
-        this.immediately = false;
-        this.coverLoaded = true;
-      } else {
-        this.immediately = true;
-        this.coverLoaded = false;
-      }
-
+      this.isManga = to.query.type === 'manga';
+      this.immediatelyChange = from.query.type !== to.query.type;
       to.meta.scrollPromise = this.fetchMangas(to.params.path, isBack);
     }
     
@@ -381,24 +343,7 @@ export default {
       const { dirId } = this.repo;
       const payload = { path, dirId, isBack }
 
-      let timer = null;
-
-      // delay hide content when is not immediately change
-      if (!this.immediately) {
-        timer = setTimeout(() => {
-          this.coverLoaded = false;
-          timer = null;
-        }, 200);
-      }
-
-      return this.$store.dispatch(mangaTypes.LIST, payload).then(() => {
-        clearTimeout(timer);
-        if (this.isManga && !this.empty) {
-          this.changeBanner()
-        } else {
-          this.coverLoaded = true;
-        }
-      })
+      return this.$store.dispatch(mangaTypes.LIST, payload);
     },
 
     toggleAddressbar: debounce(function(scrollTop, prevScrollTop) {
@@ -411,112 +356,7 @@ export default {
       trailing: false
     }),
 
-    changeBanner() {
-      const img = new Image();
-      const src = this.$service.image.makeSrc(this.cover);
-  
-      const changeCoverDelayed = () => {
-        // when slow
-        if (timer === null) {
-          setTimeout(() => changeCover(), 360);
-          return;
-        }
-
-        clearTimeout(timer);
-        changeCover();
-      }
-
-      const changeCover = () => {
-        const [ r, g, b ] = colorThief.getColor(img);
-        const bg = `rgb(${r},${g},${b})`;
-        const grayLevel = r * 0.299 + g * 0.587 + b * 0.114;
-
-        // fix background transition
-        setTimeout(() => this.$refs.banner.style.backgroundColor = bg);
-        this.$refs.cover.style.backgroundColor = bg;
-        this.$refs.cover.src = src;
-        this.darkBg = grayLevel < 192;
-        this.coverLoaded = true;
-      }
-
-      let timer = setTimeout(() => {
-        timer = null;
-
-        // when change cover is slow, reset main color
-        this.$refs.banner.style.backgroundColor = '';
-        this.$refs.cover.src = '';
-        this.darkBg = false;
-        this.coverLoaded = true;
-      }, 1000);
-
-      img.onload = () => changeCoverDelayed(img);
-      img.setAttribute('crossOrigin', '');
-      img.src = src;
-    },
-
-    // events
-    handleToggleSidebar() {
-      this.$store.dispatch(appTypes.TOGGLE_SIDEBAR);
-    },
-
-    handleBack() {
-     if (this.$router._routerHistory.length === 1) {
-        const { dirId } = this.$router.history.current.params;
-        this.$router.push({ name: 'explorer', params: { dirId } })
-      } else {
-        this.$router.go(-1);
-      }
-    },
-
-    handleBackToParent() {
-      const { dirId } = this.repo;
-      const path = this.path.split(PATH_SEP).slice(0, -1).join(PATH_SEP);
-      const params = { dirId };
-      if (path) params.path = path;
- 
-      this.$router.navigate({
-        name: 'explorer',
-        params
-      });
-    },
-
-    handleBackToTop() {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    },
-
-    handleScroll() {
-      const scrollTop = getScrollTop();
-
-      // handle navs show or hide
-      if (!this.isManga) {  
-        this.toggleAddressbar(scrollTop, this._prevScrollTop);
-
-      // handle mange title show or hide
-      } else {
-        const metaH = this.$refs.metadata.clientHeight - 48;
-        this.titleShown = scrollTop >= metaH;
-      }
-
-      this._prevScrollTop = scrollTop;
-    },
-
-    handleNavigateBack() {
-      this.$router.back();
-    },
-
-    handleNavigate($event, location) {
-      const { path } = location;
-      const { dirId } = this.repo;
-
-      if (path === false) return;
-
-      this.$router.navigate({
-        name: 'explorer',
-        params: { dirId, path }
-      });
-    },
-
-    handleViewManga($event, item, index = 0) {
+    readManga(item, index = 0) {
       const { path } = this.$route.params;
       const { dirId } = this.repo;
       const ch = item.type === 'CHAPTER' ? item.name : undefined;
@@ -557,17 +397,60 @@ export default {
       });
     },
 
-    handleViewGallery() {
-      const y = this.$refs.metadata.clientHeight - 48;
+    // events
+    handleToggleSidebar() {
+      this.$store.dispatch(appTypes.TOGGLE_SIDEBAR);
+    },
 
-      // fix ios metadata overwrite bug
-      this.$refs.topbar.style.zIndex = 1031;
-      setTimeout(() => {
-        window.scrollTo({
-          top: y,
-          behavior: 'smooth'
-        });
-        this.$refs.topbar.style.zIndex = 1030;
+    handleBack() {
+     if (this.$router._routerHistory.length === 1) {
+        const { dirId } = this.$router.history.current.params;
+        this.$router.push({ name: 'explorer', params: { dirId } })
+      } else {
+        this.$router.go(-1);
+      }
+    },
+
+    handleBackToParent() {
+      const { dirId } = this.repo;
+      const path = this.path.split(PATH_SEP).slice(0, -1).join(PATH_SEP);
+      const params = { dirId };
+      if (path) params.path = path;
+ 
+      this.$router.navigate({
+        name: 'explorer',
+        params
+      });
+    },
+
+    handleBackToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    },
+
+    handleScroll() {
+      const scrollTop = getScrollTop();
+
+      // handle navs show or hide
+      if (!this.isManga) {  
+        this.toggleAddressbar(scrollTop, this._prevScrollTop);
+      } 
+
+      this._prevScrollTop = scrollTop;
+    },
+
+    handleNavigateBack() {
+      this.$router.back();
+    },
+
+    handleNavigate($event, location) {
+      const { path } = location;
+      const { dirId } = this.repo;
+
+      if (path === false) return;
+
+      this.$router.navigate({
+        name: 'explorer',
+        params: { dirId, path }
       });
     },
 
@@ -751,34 +634,17 @@ export default {
 }
 
 #metadata {
-  height: 100vh;
-  margin-top: -3rem;
-  display: flex;
-  overflow: hidden;
-  position: sticky;
-  top: 0;
 
   .metadata-inner {
-    padding: 3rem 0 1rem 0;
-    width: 100%;
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
     position: relative;
   }
 
-  .metadata-banner {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: .8;
-    transition: .25s linear;
-  }
-
   .metadata-share {
+    height: calc(100vh - 3rem);
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
 
     .metadata-share-inner {
       padding: 1rem 0;
@@ -835,17 +701,31 @@ export default {
   .metadata-cover {
     display: block;
     position: relative;
-    border-radius: .5rem;
-    max-width: 50%;
-    max-height: 50%;
+    border-radius: .255rem;
+    max-width: 80%;
+    //max-height: 60%;
+    max-height: 240px;
   }
 
   .metadata-title {
-    font-size: 1.1rem;
+    margin: 1rem 0;
+    font-size: 1.6rem;
     text-align: center;
+    font-weight: 200;
+    text-decoration: none;
+
+    span {
+      display: none;
+    }
 
     @include media-breakpoint-up(md) {
-      font-size: 1.2rem;
+      font-size: 2rem;
+    }
+
+    &:hover {
+      span {
+        display: inline;
+      }
     }
   }
 
@@ -858,7 +738,7 @@ export default {
     flex-wrap: wrap;
 
     > div {
-      width: 33.3%;
+      width: 50%;
       display: flex;
       flex-direction: column;
       text-align: center;
@@ -884,18 +764,6 @@ export default {
       .svg-icon {
         width: 28px;
         height: 28px;
-      }
-    }
-
-    @include media-breakpoint-up(md) {
-      > a {
-        width: 4rem;
-        height: 4rem;
-
-        .svg-icon {
-          width: 36px;
-          height: 36px;
-        }
       }
     }
   }
