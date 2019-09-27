@@ -11,7 +11,9 @@
       Prev Chapter
       <icon name="arrow-up" />
     </div>
+    <div class="empty" v-if="!gallery.length"> EMPTY </div>
 
+    <!-- GALLERY -->
     <div
       ref="imgWrapper"
       v-for="(item, index) in gallery"
@@ -31,7 +33,7 @@
       </div>
     </div>
     <!-- /GALLERY -->
-
+    
     <div class="next-ch"
       v-if="chIndex && chIndex < chCount" 
       @click.stop="$emit('chapterChange', chIndex + 1)">
@@ -269,5 +271,12 @@ export default {
   &:hover {
     color: #fff;
   }
+}
+
+.empty {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
 }
 </style>

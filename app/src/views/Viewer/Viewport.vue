@@ -84,6 +84,10 @@ export default {
     width: 100%;
     margin: 0 auto;
     border: 1px solid transparent; // for BFC
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 6rem);
+    flex: 1;
   }
 
   .img-wrapper {

@@ -105,7 +105,7 @@ export default {
         }
   
         commit(LOAD, { path, images, chapters });
-        commit(GO, { page: 1, ch });
+        commit(GO, { ch });
         Vue.nextTick(() => statusHelper.success(commit));
       }).catch(error => {
         statusHelper.error(commit, { error });
