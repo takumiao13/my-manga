@@ -7,7 +7,6 @@ import mangaAPI from '@/apis/manga';
 const ns = 'viewer';
 const LOAD = 'LOAD';
 const GO = 'GO';
-const GO_CH = 'GO_CH';
 const VIEW = 'VIEW';
 const ZOOM = 'ZOOM';
 const TOGGLE_GAPS = 'TOGGLE_GAPS';
@@ -17,7 +16,7 @@ const TOGGLE_HAND_MODE = 'TOGGLE_HAND_MODE';
 const statusHelper = createRequestStatus('status');
 
 export const types = createTypesWithNs([ 
-  LOAD, GO, GO_CH, VIEW, ZOOM, TOGGLE_GAPS, TOGGLE_AUTO_SCROLLING, TOGGLE_HAND_MODE
+  LOAD, GO, VIEW, ZOOM, TOGGLE_GAPS, TOGGLE_AUTO_SCROLLING, TOGGLE_HAND_MODE
 ], ns);
 
 export default {
@@ -63,7 +62,7 @@ export default {
     },
 
     [VIEW]({ commit, state }, payload = {}) {
-      const { dirId, path, ch } = payload;
+      const { dirId, path, ch, page } = payload;
       const promiseArray = [];
       const pathResStub = () => {};
       const chResStub = () => {};
@@ -87,7 +86,7 @@ export default {
         // handle no chapters
         if (res2 === void 0) {
           if (res1 !== pathResStub) {
-            path = res1.name;
+            path = res1.path;
             images = res1.images;
             chapters = res1.chapters;
           }
@@ -95,7 +94,7 @@ export default {
         // handle chapters
         } else {
           if (res1 !== pathResStub) {
-            path = res1.name;
+            path = res1.path;
             chapters = res1.chapters;
           }
   
@@ -105,29 +104,11 @@ export default {
         }
   
         commit(LOAD, { path, images, chapters });
-        commit(GO, { ch });
+        commit(GO, { page, ch });
         Vue.nextTick(() => statusHelper.success(commit));
       }).catch(error => {
         statusHelper.error(commit, { error });
       });
-    },
-
-    [GO_CH]({ commit, state }, payload = {}) {
-      const { dirId, chIndex } = payload;
-      const chapter = state.chapters[chIndex-1];
-      const ch = chapter.name;
-
-      if (chIndex < 1 || chIndex > state.chCount) return;
-      
-      // load new chapter images
-      mangaAPI.list({ dirId, path: `${state.path}/${ch}` })
-        .then(res => {
-          const { images } = res;
-
-          commit(LOAD, { images });
-          commit(GO, { page: 1, ch });
-          window.history.replaceState(null, null, ch); // change history
-        });
     },
 
     [GO]({ commit, state, getters }, payload = {}) {

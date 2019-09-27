@@ -28,7 +28,7 @@ module.exports = {
 
     const eslintRule = config.module.rule('eslint');
     eslintRule.exclude.add(sharedPath);
-    eslintRule.exclude.add('D:\\Nutstore\\Coder\\open-source');
+    eslintRule.exclude.add('D:\\NutStore\\Coder\\open-source');
 
     // svg rule loader
     const svgRule = config.module.rule('svg');
@@ -48,6 +48,6 @@ module.exports = {
       .options();
 
     const jsRule = config.module.rule('js');
-    jsRule.exclude.add('D:\\Nutstore\\Coder\\open-source');
+    jsRule.exclude.add('D:\\NutStore\\Coder\\open-source');
   }
 }

@@ -72,7 +72,7 @@ export default {
       this.visible_ && this.toggle(false);
     },
 
-    handleItemClick($event, item, index) {
+    handleItemClick($event, item) {
       $event.stopPropagation();
       this.toggle(false);
       item.click();

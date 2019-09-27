@@ -68,8 +68,13 @@ export default {
 
   data() {
     return {
-      page_: this.page, // internal page value
-      chCount: this.chapters.length
+      page_: this.page, // internal page valu
+    }
+  },
+
+  computed: {
+    chCount() {
+      return this.chapters.length;
     }
   },
 
@@ -223,7 +228,7 @@ export default {
     },
 
     // events
-    handleScroll($event) {
+    handleScroll() {
       // prevent scrollTo trigger event，when page_ updated
       if (window._ignoreScrollEvent) {
         setTimeout(() => window._ignoreScrollEvent = false);

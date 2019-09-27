@@ -34,11 +34,11 @@ export default {
       return (autoScrolling && !locking) || (!autoScrolling && locking);
     },
 
-    handleLeft($event) {
+    handleLeft() {
       this.$emit(this.hand === 'right' ? 'prev' : 'next');
     },
 
-    handleRight($event) {
+    handleRight() {
       this.$emit(this.hand === 'right' ? 'next' : 'prev');
     },
 

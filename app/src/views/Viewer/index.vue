@@ -162,7 +162,7 @@ export default {
       let title = last(this.path.split('/'));
 
       // addon chapter name
-      if (this.ch) title += ` - ${this.ch}`
+      if (this.ch) title += ` / ${this.ch}`
       return ' ' + title;
     },
 
@@ -245,7 +245,9 @@ export default {
   },
 
   beforeRouteUpdate (to, from, next) {
+    const { dirId, path, ch } = to.params;
     this.autoScrollToggle(false);
+    this.$store.dispatch(types.VIEW, { dirId, path, ch, page: 1 });
     next();
   },
 
@@ -257,8 +259,7 @@ export default {
 
   mounted() {
     if (!this.appError) {  
-      const { path, ch } = this.$route.params;
-      const { dirId } = this.repo;
+      const { dirId, path, ch } = this.$route.params;
       this.$store.dispatch(types.VIEW, { dirId, path, ch });
     }
   },
@@ -280,8 +281,21 @@ export default {
     },
 
     goChapter(chIndex) {
+      if (chIndex < 1 || chIndex > this.chCount) return;
+
+      const chapter = this.chapters[chIndex-1];
+      const ch = chapter.name;
+
+
+      console.log(this.path, ch);
       const { dirId } = this.repo;
-      this.$store.dispatch(types.GO_CH, { dirId, chIndex });
+ 
+      this.$router.replace({
+        name: 'viewer',
+        params: { dirId, path: this.path, ch }
+      });
+
+      // this.$store.dispatch(types.GO_CH, { dirId, chIndex });
     },
     
     prev() {
