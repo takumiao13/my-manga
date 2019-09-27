@@ -67,7 +67,7 @@ import { last, isDef, capitalize } from '@/helpers';
 import { mapState, mapGetters } from 'vuex';
 import { types } from '@/store/modules/viewer';
 import screenfull from 'screenfull';
-import animatescroll from 'animatescroll';
+import animateScrollTo from 'animate-scroll-to.js';
 
 // Components
 import Viewport from './Viewport';
@@ -379,11 +379,11 @@ export default {
           break;  
         case action.up:
           $event.preventDefault();
-          animatescroll('-=50', { animate: false });
+          animateScrollTo('-=50', { animate: false });
           break;
         case action.down:
           $event.preventDefault();
-          animatescroll('+=50', { animate: false });
+          animateScrollTo('+=50', { animate: false });
           break;
       }
     }

@@ -46,7 +46,7 @@
 <script>
 import { debounce, getScrollTop, getScrollHeight, getOffsetHeight } from '@/helpers';
 import { types } from '@/store/modules/viewer';
-import animatescroll from 'animatescroll';
+import animateScrollTo from 'animate-scroll-to.js';
 
 export default {
   name: 'ScrollMode',
@@ -199,7 +199,7 @@ export default {
     startScroll() {
       console.log('start');
       if (!this._scroller) {
-        this._scroller = animatescroll('bottom', {
+        this._scroller = animateScrollTo('bottom', {
           speed: 50
         }, () => {
           this.stopScroll();

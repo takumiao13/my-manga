@@ -186,7 +186,7 @@ import { types as appTypes } from '@/store/modules/app';
 import { types as mangaTypes } from '@/store/modules/manga';
 import { types as viewerTypes } from '@/store/modules/viewer';
 import { mapState, mapGetters } from 'vuex';
-import animatescroll from 'animatescroll';
+import animateScrollTo from 'animate-scroll-to.js';
 
 const PATH_SEP = '/';
 
@@ -425,7 +425,7 @@ export default {
     },
 
     handleBackToTop() {
-      animatescroll(0);
+      animateScrollTo(0);
     },
 
     handleScroll() {
