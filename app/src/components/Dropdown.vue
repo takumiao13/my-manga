@@ -1,11 +1,11 @@
 <template>
   <component :is="as" class="dropdown" v-click-out-side="{ handler: handleClickOutSide }">
-    <a class="btn dropdown-toggle" @click="toggle()">
+    <a class="btn dropdown-toggle" @click.stop="toggle()">
       <slot />
     </a>
     <div
-      class="dropdown-menu dropdown-menu-right"
-      :class="{ show: visible_ }"
+      class="dropdown-menu"
+      :class="[{ show: visible_ }, 'dropdown-menu-' + alignment]"
     >
       <a 
         class="dropdown-item"
@@ -39,6 +39,11 @@ export default {
     visible: {
       type: Boolean,
       default: false
+    },
+
+    alignment: {
+      type: String,
+      default: 'left'
     },
 
     menu: Array,
@@ -94,8 +99,8 @@ export default {
 }
 
 .dropdown-item-checked-icon {
-  margin-left: -26px;
-  margin-right: 6px;
+  margin-left: -24px;
+  margin-right: 8px;
 }
 
 </style>

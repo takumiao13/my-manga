@@ -1,28 +1,22 @@
 <template>
-  <div class="viewer-mode" ref="mode" 
-    :style="{ 
-      'max-width': zoom === 100 ? 'none' : null, 
-      width: zoom === 100 ? 'auto' : null  
-    }"
+  <div
+    ref="mode"
+    class="viewer-mode"
   >
-    <div class="prev-ch"
+    <div class="prev-chapter"
       v-if="chIndex && chIndex > 1"
       @click.stop="$emit('chapterChange', chIndex - 1)">
       Prev Chapter
       <icon name="arrow-up" />
     </div>
-    <div class="empty" v-if="!gallery.length"> EMPTY </div>
+    <div class="empty" v-if="!gallery.length"></div>
 
     <!-- GALLERY -->
     <div
       ref="imgWrapper"
       v-for="(item, index) in gallery"
-      :class="['img-wrapper', { gaps: settings.gaps }]"
       :key="item.path"
-      :style="{ 
-        width: item.width + 'px',
-        'max-width': zoom === 100 ? 'none' : null
-      }"
+      :class="['img-wrapper', { gaps: settings.gaps }]"
     >
       <div class="img-loading">{{ index + 1 }}</div>
       <div 
@@ -34,7 +28,7 @@
     </div>
     <!-- /GALLERY -->
     
-    <div class="next-ch"
+    <div class="next-chapter"
       v-if="chIndex && chIndex < chCount" 
       @click.stop="$emit('chapterChange', chIndex + 1)">
       Next Chapter
@@ -158,11 +152,16 @@ export default {
     },
 
     refresh() {
+      // update viewWidth first
+      this.$refs.mode.style['max-width'] = this.zoom === 100 ? 'none' : null;
+
       const imgWrappers = this.$refs.imgWrapper;
       const viewWidth = this.$refs.mode.clientWidth;
       const viewHeight = window.innerHeight;
       if (!imgWrappers) return;
 
+      // TODO: need optimize
+      // should divide calculate offsets and set styles
       this._offsets = [].slice.call(imgWrappers).map((item, index) => {
         // when zoom is fit to screen we should adjust image height
         const { width: orgWidth, height: orgHeight } = this.gallery[index];
@@ -170,7 +169,9 @@ export default {
         const ratio = realWidth / orgWidth;
         const realHeight = orgHeight * ratio;
 
-        if (this.zoom !== 'width') {
+        item.style['max-width'] = this.zoom === 100 ? 'none' : null;
+
+        if (this.zoom === 'screen') {
           if (realHeight > viewHeight) {
             const ratio = viewHeight / realHeight;
             item.style.width = orgWidth * ratio + 'px';
@@ -185,6 +186,8 @@ export default {
           return itemBCR.top + scrollTop
         }
       });
+    
+      console.log(this._offsets);
     },
 
     scrollToCurrPage(margin) {
@@ -266,7 +269,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.prev-ch, .next-ch {
+.prev-chapter, .next-chapter {
   height: 3rem;
   line-height: 3rem;
   font-size: 110%;

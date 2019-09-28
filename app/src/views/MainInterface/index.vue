@@ -18,14 +18,9 @@
 <script>
 import { mapState } from 'vuex';
 import { types } from '@/store/modules/app';
-import Explorer from './Explorer';
 
 export default {
   name: 'MainInterface',
-
-  components: {
-    Explorer
-  },
 
   computed: {
     ...mapState('app', [ 'isSidebarOpen' ])

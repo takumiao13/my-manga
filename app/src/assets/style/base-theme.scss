@@ -215,19 +215,22 @@ $viewer-toolbar-bg: #333;
 body.viewer-active,
 .viewer-active #app {
   background: $viewer-bg !important;
-  color: $viewer-color !important;
 } 
 
-#viewer {
-  .viewer-viewport {
-    &::-webkit-scrollbar-track {
-      background-color: $viewer-bg;
-    }
-    
-    &::-webkit-scrollbar-thumb {
-      background-color: #666;
-    }
+body.viewer-active {
+  &::-webkit-scrollbar-track {
+    background-color: $viewer-bg;
   }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: #666 !important;
+  }
+}
+
+
+#viewer {
+  background: $viewer-bg !important;
+  color: $viewer-color !important;
 
   .viewer-topbar > .navbar,
   .viewer-toolbar > .navbar {

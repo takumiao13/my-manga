@@ -1,7 +1,6 @@
 import config from '@/config';
 import store from '@/store';
 import { types as appTypes } from '@/store/modules/app';
-import { eventHub } from '@/helpers';
 
 function fetch$(input, options) {
   input  = config.baseURL + input;

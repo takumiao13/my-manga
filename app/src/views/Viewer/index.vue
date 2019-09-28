@@ -1,5 +1,8 @@
 <template>
-  <div id="viewer">
+  <div id="viewer" :class="{
+    'viewer-left-hand': this.handMode === 'left',
+    'viewer-right-hand': this.handMode === 'right'
+  }">
     <div class="topbar viewer-topbar fixed-top" 
       :class="{ 
         'viewer-autoscrolling': autoScrolling,
@@ -162,7 +165,7 @@ export default {
       let title = last(this.path.split('/'));
 
       // addon chapter name
-      if (this.ch) title += ` / ${this.ch}`
+      if (this.ch) title = `${this.ch} / ${title}`;
       return ' ' + title;
     },
 
@@ -197,50 +200,51 @@ export default {
 
       const selected = menu.map(item => item.zoom).indexOf(this.zoom);
 
-      return this.autoScrolling ? [{
-        icon: 'pause',
-        title: 'stop scrolling',
-        click: () => this.autoScrollToggle(false)
-      }] : [{
-        icon: this.isFullscreen ? 'compress' : 'expand',
-        tip: 'Fullscreen',
-        click: () => this.fullscreenToggle()
-      }, {
-        icon: 'page-alt',
-        tip: 'Page Display',
-        dropdown: {
-          props: {
-            type: 'select',
-            menu: [{
-              html: `
-                Hand Mode: 
-                <strong class="text-primary">
-                  ${capitalize(this.handMode)}
-                </strong>
-              `,
-              click: this.handModeToggle
-            }, {
-              type: 'check',
-              checked: this.gaps,
-              text: 'Show Gaps Between Pages',
-              click: this.gapsToggle
-            }, {
-              text: 'Auto Scrolling',
-              click: () => this.autoScrollToggle(true)
-            }]
+      return this.autoScrolling ? 
+        [{
+          icon: 'pause',
+          title: 'Stop scrolling',
+          click: () => this.autoScrollToggle(false)
+        }] : 
+        [{
+          icon: this.isFullscreen ? 'compress' : 'expand',
+          tip: 'Fullscreen',
+          click: () => this.fullscreenToggle()
+        }, {
+          icon: 'page-alt',
+          tip: 'Page Display',
+          dropdown: {
+            props: {
+              menu: [{
+                html: `
+                  Hand Mode : 
+                  <strong class="text-primary">
+                    ${capitalize(this.handMode)}
+                  </strong>
+                `,
+                click: this.handModeToggle
+              }, {
+                type: 'check',
+                checked: this.gaps,
+                text: 'Show Gaps Between Pages',
+                click: this.gapsToggle
+              }, {
+                text: 'Auto Scrolling',
+                click: () => this.autoScrollToggle(true)
+              }]
+            }
           }
-        }
-      }, {
-        icon: 'search-plus',
-        tip: 'Zoom',
-        dropdown: {
-          props: {
-            type: 'select',
-            selected,
-            menu
+        }, {
+          icon: 'search-plus',
+          tip: 'Zoom',
+          dropdown: {
+            props: {
+              type: 'select',
+              selected,
+              menu
+            }
           }
-        }
-      }];
+        }];
     }
   },
 
@@ -260,7 +264,8 @@ export default {
   mounted() {
     if (!this.appError) {  
       const { dirId, path, ch } = this.$route.params;
-      this.$store.dispatch(types.VIEW, { dirId, path, ch });
+      const { start: page } = this.$route.query;
+      this.$store.dispatch(types.VIEW, { dirId, path, ch, page });
     }
   },
 
@@ -406,7 +411,7 @@ export default {
   position: relative;
 }
 
-#viewer > .topbar {
+.viewer-topbar {
   transform: translateY(-100%);
   transition: transform .3s ease-in;
 

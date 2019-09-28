@@ -76,6 +76,7 @@ export default {
         const chPromise = state.ch !== ch ? 
           mangaAPI.list({ dirId, path: `${path}/${ch}` }) : chResStub;
 
+        //const chPromise = mangaAPI.list({ dirId, path: `${path}/${ch}` })
         promiseArray.push(chPromise);
       }
   
@@ -102,6 +103,9 @@ export default {
             images = res2.images;
           }
         }
+
+        console.log(path, images, chapters);
+        console.log(page, ch);
   
         commit(LOAD, { path, images, chapters });
         commit(GO, { page, ch });
@@ -111,9 +115,13 @@ export default {
       });
     },
 
-    [GO]({ commit, state, getters }, payload = {}) {
-      const { page } = payload;
-      if (page < 1 || page > getters.count) return;
+    [GO]({ commit, getters }, payload = {}) {
+      const { page, ch } = payload;
+      
+      if (page < 1) return;
+      if (ch && page > getters.chCount) return;
+      if (!ch && page > getters.count) return;
+      
       // should empty ch
       commit(GO, payload);
     },

@@ -4,17 +4,21 @@
       <component 
         class="nav-item"
         v-for="(btn, index) in leftBtns_"
-        :is="btn.dropdown ? 'dropdown' : 'li'"
         :key="`left-${index}`"
-        :as="btn.dropdown ? 'li' : null"
-        v-bind="btn.dropdown ? btn.dropdown.props : null"
-        v-on="btn.dropdown ? btn.dropdown.on : null"
+        :is="navItemIs(btn)"
+        v-bind="navItemProps(btn)"
+        v-on="navItemEvents(btn)"
       >
         <component
           :is="btn.dropdown ? 'span' : 'a'"
           :class="[btn.className, { btn: !btn.dropdown }]"
           :title="btn.tip"
-          @click="btn.click"
+          v-on="btn.dropdown ? null: { 
+            click: ($event) => {
+              $event.stopPropagation();
+              btn.click();
+            } 
+          }"
         >
           <icon v-if="btn.icon" :name="btn.icon" />
           <template v-if="btn.icon && btn.title">&nbsp;</template>
@@ -44,7 +48,12 @@
           :is="btn.dropdown ? 'span' : 'a'"
           :class="{ btn: !btn.dropdown }"
           :title="btn.tip"
-          @click="btn.click"
+          v-on="btn.dropdown ? null: { 
+            click: ($event) => {
+              $event.stopPropagation();
+              btn.click();
+            } 
+          }"
         >
           <icon v-if="btn.icon" :name="btn.icon" />
           <template v-if="btn.icon && btn.title">&nbsp;</template>
@@ -102,7 +111,13 @@ export default {
         buttons = this.leftBtns;
       }
 
-      return buttons && buttons.map(btn => Object.assign({}, DEFAULT_BUTTON, btn));
+      return buttons && buttons.map(btn => {
+        btn = Object.assign({}, DEFAULT_BUTTON, btn);
+        if (btn.dropdown && !btn.dropdown.props.alignment) {
+          btn.dropdown.props.alignment = 'left';
+        }
+        return btn;
+      });
     },
 
     rightBtns_() {
@@ -113,7 +128,35 @@ export default {
         buttons = this.rightBtns;
       }
       
-      return buttons && buttons.map(btn => Object.assign({}, DEFAULT_BUTTON, btn));
+      return buttons && buttons.map(btn => {
+        btn = Object.assign({}, DEFAULT_BUTTON, btn);
+        if (btn.dropdown && !btn.dropdown.props.alignment) {
+          btn.dropdown.props.alignment = 'right';
+        }
+        return btn;
+      });
+    },
+  },
+
+  methods: {
+    navItemIs(btn) {
+      return  btn.dropdown ? 'dropdown': 'li';
+    },
+
+    navItemProps(btn) {
+      const props = {
+        as: btn.dropdown ? 'li' : null
+      };
+
+      if (btn.dropdown && btn.dropdown.props) {
+        Object.assign(props, btn.dropdown.props);
+      }
+
+      return props;
+    },
+
+    navItemEvents(btn) {
+      return btn.dropdown ? btn.dropdown.on : null;
     }
   }
 }

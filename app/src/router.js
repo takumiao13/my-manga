@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import store, { loadSettingsState } from './store';
 import VueRouter from 'vue-router';
-import { last, isUndef, eventHub } from '@/helpers';
+import { last, isUndef } from '@/helpers';
 import { types as appTypes } from '@/store/modules/app';
 
 // views

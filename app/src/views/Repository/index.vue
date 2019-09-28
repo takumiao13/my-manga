@@ -53,9 +53,6 @@
 
 <script>
 import { inElectron, eventHub } from '@/helpers';
-import settingsAPI from '@/apis/settings';
-import { resetStore } from '@/store';
-import { types as appTypes } from '@/store/modules/app';
 import { types } from '@/store/modules/settings';
 import { mapGetters, mapState } from 'vuex';
 
@@ -107,7 +104,7 @@ export default {
         })
     },
 
-    handleSelectRepo($event) {
+    handleSelectRepo() {
       inElectron && ipc.send('open-file-dialog');
     },
 

@@ -9,8 +9,7 @@
 
 <script>
 import ServerError from '@/views/Error/ServerError';
-import { types as appTypes } from '@/store/modules/app';
-import { mapGetters, mapState } from 'vuex';
+import { mapState } from 'vuex';
 
 export default {
   name: 'App',

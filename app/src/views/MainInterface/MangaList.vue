@@ -29,17 +29,11 @@
           <!-- META DATA -->
           <div id="metadata" v-if="isManga && !empty" class="col-12" ref="metadata"> 
             <div class="metadata-share metadata-inner" v-if="sharing">
-              <div class="modal" tabindex="-1" role="dialog">
+              <div class="modal mb-3" tabindex="-1" role="dialog">
                 <div class="modal-dialog">
                   <div class="modal-content">
                     <div class="modal-header">
                       <h5 class="modal-title">Share: {{ title }}</h5>
-                      <button type="button" class="close" 
-                        data-dismiss="modal" aria-label="Close"
-                        @click="sharing = false"
-                      >
-                        <span aria-hidden="true">×</span>
-                      </button>
                     </div>
                     <div class="modal-body">
                       <qriously class="mb-3 qr-code" :value="qrcodeValue" :size="160" />
@@ -181,7 +175,7 @@
 
 <script>
 import config from '@/config';
-import { isUndef, last, debounce, getScrollTop } from '@/helpers';
+import { isUndef, last, debounce, getScrollTop, inElectron } from '@/helpers';
 import { types as appTypes } from '@/store/modules/app';
 import { types as mangaTypes } from '@/store/modules/manga';
 import { types as viewerTypes } from '@/store/modules/viewer';
@@ -270,12 +264,6 @@ export default {
     },
 
     rightBtns() {
-
-      // {
-      //   icon: 'book-open',
-      //   tip: 'Read Now',
-      //   click: ($event) => this.readManga(this.chapters[0] || this.images[0], 0)
-      // }
       return this.isManga ? [{
         icon: 'share-alt',
         tip: 'Share Manga',
@@ -289,15 +277,7 @@ export default {
     
     qrcodeValue() {
       const { host, port } = config;
-      const { protocol } = window.location;
-      // if (inElectron && process.env.NODE_ENV === 'development') {
-      //   const { host, port, baseURL } = config;
-      //   // when share the qrcode we need the real ip
-  
-      //   return href.replace('localhost', host); // replace real ip
-      // } else {
-      //   return `http://${host}:${port}/manga/share/${this.shortId}`
-      // }
+      const protocol = inElectron ? 'http:' : window.location.protocol;
       return `${protocol}//${host}:${port}/s/${this.shortId}`
     },
   },
@@ -313,6 +293,7 @@ export default {
   activated() {
     if (this.appError || (this.$route.meta.isBack && this.inited) || this.$router._reset) return;
     this.sharing = false;
+    this.addressbarCollapsed = false;
     this.isManga = this.$route.query.type === 'manga';
     this.immediatelyChange = true;
     this.fetchMangas(this.$route.params.path);
@@ -322,6 +303,7 @@ export default {
     const { isBack } = to.meta;
     if (!this.appError) {
       this.sharing = false;
+      this.addressbarCollapsed = false;
       this.isManga = to.query.type === 'manga';
       this.immediatelyChange = from.query.type !== to.query.type;
       to.meta.scrollPromise = this.fetchMangas(to.params.path, isBack);
@@ -370,8 +352,8 @@ export default {
 
         if (item.type === 'CHAPTER') {
           return !this.path || 
-                this.path !== this.viewerPath || 
-                this.ch !== this.viewerCh;
+            this.path !== this.viewerPath || 
+            this.ch !== this.viewerCh;
         }
       };
 
@@ -387,14 +369,13 @@ export default {
         });
       }
 
-      this.$store.dispatch(viewerTypes.GO, { 
-        page: index + 1, 
-        ch: '' 
-      });
-
       this.$router.push({
         name: 'viewer',
-        params: { dirId, path, ch }
+        params: { dirId, path, ch },
+        query: {
+          // use a query from start page, prepare for history feature
+          start: index + 1
+        }
       });
     },
 
@@ -457,10 +438,16 @@ export default {
 
     handleShareManga() {
       const { host } = config;
-      const { protocol, pathname, search, hash, port } = window.location;
-      const url = `${protocol}//${host}:${port}${pathname}${search}${hash}`;
-      const payload = { url }
-      this.$store.dispatch(mangaTypes.SHARE, payload).then(() => {
+      const { search, hash } = window.location;
+      
+      const port = process.env.NODE_ENV === 'development' ?
+        window.location.port : // user client port
+        config.port; // user server port
+
+      const protocol = inElectron ? 'http:' : window.location.protocol;
+      const url = `${protocol}//${host}:${port}/${hash}`;
+      
+      this.$store.dispatch(mangaTypes.SHARE, { url }).then(() => {
         this.sharing = true;
       }); 
     }
