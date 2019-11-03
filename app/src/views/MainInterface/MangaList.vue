@@ -329,15 +329,11 @@ export default {
       return this.$store.dispatch(mangaTypes.LIST, payload);
     },
 
-    toggleAddressbar: debounce(function(scrollTop, prevScrollTop) {
+    toggleAddressbar(scrollTop, prevScrollTop) {
       this.addressbarCollapsed = scrollTop >= 160 ? 
         isUndef(prevScrollTop) || scrollTop > prevScrollTop :
         false;
-    }, 500, {
-      maxWait: 1500,
-      leading: true,
-      trailing: false
-    }),
+    },
 
     readManga(item, index = 0) {
       const { path } = this.$route.params;

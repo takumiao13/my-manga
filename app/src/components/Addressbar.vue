@@ -6,7 +6,7 @@
         class="address-item"
         @click="$emit('back', $event)"
       >
-        <a class="address-link address-back">
+        <a class="address-link address-back" title="Back to parent">
           <icon name="arrow-left" />
         </a>
       </li>
@@ -144,7 +144,6 @@ export default {
 
 <style lang="scss" scoped>
 .addressbar {
-  height: 2rem;
   display: flex;
   overflow-x: hidden;
 }
@@ -176,7 +175,8 @@ export default {
 }
 
 .address-link {
-  padding: 0 .25rem 0 .5rem;
+  display: block;
+  padding: .25rem .25rem .25rem .5rem;
   cursor: pointer;
 
   &.address-back {
