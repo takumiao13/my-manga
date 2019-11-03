@@ -3,9 +3,9 @@ import './assets/style/index.scss';
 import Vue from 'vue'
 import App from './App.vue'
 import store, { resetStore, loadSettingsState } from './store';
-import router, { backwardAllHistory } from './router';
-import { byId, delay, inElectron, eventHub } from '@/helpers';
+import router, { resetHistory } from './router';
 import config from '@/config';
+import { byId, delay, inElectron, eventHub } from '@/helpers';
 import { types as settingTypes } from '@/store/modules/settings';
 
 // Global components
@@ -77,13 +77,18 @@ function bootstrapApp() {
 
   eventHub.$on('store.reset', (repo) => {
     const { name, dirId } = repo;
-    $message.innerHTML = '<p>Change Repository</p> <strong>' + name + '</strong>';
+    
+    // style
     document.body.style.overflow = 'hidden';
+    $message.innerHTML = '<p>Change Repository</p> <strong>' + name + '</strong>';
     $loading.classList.remove('fade');
     $loading.style.display = '';
+    
+    // store repo key
     window.localStorage.setItem(REPO_KEY, dirId);
 
-    backwardAllHistory(function() {
+    // reset store
+    resetHistory(() => {
       resetStore();     
       router.push({ name: 'explorer', params: { dirId }});
       showApp();
@@ -91,7 +96,7 @@ function bootstrapApp() {
   });
 
   // try to get user settings
-    Promise.all([
+  Promise.all([
     store.dispatch(settingTypes.user.INIT),
     store.dispatch(settingTypes.repo.INIT)  
   ])
