@@ -184,6 +184,14 @@ export default {
     },
 
     rightBtns() {
+
+      const leftHandBack = {
+        icon: 'arrow-left',
+        tip: 'Back',
+        click: this.handleBack,
+        className: 'viewer-back'
+      }
+
       const menu = [{
         zoom: 'width',
         text: 'Fit to width'
@@ -201,50 +209,58 @@ export default {
       const selected = menu.map(item => item.zoom).indexOf(this.zoom);
 
       return this.autoScrolling ? 
-        [{
-          icon: 'pause',
-          title: 'Stop scrolling',
-          click: () => this.autoScrollToggle(false)
-        }] : 
-        [{
-          icon: this.isFullscreen ? 'compress' : 'expand',
-          tip: 'Fullscreen',
-          click: () => this.fullscreenToggle()
-        }, {
-          icon: 'page-alt',
-          tip: 'Page Display',
-          dropdown: {
-            props: {
-              menu: [{
-                html: `
-                  Hand Mode : 
-                  <strong class="text-primary">
-                    ${capitalize(this.handMode)}
-                  </strong>
-                `,
-                click: this.handModeToggle
-              }, {
-                type: 'check',
-                checked: this.gaps,
-                text: 'Show Gaps Between Pages',
-                click: this.gapsToggle
-              }, {
-                text: 'Auto Scrolling',
-                click: () => this.autoScrollToggle(true)
-              }]
+        [
+          leftHandBack,
+          {
+            icon: 'pause',
+            title: 'Stop scrolling',
+            click: () => this.autoScrollToggle(false)
+          }
+        ] : 
+        [
+          leftHandBack,
+          {
+            icon: this.isFullscreen ? 'compress' : 'expand',
+            tip: 'Fullscreen',
+            click: () => this.fullscreenToggle()
+          }, 
+          {
+            icon: 'page-alt',
+            tip: 'Page Display',
+            dropdown: {
+              props: {
+                menu: [{
+                  html: `
+                    Hand Mode : 
+                    <strong class="text-primary">
+                      ${capitalize(this.handMode)}
+                    </strong>
+                  `,
+                  click: this.handModeToggle
+                }, {
+                  type: 'check',
+                  checked: this.gaps,
+                  text: 'Show Gaps Between Pages',
+                  click: this.gapsToggle
+                }, {
+                  text: 'Auto Scrolling',
+                  click: () => this.autoScrollToggle(true)
+                }]
+              }
+            }
+          }, 
+          {
+            icon: 'search-plus',
+            tip: 'Zoom',
+            dropdown: {
+              props: {
+                type: 'select',
+                selected,
+                menu
+              }
             }
           }
-        }, {
-          icon: 'search-plus',
-          tip: 'Zoom',
-          dropdown: {
-            props: {
-              type: 'select',
-              selected,
-              menu
-            }
-          }
-        }];
+        ];
     }
   },
 
@@ -458,5 +474,36 @@ export default {
   position: fixed;
   right: 0;
   bottom: 0;
+}
+
+// change left and right position
+
+.viewer-back {
+  display: none;
+}
+
+.viewer-left-hand {
+
+  .viewer-back {
+    display: block;
+  }
+
+  .navbar-nav-left {
+    order: 2;
+
+    .viewer-title .svg-icon {
+      display: none;
+    }
+  }
+
+  .navbar-nav-right {
+    order: 1;
+    margin-left: 0 !important;
+    
+    .dropdown-menu-right {
+      left: 0;
+      right: auto;
+    }
+  }
 }
 </style>

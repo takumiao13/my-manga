@@ -201,9 +201,10 @@ export default {
     &.navbar-nav-left .nav-item {
       margin-right: .25rem;
 
-      &:last-child {
-        margin-right: -.5rem;
-      }
+      // why ??
+      // &:last-child {
+      //   margin-right: -.5rem;
+      // }
     }
 
     &.navbar-nav-right .nav-item {
