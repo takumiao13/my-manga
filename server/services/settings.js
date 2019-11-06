@@ -27,55 +27,92 @@ class Data {
 }
 
 
-const _hooks = {
-  repos: {
-    get(value, context) {
-      return context._cryptoedRepos;
-    }
-  }
-}
-
 class SettingsService extends Service {
 
-  constructor(opts) {
-    super(opts);
+  initialize() {
     const { options } = this.app;
     const { settings, baseDir } = options;
     
     this._settings = {};
-    this._hooks = _hooks;
-    const repoMap = {};
 
+    // get repos from settings
     if (settings) {
-      this.setPath('user', settings); // 全局 settings 需要获取 repos
+      this._setPath('user', settings); 
       const repos = this.get('user', 'repos', false);
-      const cryptoedRepos = [];
-    
-      repos.forEach(baseDir => {
-        const name = pathFn.basename(baseDir);
-        const dirId = this.hashBaseDir(baseDir);
 
-        repoMap[dirId] = { name, baseDir };
-        cryptoedRepos.push({ name, dirId, accessed: pathAccess(baseDir) });
-      });
+      this.service.repo.multiple = true;
+      this.service.repo.add(repos);
 
-      this._cryptoedRepos = cryptoedRepos;
+    // get repo from single dir
     } else if (baseDir) {
-      // single dir
-      this.setPath('repo', pathFn.resolve(baseDir, FILE_NAME));
-      const name = pathFn.basename(baseDir) || pathFn.dirname(baseDir).replace(pathFn.sep, '');
-      const dirId = this.hashBaseDir(baseDir);
+      this._setPath('repo', pathFn.resolve(baseDir, FILE_NAME));
 
-      this._singleRepoId = dirId;
-      repoMap[dirId] = { name, baseDir };
+      this.service.repo.multiple = false;
+      this.service.repo.add(baseDir);
     }
-
-    // set repoMap to app options
-    // we can get it from other service or controller
-    options.repoMap = repoMap; 
   }
 
-  setPath(scope, path) {
+  get(scope, key, encode) {
+    const settings = this._getScope(scope);
+
+    // if unknown scope settings return null
+    if (!settings) return null; 
+    const { data } = settings;
+
+    let value = data.get(key);
+
+    if (encode !== false) {
+      value = this._cryptoValue(key, value);
+    }
+    
+    if (scope !== 'user') {
+      // get repo by scope
+      const dirId = scope === 'repo' ? '' : scope;
+      const repo = this.service.repo.get(dirId)
+
+      if (isUndef(key) && repo) {      
+        Object.assign(value, {
+          name: repo.name,
+          dirId: repo.dirId
+        });
+      }
+    }
+    
+    return value;
+  }
+
+  set(scope, key, value) {
+    const { data } = this._getScope(scope);
+    let result;
+
+    this._perSet(key, value);
+
+    if (isDef(value)) {  
+      result = data.set(key, value);
+    } else {
+      result = data.unset(key);
+    }
+
+    return result
+  }
+
+  async save(scope, key, value) {
+    const { path } = this._getScope(scope);
+    const data = this.set(scope, key, value);
+
+    // overwrite settings file
+    const stringifiedData = JSON.stringify(data, null, 2);
+    const [ err ] = await to(fs.writeFile(path, stringifiedData));
+    if (err) {
+      err.message = 'update settings error';
+      throw err;
+    }
+
+    // only return the set value
+    return value ? this.get(scope, key) : true;
+  }
+
+  _setPath(scope, path) {
     let data;
     const settings = this._settings[scope] = {};
     
@@ -89,26 +126,23 @@ class SettingsService extends Service {
     return settings;
   }
 
-  hashBaseDir(baseDir) {
-    return md5(baseDir);
-  }
-
-  getScope(scope) {
+  _getScope(scope) {
     let settings = null;
-    const { repoMap } = this.app.options;
+
+    const repo = this.service.repo.get(scope);
 
     // scope ['user'] has loaded when init
     if (scope === 'user') {
       settings = this._settings.user;
+
     } else if (scope === 'repo') {
       settings = this._settings.repo;
+
     // scope ['<hash>'] dynamic load
-    } else if (repoMap[scope]) {
-      const { baseDir } = repoMap[scope]; // get real dir
-      settings = this._settings[scope];
-      if (!settings) {
-        settings = this.setPath(scope, pathFn.resolve(baseDir, FILE_NAME));
-      }
+    } else if (repo) {
+      const { baseDir } = repo // get real dir from repo
+      settings = this._settings[scope] || this._setPath(scope, pathFn.resolve(baseDir, FILE_NAME));
+
     } else {
       throw new CustomError(ERR_CODE.REPO_UNACCESSED);
     }
@@ -116,74 +150,40 @@ class SettingsService extends Service {
     return settings;
   }
 
-  get(scope, key, encode) {
-    const { repoMap } = this.app.options;
-    const settings = this.getScope(scope);
-    // if unknown scope settings return null
-    if (!settings) return null; 
-    const { data } = settings;
-    const value = encode === false ? 
-        data.get(key) : 
-        this.encode(data.get(key), key);
-    
-    if (scope !== 'user') {
-      if (scope === 'repo') scope = this._singleRepoId;
-      const repo = repoMap[scope]
-      if (isUndef(key) && repo) {      
-        Object.assign(value, {
-          name: repo.name,
-          dirId: scope
-        });
+  _cryptoValue(key, value) {
+    const reposRE = /repos\[(\d+)\]/; 
+
+    if (isUndef(key)) {
+      value = cloneDeep(value);
+      if ('repos' in value) {
+        value.repos = this.service.repo.list();
+      } 
+
+      return value;
+
+    } else if (key === 'repos') {
+      return this.service.repo.list();
+
+    } else if (reposRE.test(key)) {
+      const result = key.match(reposRE);
+      const index = +result[1];
+      return this.service.repo.list()[index]
+    }
+  }
+
+  _perSet(key, value) {
+    const reposRE = /repos\[(\d+)\]/; 
+    if (reposRE.test(key)) {
+      const result = key.match(reposRE);
+      const index = result[1];
+
+      if (isDef(value)) {
+        this.service.repo.add(value);
+      } else {
+        this.service.repo.remove(index)
       }
     }
-    
-    return value;
   }
-
-  set(scope, key, value) {
-    const { data } = this.getScope(scope);
-    // @todo
-    // if unknow scope return null
-    if (isDef(value)) {
-      return data.set(key, value);
-    } else {
-      return data.unset(key) ? data.get() : null;
-    }
-  }
-
-  async save(scope, key, value) {
-    const { path } = this.getScope(scope);
-    const data = this.set(scope, key, value);
-    const stringifiedData = JSON.stringify(data, null, 2);
-    const [ err, result ] = await to(fs.writeFile(path, stringifiedData));
-    if (err) {
-      err.message = '更新配置文件错误'
-      throw err;
-    }
-    return result;
-  }
-
-  encode(data, key) {
-    data = cloneDeep(data);
-    const _hooks = this._hooks;
-    if (_hooks[key] && _hooks[key].get) {
-      data = _hooks[key].get(data, this);
-    }
-
-    Object.keys(_hooks).forEach(key => {
-      if (has(data, key) && _hooks[key].get) {
-        const value = get(data, key);
-        set(data, key, _hooks[key].get(value, this));
-      }
-    });
-
-    return data;
-  }
-
-  // // @todo
-  // decode(data, key) {
-  //   return data;
-  // }
 }
 
 module.exports = SettingsService;

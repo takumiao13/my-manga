@@ -26,7 +26,7 @@ class MangaController extends Controller {
   async _cache(ctx, process) {
     try {
       const { request, response } = ctx;
-      const { path = '', baseDir: dirId } = ctx.params;
+      const { path = '', dirId } = ctx.params;
       const ifModifiedSince = request.headers['if-modified-since'];
       const baseDir = this._getBaseDir(dirId);
       const dirStat = await fs.stat(pathFn.resolve(baseDir, path));
@@ -48,8 +48,7 @@ class MangaController extends Controller {
   }
 
   _getBaseDir(dirId) {
-    const { repoMap } = this.app.options;
-    const repo = repoMap[dirId]
+    const repo = this.app.service.repo.get(dirId);
     
     if (!repo) throw new CustomError(ERR_CODE.REPO_UNACCESSED);
     return repo.baseDir;

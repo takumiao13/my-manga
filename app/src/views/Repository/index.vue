@@ -113,7 +113,6 @@ export default {
       // 2.repo is not changed 
       // 3.can go back
       // then we just back it
-      debugger;
       if (repo.dirId === this.repoId && this.$router.canGoBack()) {
         this.$router.go(-1);
         return;
@@ -125,12 +124,12 @@ export default {
 
     handleRemoveRepo($event, repo) {
       $event.stopPropagation();
-      const index = this.repos.map(item => item.path).indexOf(repo);
+      const index = this.repos.map(item => item.dirId).indexOf(repo.dirId);
       const scope = 'user';
       const payload = { key: `repos[${index}]` };
 
       if (index > -1) {
-        this.$store.dispatch(types[scope].SET, payload)
+        this.$store.dispatch(types[scope].UNSET, payload)
           .then(() => {
             // remove done; tip later
           })

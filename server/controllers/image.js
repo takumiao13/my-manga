@@ -5,10 +5,9 @@ class ImageController extends Controller {
 
   async show(ctx) {
     const { app } = this;
-    const { path, baseDir } = ctx.params;
-    const { repoMap } = app.options;
-
-    const root = repoMap[baseDir].baseDir; // get real path;
+    const { path, dirId } = ctx.params;
+    const repo = this.app.service.repo.get(dirId);
+    const root = repo.baseDir; // get real path;
     const [ err, result ] = await to(app.send(ctx, path, { 
       root,
       hidden: true,
