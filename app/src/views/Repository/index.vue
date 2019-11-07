@@ -113,7 +113,6 @@ export default {
       // 2.repo is not changed 
       // 3.can go back
       // then we just back it
-      debugger;
       if (repo.dirId === this.repoId && this.$router.canGoBack()) {
         this.$router.go(-1);
         return;
