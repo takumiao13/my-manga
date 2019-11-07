@@ -22,18 +22,24 @@ class MangaService extends Service {
   }
 
   async folder(path = '', baseDir) {
-    return await traverse({ path, baseDir, skipMeta: true });
+    return await traverse({ path, baseDir });
   }
 }
 
 // Private Methods
-async function traverse({ path = '', baseDir, maxDepth = 1, onlyDir = true, skipMeta = false }) {
+async function traverse({ 
+  path = '',
+  baseDir,
+  maxDepth = 1,
+  onlyDir = true
+}) {
   let err, stat, files;
   const absPath = pathFn.resolve(baseDir, path);
-  // basic info
-  const children = [];
   const name = pathFn.basename(path);
+  const children = [];
+  
   [ err, stat ] = await to(fs.stat(absPath));
+  
   if (err) return null;
 
   const isDir = stat.isDirectory();
@@ -41,17 +47,25 @@ async function traverse({ path = '', baseDir, maxDepth = 1, onlyDir = true, skip
   // extra info
   let metadata, type, cover, width, height, hasChildren = false;
 
+  // Ignore if file is either image or directory type
   if (!isDir && !imgRE.test(extname(path))) return null;
   
-  // sort files by filename
-  if (isDir) { 
+  // Traverse sub directory
+  if (isDir) {
+    // try to get metadata
     metadata = await readMeta(absPath);
+
+    // get cover if metadata has `cover` key
     if (metadata && metadata.cover) {
       cover = pathFn.posix.join(path, metadata.cover);
     }
   
     [ err, files ] = await to(fs.readdir(absPath))
-    if (err) return null; // simple check operation not permitted
+
+    // simple check id path operation not permitted
+    if (err) return null; 
+    
+    // sort files by filename
     files = sortFiles(files);
 
     for (let i = 0; i < files.length; i++) {
@@ -59,76 +73,95 @@ async function traverse({ path = '', baseDir, maxDepth = 1, onlyDir = true, skip
       const childPath = pathFn.posix.join(path, files[i]);
 
       if (maxDepth > 0) {
-        child = await traverse({ baseDir, path: childPath, maxDepth: maxDepth-1, onlyDir, skipMeta });
+        child = await traverse({ 
+          baseDir, 
+          path: childPath, 
+          maxDepth: maxDepth-1, 
+          onlyDir
+        });
       } else {
-        child = await simpleTraverse({ baseDir, path: childPath });
-      }
-      
+        // when `maxDepth` is decrease to 0
+        // we need do one more iteratee to check 
+        // current directory type is `MANGA` or `FOLDER`
+        // - if directory has sub folder then consider it as `FOLDER`
+        // - if directory has more than 10 image then consider it as `MANGA`
+
+        const filepath = pathFn.resolve(baseDir, childPath);
+        const [ err, stat ] = await to(fs.stat(filepath));
+
+        //console.log(filepath);
+        if (err) { continue }
+
+        const isDir = stat.isDirectory();
+
+        if (!isDir && !imgRE.test(extname(filepath))) { continue }
+
+        child = { path: childPath, isDir }
+      } 
+           
       if (child) {
-        // handle `cover` & `type`
-        if (!child.isDir && !cover) cover = child.path;
-        if (child.isDir && metadata) child.type = FILE_TYPE.CHAPTER; 
+        // if directory has not specify cover
+        // use first image child as it's cover
+        if (!child.isDir && !cover) {
+          cover = child.path;
+        }
+
+        // change child type to `CHAPTER` if contains metadata
+        if (child.isDir && metadata) {
+          child.type = FILE_TYPE.CHAPTER;
+        }
         
-        // handle `children`
-        if (child && child.isDir && !hasChildren) hasChildren = true;
-        if (!onlyDir || (onlyDir && child.isDir) && maxDepth > 0) children.push(child);
+        // sometimes we will not push child to `children` (onlyDir or performance)
+        // so we can use `hasChildren` key to know the directory whether has children
+        if (child.isDir && !hasChildren) {
+          hasChildren = true;
+        }
+
+        // if we get the directory type skip the loop for performance
+        if (maxDepth == 0 && (hasChildren || i >= 10)) {
+          break;
+        }
+
+        // push `child` to `children`
+        // - `maxDepth > 0` not the last iteratee
+        // - `onlyDir` only push directory type
+        if (maxDepth > 0 && !onlyDir || onlyDir && child.isDir) {
+          children.push(child);
+        }
       }
     }
   }
 
-  // handle file type
+  // Determine the file type
   if (isDir) {
-    type = metadata ? FILE_TYPE.MANGA : FILE_TYPE[hasChildren ? 'FOLDER' : 'MANGA'];
+    type = metadata ? 
+      FILE_TYPE.MANGA : 
+      FILE_TYPE[hasChildren ? 'FOLDER' : 'MANGA'];
   } else {
     type = FILE_TYPE.IMAGE;
   }
 
-  // handle size (W & H)
-  if (!isDir || (isDir && cover)) {
-    const imgPath = cover || path;
+  // Determine the file path
+  let imgPath;
+  
+  if (type === FILE_TYPE.IMAGE) {
+    imgPath = path;
+  } else if (type === FILE_TYPE.MANGA) {
+    imgPath = cover;
+  }
 
+  // Calculate image size (W & H)
+  // if `onlyDir` is true we should not calculate it
+  if (imgPath && !onlyDir) {
     try {
       const size = sizeOf(pathFn.resolve(baseDir, imgPath));
       width = size.width;
       height = size.height;
     } catch (e) {}
-    
   }
 
-  // merge info
+  // Merge base info and extra info
   return { isDir, path, name, type, cover, metadata, width, height, children, hasChildren };
-}
-
-async function simpleTraverse({ path, baseDir }) {
-  let err, stat, files;
-  const absPath = pathFn.resolve(baseDir, path);
-  [ err, stat ] = await to(fs.stat(absPath));
-  
-  if (err) return null;
-  
-  const ret = { 
-    path, 
-    hasChildren: false,
-    isDir: stat.isDirectory()
-  };
-
-  if (!ret.isDir) return imgRE.test(extname(path)) ? ret : null;
-
-  [ err, files ] = await to(fs.readdir(absPath));
-  if (err) return null; // simple check operation not permitted
-
-  for (let i = 0; i < files.length; i++) {
-    const childPath = pathFn.resolve(absPath, files[i]);
-    const [ err, stat ] = await to(fs.stat(childPath));
-    
-    if (stat && stat.isDirectory()) {
-      // check has sub folder
-      ret.hasChildren = true;
-      return ret;
-    }
-  }
-
-  return ret;
 }
 
 async function readMeta(dir) {
