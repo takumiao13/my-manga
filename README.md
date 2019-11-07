@@ -32,11 +32,11 @@ Usage: start [options]
 start my manga server
 
 Options:
-  -o, --open                 open browser
-  -p, --port <port>          port used for server (default: 3033)  
-  -d, --dir <dir>            specify dir as manga repo
-  -s, --settings <settings>  settings file
-  -h, --help                 output usage information
+  -o, --open .................. open browser after starting the server
+  -p, --port <port> ........... port to use (default: 3033)  
+  -d, --dir <dir> ............. specify dir as manga repo
+  -s, --settings <settings> ... settings file
+  -h, --help .................. output usage information
 ```
 
 ### settings
@@ -44,10 +44,9 @@ Options:
 **settings.json**
 ```json
 {
-  // multiple repos support
-  "repos": [
+  "repos": [ // multiple repos support
     "C:\\repo-a",
-    "D:\\repo-b"
+    "D:/repo-b"
     "E:\\repo-c"
   ]
 }
@@ -55,11 +54,9 @@ Options:
 
 ## Browsers support
 
-Modern browsers.
-
-| [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="IE / Edge" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>IE / Edge | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png" alt="Firefox" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>Firefox | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>Chrome | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png" alt="Safari" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)</br>Safari |
-| --------- | --------- | --------- | --------- |
-|IE11, Edge| last 2 versions| last 2 versions| last 2 versions
+- IE11, Edge
+- Firefox (last 2 versions)
+- Chrome (last 2 versions)
 
 
 ## License

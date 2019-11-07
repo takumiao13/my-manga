@@ -17,8 +17,8 @@ program
 program
   .command('start')
   .description('start my manga server')
-  .option('-o, --open', 'open browser')
-  .option('-p, --port <port>', 'port used for server (default: 8000)')
+  .option('-o, --open', 'open browser after starting the server')
+  .option('-p, --port <port>', 'port to use (default: 3033)')
   .option('-d, --dir <dir>', 'specify dir')
   .option('-s, --settings <settings>', 'settings file')
   .action((cmd) => require('../lib/start')(cmd));
