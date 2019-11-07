@@ -7,6 +7,7 @@ import settingsAPI from '@/apis/settings';
 const ns = 'settings';
 const INIT = 'INIT';
 const SET = 'SET';
+const UNSET = 'UNSET';
 
 export const types = {};
 
@@ -15,7 +16,7 @@ const parseRepo = (repo) => {
 }
 
 export const createTypes = (scope) => {
-  types[scope] = createTypesWithNs([ INIT, SET ], `${ns}/${scope}`);
+  types[scope] = createTypesWithNs([ INIT, SET, UNSET ], `${ns}/${scope}`);
 }
 
 export const createSettings = (scope) => ({
@@ -53,9 +54,19 @@ export const createSettings = (scope) => ({
     },
 
     [SET]({ commit }, payload = {}) {
+      const { key } = payload;
       const body = assign({ scope }, payload);
+      
       return settingsAPI.post(body)
-        .then(() => commit(SET, payload));
+        .then(res => commit(SET, { key, value: res.data }));
+    },
+
+    [UNSET]({ commit }, payload = {}) {
+      const { key } = payload;
+      const body = assign({ scope }, payload);
+      
+      return settingsAPI.post(body)
+        .then(() => commit(UNSET, { key }));
     }
   },
 
@@ -73,40 +84,44 @@ export const createSettings = (scope) => ({
     [SET](state, payload) {
       const settings = state.data;
       const { key, value } = payload;
-      if (isDef(value)) {
-        const path = stringToPath(key);
+      const path = stringToPath(key);
 
-        if (path.length == 1) {
-          Vue.set(settings, key, value);
-        } else { // [repos, 1]
-          const ka = path.slice(0, -1); // ['repos'] 
-          const kb = path.slice(-1)[0]; // 1
-          let data = get(settings, ka);
-          
-          if (isUndef(data)) {
-            let obj, kd;
-            if (ka.length == 1) {
-              kd = ka;
-              obj = settings; // Vue.set(settings, 'repos', [])
-            } else {
-              const kc = ka.slice(0, -1);
-              kd = ka.slice(-1)[0];    // obj = get(settings, 'a.b.c');
-              obj = get(settings, kc); // Vue.set(obj, 'repos', []);
-            }
-            
-            Vue.set(obj, kd, isIndex(kb) ? [] : {});
-            data = get(settings, ka);
+      if (path.length == 1) {
+        Vue.set(settings, key, value);
+
+      // handle cast path
+      } else { // [repos, 1]
+        const ka = path.slice(0, -1); // ['repos'] 
+        const kb = path.slice(-1)[0]; // 1
+        let data = get(settings, ka);
+        
+        if (isUndef(data)) {
+          let obj, kd;
+          if (ka.length == 1) {
+            kd = ka;
+            obj = settings; // Vue.set(settings, 'repos', [])
+          } else {
+            const kc = ka.slice(0, -1);
+            kd = ka.slice(-1)[0];    // obj = get(settings, 'a.b.c');
+            obj = get(settings, kc); // Vue.set(obj, 'repos', []);
           }
           
-          if (isArray(data) && isIndex(kb) && kb >= data.length) {
-            data[kb] = undefined;  
-          }
-
-          Vue.set(data, kb, value);
+          Vue.set(obj, kd, isIndex(kb) ? [] : {});
+          data = get(settings, ka);
         }
-      } else {
-        unset(settings, key);
+        
+        if (isArray(data) && isIndex(kb) && kb >= data.length) {
+          data[kb] = undefined;  
+        }
+
+        Vue.set(data, kb, value);
       }
+    },
+
+    [UNSET](state, payload) {
+      const settings = state.data;
+      const { key } = payload;
+      unset(settings, key);
     }
   }
 });

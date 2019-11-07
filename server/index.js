@@ -24,7 +24,8 @@ const SettingsController = require('./controllers/settings');
 // Load Services
 const MangaService    = require('./services/manga');
 const SettingsService = require('./services/settings');
-const ShareService = require('./services/share');
+const RepoService     = require('./services/repo');
+const ShareService    = require('./services/share');
 
 class Application {
 
@@ -71,10 +72,15 @@ class Application {
     Object.assign(service, {
       manga: new MangaService(options),
       settings: new SettingsService(options),
-      share: new ShareService(options)
+      share: new ShareService(options),
+      repo: new RepoService(options)
     });
 
     this.service = service;
+
+    Object.keys(this.service).forEach((key) => {
+      this.service[key].initialize();
+    });
   }
 
   _loadControllers() {

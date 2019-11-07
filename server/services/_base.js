@@ -1,7 +1,12 @@
 class Service {
 
-  constructor({ app }) {
+  constructor({ app, service }) {
     this.app = app;
+    this.service = service;
+  }
+
+  initialize() {
+    
   }
 }
 
