@@ -2,10 +2,12 @@ import Service from './_base';
 import { isArray } from '@/helpers/utils';
 import { NAMESPACE as APP_NAMESPACE} from '@/store/modules/app';
 
-const DEFAULT = {
-  vRatio: 141.4,
-  hRatio: 70.1
-};
+const Ratio = {
+  V: 141.4, // 297 : 210,
+  H: 65 // old -> 70.1
+}
+
+const BOUNDING = 1;
 
 class ImageService extends Service {
 
@@ -25,30 +27,62 @@ class ImageService extends Service {
   
   coverStyle({ width, height }) {
     let ratio = (height / width) * 100;
-    let adjust = false;
-    const bounding = 8;
-    
-    if (ratio >= DEFAULT.vRatio - bounding && ratio <= DEFAULT.vRatio + bounding) {
-      ratio = DEFAULT.vRatio;
-      adjust = true;
-    } else if (ratio >= DEFAULT.hRatio - bounding && ratio <= DEFAULT.hRatio + bounding) {
-      ratio = DEFAULT.hRatio;
-      adjust = true;
-    }
+    let scale = false, fitW = false, fitH = false;
 
-    if (ratio > DEFAULT.vRatio + bounding) {
-      ratio = DEFAULT.vRatio;
+    if (isNaN(ratio)) ratio = Ratio.V;
+
+    // ___|___|___ ratio ___|___|___
+    //   sec pri           pri sec
+    //
+    // - <= primary allow scale
+    // - <= secondary allow center
+    // - > secondary max 
+
+    // should adjust v-ratio to scale image
+    if (ratio > 100 || isNaN(ratio)) {
+      if (
+        ratio >= Ratio.V - BOUNDING && 
+        ratio <= Ratio.V + BOUNDING
+      ) {
+        scale = true;
+      } else if (ratio < Ratio.V - BOUNDING) {
+        fitH = true;
+      } else if (ratio > Ratio.V + BOUNDING) {
+        fitW = true;
+      }
+
+      ratio = Ratio.V;
+
+    // should adjust h-ratio to scale image
+    } else {
+      
+      if (
+        ratio >= Ratio.H - BOUNDING && 
+        ratio <= Ratio.H + BOUNDING
+      ) {
+        scale = true;
+      } else if (ratio < Ratio.H - BOUNDING) {
+        fitH = true;
+      } else if (ratio > Ratio.H + BOUNDING) {
+        fitW = true;
+      }
+
+      ratio = Ratio.H;
     }
 
     return {
-      class: { adjust },
-      style: { padding:'0 0 ' + ratio + '%' }
+      class: { scale, fitW, fitH },
+      style: { padding:'0 0 ' + ratio + '%', height: '100%' }
     }
   }
 
-  style({ width, height }, maxRatio) {
+  style({ width, height }, maxRatio = 240) {
     let ratio = (height / width) * 100;
-    if (maxRatio) ratio = Math.min(ratio, maxRatio);
+
+    if (maxRatio) {
+      ratio = Math.min(ratio, maxRatio);
+    }
+
     return { padding:'0 0 ' + ratio + '%' }
   }
 

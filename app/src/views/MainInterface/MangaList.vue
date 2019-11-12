@@ -20,7 +20,7 @@
       </div>
       
       <data-view 
-        class="main-explorer-container" 
+        class="main-explorer-container container" 
         :loading="pending"
         :empty="empty"
         :error="error"
@@ -99,8 +99,12 @@
               <p class="area-header">MANGA - {{ mangas.length }} items</p>
               <div class="row">
                 <div 
-                  class="col-6 col-sm-4 col-md-3 col-xl-2 area-item"
-                  :class="{ active: item.path === activePath }"
+                  class="area-item"
+                  :class="{ 
+                    active: item.path === activePath, 
+                    'col-6 col-sm-3 col-xl-2': !item.cover || (item.height > item.width),
+                    'col-12 col-sm-6 col-xl-4': item.height <= item.width 
+                  }"
                   v-for="item in mangas"
                   :key="item.path"
                 >
@@ -161,7 +165,7 @@
                   :key="item.path">
 
                   <div class="cover"
-                    :style="$service.image.style(item, 240)"
+                    :style="$service.image.style(item)"
                     @click="readManga(item, index)">
                     <img v-lazy="$service.image.makeSrc(item.path)" />
                   </div>
@@ -475,6 +479,8 @@ export default {
 
 .main-explorer-container {
   min-height: calc(100vh - 5rem);
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .area-header {
@@ -496,12 +502,12 @@ export default {
     border-width: .5px 0;
     cursor: pointer;
 
-    @include media-breakpoint-up(md) {
+    @include media-breakpoint-up(sm) {
       border-width: .5px;
     }
   }
 
-  @include media-breakpoint-up(md) {
+  @include media-breakpoint-up(sm) {
     margin-left: 0;
     margin-right: 0;
   }
@@ -590,12 +596,36 @@ export default {
       padding: 0;
     }
   }
+
+  .area-item {
+    flex-grow: 1;
+  }
   
   .cover {
     border-radius: .5rem .5rem 0 0;
 
-    &.adjust img[lazy="loaded"] {
+    // scale img to fill cover
+    &.scale img[lazy="loaded"] {
       height: 100%;
+    }
+
+    &.fitW,
+    &.fitH {
+      img[lazy="loaded"] {
+        top: 50%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-50%);
+      }
+    }
+
+    &.fitW img[lazy="loaded"] {
+      width: 100%;
+      height: auto;
+    }
+
+    &.fitH img[lazy="loaded"] {
+      height: 100%;
+      width: auto;
     }
   }
 

@@ -69,16 +69,28 @@
 
   .manga-area > .row {
     .area-item:hover {
-      .cover,
+    
+      img {
+        top: 55%;
+        left: 55%;
+        transform: scale(1.1) translateX(-50%) translateY(-50%);
+        filter: brightness(80%);
+      }
+      
+      .cover-placeholder {
+        transform: scale(1.1);
+        filter: brightness(80%);
+      }
+
       .caption {
-        box-shadow: 0 0 0 8px $app-item-hover-bg;
+        color: $app-main;
       }
     }
 
     .area-item.active {
       .cover,
       .caption {
-        box-shadow: 0 0 0 8px $app-item-active-bg;
+        box-shadow: 0 0 0 4px $app-item-active-bg;
       }
     }
   }
@@ -93,11 +105,7 @@
 
   .gallery-area > .row {
     .area-item:hover {
-      background: $app-item-hover-bg;
-    
-      .caption {
-        background: rgba($white, 0.65);
-      }
+      //background: $app-item-hover-bg;
     }
 
     .area-item.active {
