@@ -1,10 +1,10 @@
 import { assign } from '@/helpers';
 
-export function createTypesWithNs(types, ns) {
+export function createTypesWithNamespace(types, namespace) {
   const obj = {};
 
   types.forEach(type => {
-    obj[type] = `${ns}/${type}`
+    obj[type] = `${namespace}/${type}`
   });
 
   return obj;

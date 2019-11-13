@@ -8,7 +8,12 @@ import appModule, { types as appTypes } from './modules/app';
 import explorerModule from './modules/explorer';
 import mangaModule, { cacheStack as mangaCacheStack } from './modules/manga';
 import viewerModule from './modules/viewer';
-import settingsModule, { types as settingTypes, createTypes, createSettings } from './modules/settings';
+import settingsModule, { 
+  types as settingTypes, 
+  NAMESPACE as SETTINGS_NAMESPACE,
+  createTypes, 
+  createSettings 
+} from './modules/settings';
 
 Vue.use(Vuex);
 
@@ -50,7 +55,7 @@ export function resetStore() {
 
 export const loadSettingsState = (scope) => {
   // first we should check the scope is valid
-  const repos = store.getters['settings/user/repos'];
+  const repos = store.getters[`${SETTINGS_NAMESPACE}/user/repos`];
   const isExists = repos ? repos.map(repo => repo.dirId).indexOf(scope) > -1 : true;
   
   if (!isExists) {
@@ -62,7 +67,7 @@ export const loadSettingsState = (scope) => {
 
   // register nested settings state
   const settingsState = createSettings(scope);
-  createTypes(scope);
+  settingTypes[scope] = createTypes(scope);
   store.registerModule(['settings', scope], settingsState);
   return store.dispatch(settingTypes[scope].INIT)
     .then(() => store.dispatch(appTypes.TOGGLE_REPO, { repo: scope }))

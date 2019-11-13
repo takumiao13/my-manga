@@ -1,5 +1,6 @@
-import { isArray } from '@/helpers';
 import Service from './_base';
+import { isArray } from '@/helpers';
+import { NAMESPACE as APP_NAMESPACE} from '@/store/modules/app';
 
 const DEFAULT = {
   vRatio: 141.4,
@@ -10,12 +11,12 @@ class ImageService extends Service {
 
   makeSrc(paths, escape) {
     const { baseURL } = this.$config;
-    const { dirId } = this.$store.getters['app/repo'];
+    const { dirId } = this.$store.getters[`${APP_NAMESPACE}/repo`];
     const path = isArray(paths) ? paths.join('/') : paths;
     let src = dirId && path && `${baseURL}img/${dirId}/${encodeURIComponent(path)}`;
     
     if (src && escape) {
-      src = src.replace(/(\(|\))/g, "\\$1");
+      src = src.replace(/(\(|\))/g, '\\$1');
     }
   
     return src;

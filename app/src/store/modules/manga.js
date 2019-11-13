@@ -1,14 +1,17 @@
 import { assign, last } from '@/helpers';
-import { createTypesWithNs, createRequestStatus } from '../helpers';
+import { createTypesWithNamespace, createRequestStatus } from '../helpers';
 import mangaAPI from '@/apis/manga';
 
-// types for internal
-const ns = 'manga';
-const LIST = 'LIST';
+// Namespace
+export const NAMESPACE = 'manga';
+
+// Types Enum
+const LIST  = 'LIST';
 const SHARE = 'SHARE';
+
 const statusHelper = createRequestStatus('status');
 
-export const types = createTypesWithNs([ LIST, SHARE ], ns);
+export const types = createTypesWithNamespace([ LIST, SHARE ], NAMESPACE);
 
 export const cacheStack = {
   _value: [],
@@ -70,28 +73,28 @@ export default {
   actions: {
     [LIST]({ commit }, payload = {}) { 
       let index = -1;
-      const { path, isBack, dirId, random } = payload;
-      if (isBack && !random) index = cacheStack.find(dirId, path);
-      // console.log(cacheStack);
+      const { path, isBack, dirId } = payload;
+      if (isBack) index = cacheStack.find(dirId, path);
 
       // hack no flashing when random manga
-      if (!random) statusHelper.pending(commit);
+      statusHelper.pending(commit);
+      
       // if cannot find cache
       if (index === -1) {
-        return mangaAPI[random ? 'pick' : 'list']({ dirId, path })
+        return mangaAPI.list({ dirId, path })
           .then(res => {
-            if (!random) {
-              cacheStack.push(Object.assign(res, { 
-                _prevPath: path,
-                _dirId: dirId
-              }));
-            }
+            cacheStack.push(Object.assign(res, { 
+              _prevPath: path,
+              _dirId: dirId
+            }));
+   
             commit(LIST, res);
             return statusHelper.success(commit);
           })
           .catch(error => {
             statusHelper.error(commit, error);
           });
+
       // get result from cache
       } else {
         const result = cacheStack.pop(index);

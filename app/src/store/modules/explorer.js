@@ -1,24 +1,24 @@
 import mangaAPI from '@/apis/manga';
-import { createTypesWithNs, createRequestStatus } from '../helpers';
+import { createTypesWithNamespace, createRequestStatus } from '../helpers';
 
-// types for internal
-const ns = 'explorer';
+// Namespace
+export const NAMESPACE = 'explorer';
+
+// Types Enum
 const FETCH = 'FETCH';
 
 const statusHelper = createRequestStatus('status');
 
-const initialState = {
-  inited: false,
-  folders: [],
-  ...statusHelper.state()
-}
-
-export const types = createTypesWithNs([ FETCH ], ns);
+export const types = createTypesWithNamespace([ FETCH ], NAMESPACE);
 
 export default {
   namespaced: true,
 
-  state: initialState,
+  state: {
+    inited: false,
+    folders: [],
+    ...statusHelper.state()
+  },
 
   getters: {
     pending(state) {

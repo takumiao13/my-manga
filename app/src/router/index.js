@@ -1,7 +1,7 @@
 import Vue from 'vue'
-import store, { loadSettingsState } from '../store';
+import store, { loadSettingsState } from '@/store';
+import { types as appTypes, NAMESPACE as APP_NAMESPACE } from '@/store/modules/app';
 import { last, isUndef } from '@/helpers';
-import { types as appTypes } from '@/store/modules/app';
 import routes from './routes';
 import AppRouter, { historyName } from './app-router';
 
@@ -70,7 +70,7 @@ router.beforeEach(function(to, from, next) {
 	if (['explorer', 'viewer'].indexOf(to.name) > -1) {
 		let title = 'My Manga';
 		const { path } = to.params;
-		const { name: repoName } = store.getters['app/repo'];
+		const { name: repoName } = store.getters[`${APP_NAMESPACE}/repo`];
 		
 		if (path) title = last(path.split('/'));
 		if (repoName) title += ` - ${repoName}`

@@ -4,6 +4,8 @@ import MangaList from '@/views/MainInterface/MangaList';
 import Viewer from '@/views/Viewer';
 import Repository from '@/views/Repository';
 
+import { NAMESPACE as SETTINGS_NAMESPACE } from '@/store/modules/settings';
+
 import store from '../store';
 
 const routes = [
@@ -41,8 +43,8 @@ const routes = [
 		name: 'home',
 		path: '*', // handle not found
 		redirect() {
-			const userSettings = store.getters['settings/user/settings'];
-			const repo = store.getters['settings/repo/repo'];
+			const userSettings = store.getters[`${SETTINGS_NAMESPACE}/user/settings`];
+			const repo = store.getters[`${SETTINGS_NAMESPACE}/repo/repo`];
 			
 			if (userSettings) return 'repos';
 

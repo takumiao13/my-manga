@@ -1,23 +1,22 @@
-import { assign, get, unset, isIndex, isArray, isDef, isUndef, stringToPath } from '@/helpers';
-import { createTypesWithNs } from '../helpers';
 import Vue from 'vue';
+import { assign, get, unset, isIndex, isArray, isUndef, stringToPath } from '@/helpers';
+import { createTypesWithNamespace } from '../helpers';
 import settingsAPI from '@/apis/settings';
 
-// types for internal
-const ns = 'settings';
-const INIT = 'INIT';
-const SET = 'SET';
+// Namespace
+export const NAMESPACE = 'settings';
+
+// sub module
+const user = 'user';
+const repo = 'repo';
+
+// Types Enum
+const INIT  = 'INIT';
+const SET   = 'SET';
 const UNSET = 'UNSET';
 
-export const types = {};
-
-const parseRepo = (repo) => {
-  return Object.assign(repo, { name: repo.name.toUpperCase()})
-}
-
-export const createTypes = (scope) => {
-  types[scope] = createTypesWithNs([ INIT, SET, UNSET ], `${ns}/${scope}`);
-}
+export const createTypes = (scope) => 
+  createTypesWithNamespace([ INIT, SET, UNSET ], `${NAMESPACE}/${scope}`);
 
 export const createSettings = (scope) => ({
   namespaced: true,
@@ -41,8 +40,13 @@ export const createSettings = (scope) => ({
     },
 
     repos(state) {
-      const repos = get(state, 'data.repos')
+      const repos = get(state, 'data.repos');
+
       if (!repos) return null;
+
+      const parseRepo = (repo) => 
+        Object.assign(repo, { name: repo.name.toUpperCase()});
+
       return repos.map(parseRepo);
     }
   },
@@ -126,14 +130,16 @@ export const createSettings = (scope) => ({
   }
 });
 
-createTypes('user');
-createTypes('repo')
+export const types = {
+  [user]: createTypes(user),
+  [repo]: createTypes(repo)
+};
 
 export default {
   namespaced: true,
 
   modules: {
-    user: createSettings('user'),
-    repo: createSettings('repo')
+    [user]: createSettings(user),
+    [repo]: createSettings(repo)
   }
 };

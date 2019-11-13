@@ -1,31 +1,37 @@
-import { createTypesWithNs } from '../helpers';
+import { createTypesWithNamespace } from '../helpers';
+import { NAMESPACE as SETTINGS_NAMESPACE } from './settings'
+import { isUndef } from '@/helpers';
 
-// types for internal
-const ns = 'app';
+// Namespace
+export const NAMESPACE = 'app';
+
+// Types Enum
 const TOGGLE_SIDEBAR = 'TOGGLE_SIDEBAR';
-const TOGGLE_REPO = 'TOGGLE_REPO';
-const ERROR = 'ERROR';
+const TOGGLE_REPO    = 'TOGGLE_REPO';
+const ERROR          = 'ERROR';
 
-export const types = createTypesWithNs([
-  TOGGLE_SIDEBAR, TOGGLE_REPO, ERROR
-], ns);
-
-const CLASS_NAMES = {
+const ClassNames = {
   SIDEBAR_OPEN: 'sidebar-open'
 };
+
+export const types = createTypesWithNamespace([
+  TOGGLE_SIDEBAR, TOGGLE_REPO, ERROR
+], NAMESPACE);
 
 export default {
   namespaced: true,
 
   state: {
-    isSidebarOpen: false,
+    sidebarOpen: false,
     repoId: '',
     error: null,
   },
 
   getters: {
     repo(state, getters, allState, allGetters) {
-      return state.repoId ? allGetters[`settings/${state.repoId}/repo`] : {};
+      return state.repoId ? 
+        allGetters[`${SETTINGS_NAMESPACE}/${state.repoId}/repo`] : 
+        {};
     }
   },
 
@@ -48,13 +54,13 @@ export default {
       const body = window.document.body;
       const { open } = payload;
 
-      if (open === undefined) {
-        body.classList.toggle(CLASS_NAMES.SIDEBAR_OPEN);
-        state.isSidebarOpen = !state.isSidebarOpen;
+      if (isUndef(open)) {
+        body.classList.toggle(ClassNames.SIDEBAR_OPEN);
+        state.sidebarOpen = !state.sidebarOpen;
         
       } else {
-        body.classList[open ? 'add' : 'remove'](CLASS_NAMES.SIDEBAR_OPEN);
-        state.isSidebarOpen = !!open;
+        body.classList[open ? 'add' : 'remove'](ClassNames.SIDEBAR_OPEN);
+        state.sidebarOpen = !!open;
       }
     },
 

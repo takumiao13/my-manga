@@ -1,23 +1,25 @@
 import Vue from 'vue';
 import { assign, isDef } from '@/helpers';
-import { createTypesWithNs, createRequestStatus } from '../helpers';
+import { createTypesWithNamespace, createRequestStatus } from '../helpers';
 import mangaAPI from '@/apis/manga';
 
-// types for internal
-const ns = 'viewer';
-const LOAD = 'LOAD';
-const GO = 'GO';
-const VIEW = 'VIEW';
-const ZOOM = 'ZOOM';
-const TOGGLE_GAPS = 'TOGGLE_GAPS';
+// Namespace
+export const NAMESPACE = 'viewer';
+
+// Types Enum
+const LOAD  = 'LOAD';
+const GO    = 'GO';
+const VIEW  = 'VIEW';
+const ZOOM  = 'ZOOM';
+const TOGGLE_GAPS           = 'TOGGLE_GAPS';
 const TOGGLE_AUTO_SCROLLING = 'TOGGLE_AUTO_SCROLLING';
-const TOGGLE_HAND_MODE = 'TOGGLE_HAND_MODE';
+const TOGGLE_HAND_MODE      = 'TOGGLE_HAND_MODE';
 
 const statusHelper = createRequestStatus('status');
 
-export const types = createTypesWithNs([ 
+export const types = createTypesWithNamespace([ 
   LOAD, GO, VIEW, ZOOM, TOGGLE_GAPS, TOGGLE_AUTO_SCROLLING, TOGGLE_HAND_MODE
-], ns);
+], NAMESPACE);
 
 export default {
   namespaced: true,
@@ -163,8 +165,8 @@ export default {
     [TOGGLE_AUTO_SCROLLING](state, payload) {
       const { autoScrolling } = payload;
       state.autoScrolling = isDef(autoScrolling) ? 
-       !!autoScrolling :
-       !state.autoScrolling;
+        !!autoScrolling :
+        !state.autoScrolling;
     },
 
     [TOGGLE_HAND_MODE](state) {
