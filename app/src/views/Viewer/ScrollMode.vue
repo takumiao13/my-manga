@@ -38,7 +38,8 @@
 </template>
 
 <script>
-import { debounce, getScrollTop, getScrollHeight, getOffsetHeight } from '@/helpers';
+import { debounce } from '@/helpers/utils';
+import { getScrollTop, getScrollHeight, getOffsetHeight } from '@/helpers/dom';
 import { types } from '@/store/modules/viewer';
 import animateScrollTo from 'animate-scroll-to.js';
 

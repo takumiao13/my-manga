@@ -10,7 +10,7 @@
         <h1 class="page-header">{{ title }}</h1>
 
         <div>
-          <button class="btn" v-if="inElectron" @click="handleSelectRepo">
+          <button class="btn" v-if="isElectron" @click="handleSelectRepo">
             <icon name="plus" />
             New Repository
           </button>
@@ -25,7 +25,7 @@
           :key="index"
           @click="handleToggleRepo($event, repo)"
         >
-          <div class="list-group-item-actions" v-if="inElectron">
+          <div class="list-group-item-actions" v-if="isElectron">
             <button class="btn" @click="handleRemoveRepo($event, repo)">
               <icon name="trash" />
             </button>
@@ -51,18 +51,20 @@
 </template>
 
 <script>
-import { inElectron, eventHub } from '@/helpers';
+import EventEmitter from '@/helpers/eventemitter';
+import platform from '@/helpers/platform';
 import { types } from '@/store/modules/settings';
 import { mapGetters, mapState } from 'vuex';
 
-const ipc = inElectron ? window.require('electron').ipcRenderer : null;
+const isElectron = platform.isElectron();
+const ipc = isElectron ? window.require('electron').ipcRenderer : null;
 
 export default {
   name: 'Repository',
 
   data() {
     return {
-      inElectron,
+      isElectron,
       title: 'Manga Repository',
       leftBtns: [{
         icon: 'back',
@@ -78,11 +80,11 @@ export default {
   },
 
   created() {
-    inElectron && ipc.on('selected-file', this.handleAddRepo);
+    isElectron && ipc.on('selected-file', this.handleAddRepo);
   },
 
   destroyed() {
-    inElectron && ipc.removeListener('selected-file', this.handleAddRepo);
+    isElectron && ipc.removeListener('selected-file', this.handleAddRepo);
   },
 
   methods: {
@@ -104,7 +106,7 @@ export default {
     },
 
     handleSelectRepo() {
-      inElectron && ipc.send('open-file-dialog');
+      isElectron && ipc.send('open-file-dialog');
     },
 
     handleToggleRepo($event, repo) {
@@ -120,7 +122,7 @@ export default {
       }
     
       // we should reset store to change repo 
-      eventHub.$emit('store.reset', repo);
+      EventEmitter.$emit('store.reset', repo);
     },
 
     handleRemoveRepo($event, repo) {

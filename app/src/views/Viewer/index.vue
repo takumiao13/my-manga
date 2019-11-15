@@ -66,11 +66,11 @@
 </template>
 
 <script>
-import { last, isDef, capitalize } from '@/helpers';
 import { mapState, mapGetters } from 'vuex';
-import { types } from '@/store/modules/viewer';
 import screenfull from 'screenfull';
 import animateScrollTo from 'animate-scroll-to.js';
+import { last, isDef, capitalize } from '@/helpers/utils';
+import { types } from '@/store/modules/viewer';
 
 // Components
 import Viewport from './Viewport';

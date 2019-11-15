@@ -1,6 +1,5 @@
 const pathFn = require('path');
-const fs = require('fs-extra');
-const { assign } = require('../helpers');
+const fs = require('../helpers/fs');
 
 const name = {
   development: 'dev'
@@ -14,7 +13,7 @@ let pkg = fs.readFileSync(pkgPath, { encode: 'utf8' });
 pkg = JSON.parse(pkg);
 
 // @fixed should use something like merge
-assign(config, {
+Object.assign(config, {
   appinfo: {
     pkg,
     name: pkg.name,

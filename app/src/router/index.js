@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import store, { loadSettingsState } from '@/store';
 import { types as appTypes, NAMESPACE as APP_NAMESPACE } from '@/store/modules/app';
-import { last, isUndef } from '@/helpers';
+import { last, isUndef } from '@/helpers/utils';
 import routes from './routes';
 import AppRouter, { historyName } from './app-router';
 

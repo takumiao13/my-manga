@@ -1,4 +1,4 @@
-import { assign } from '@/helpers';
+import { safeAssign } from '@/helpers/utils';
 
 export function createTypesWithNamespace(types, namespace) {
   const obj = {};
@@ -76,7 +76,7 @@ export function createRequestStatus(name, type = 'STATUS') {
     mutation() {
       return {
         [type](state, payload = {}) {
-          assign(state, payload);
+          safeAssign(state, payload);
         }
       }
     },

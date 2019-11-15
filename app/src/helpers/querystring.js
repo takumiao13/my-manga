@@ -1,27 +1,3 @@
-const rePropName = /[^.\[\]]+/g;
-
-/**
- * Converts `string` to a property path array.
- *
- * @param {string} string The string to convert.
- * @returns {Array} Returns the property path array.
- */
-exports.stringToPath = (string) => {
-  var result = [];
-  string.replace(rePropName, function(match, number) {
-    result.push(match);
-  });
-  return result;
-}
-
-
-exports.regexIndexOf = (string, re, i = 0) => {
-  const indexInSuffix = string.slice(i).search(re);
-  return indexInSuffix < 0 ? indexInSuffix : indexInSuffix + i;
-}
-
-
-
 function decode(str) {
   try {
     return decodeURIComponent(str.replace(/\+/g, ' '));
@@ -45,7 +21,7 @@ function parseValue(url) {
   return search;
 }
 
-exports.qs = (url) => {
+export const parse = (url) => {
   var params = {};
   var search = parseValue(url);
   if (search == '') return params;
@@ -59,5 +35,3 @@ exports.qs = (url) => {
   }
   return params;
 }
-
-exports.capitalize = require('lodash/capitalize');

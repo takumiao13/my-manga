@@ -1,6 +1,7 @@
 const Service = require('./_base');
 const pathFn = require('path');
-const { md5, pathAccess } = require('../helpers');
+const crypto = require('../helpers/crypto');
+const fs = require('../helpers/fs');
 
 class RepoService extends Service {
 
@@ -13,7 +14,7 @@ class RepoService extends Service {
 
   set(dirId, { name, baseDir }) {
     this.repoMap[dirId] = { name, baseDir, dirId };
-    this.cryptoedRepos.push({ name, dirId, accessed: pathAccess(baseDir) });
+    this.cryptoedRepos.push({ name, dirId, accessed: fs.accessSync(baseDir) });
   }
 
   get(dirId) {
@@ -34,7 +35,9 @@ class RepoService extends Service {
     }
 
     repos.forEach(baseDir => {
-      const name = pathFn.basename(baseDir) || pathFn.dirname(baseDir).replace(pathFn.sep, '')
+      const name = pathFn.basename(baseDir) || 
+        pathFn.dirname(baseDir).replace(pathFn.sep, '');
+
       const dirId = this.hashBaseDir(baseDir);
 
       this.set(dirId, { name, baseDir });
@@ -52,7 +55,7 @@ class RepoService extends Service {
   }
 
   hashBaseDir(baseDir) {
-    return md5(baseDir);
+    return crypto.md5(baseDir);
   }
 }
 

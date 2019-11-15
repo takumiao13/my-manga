@@ -1,4 +1,4 @@
-import { assign, last } from '@/helpers';
+import { safeAssign, last } from '@/helpers/utils';
 import { createTypesWithNamespace, createRequestStatus } from '../helpers';
 import mangaAPI from '@/apis/manga';
 
@@ -118,7 +118,7 @@ export default {
   mutations: {
     [LIST](state, payload) {
       state.inited || (state.inited = true);
-      assign(state, { 
+      safeAssign(state, { 
         ...payload, 
         error: null,
         shortId: false
@@ -127,7 +127,7 @@ export default {
 
     [SHARE](state, payload) {
       const { shortId } = payload;
-      assign(state, { shortId });
+      safeAssign(state, { shortId });
     },
 
     ...statusHelper.mutation()

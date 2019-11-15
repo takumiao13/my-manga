@@ -69,7 +69,8 @@
 
 <script>
 
-import { capitalize } from '@/helpers';
+// TODO: use filter later
+import { capitalize } from '@/helpers/utils';
 
 const HELP = {
   left: {

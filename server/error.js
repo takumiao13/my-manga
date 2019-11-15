@@ -1,4 +1,4 @@
-const { errorCodeMap } = require('./helpers');
+const { errorCodeMap } = require('./helpers/error-code');
 
 class CustomError extends Error {
   constructor(code, msg) {

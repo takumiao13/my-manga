@@ -2,10 +2,17 @@ import './assets/style/index.scss';
 
 import Vue from 'vue'
 import App from './App.vue'
-import store, { resetStore, loadSettingsState } from './store';
 import router, { resetHistory } from './router';
 import config from '@/config';
-import { byId, delay, inElectron, eventHub } from '@/helpers';
+
+// Helpers
+import { byId } from '@/helpers/dom';
+import { delay } from '@/helpers/promise';
+import platform from '@/helpers/platform';
+import EventEmitter from '@/helpers/eventemitter';
+
+// Store
+import store, { resetStore, loadSettingsState } from './store';
 import { types as settingTypes } from '@/store/modules/settings';
 
 // Global components
@@ -65,7 +72,7 @@ bootstrapApp();
 
 function bootstrapApp() {
 
-  if (inElectron) {
+  if (platform.isElectron()) {
     const ipc = window.require('electron').ipcRenderer;
     // get real ip from electron
     ipc.on('app-config', (event, { host }) => {
@@ -75,7 +82,7 @@ function bootstrapApp() {
     window.onload = () => ipc.send('win-load');
   }
 
-  eventHub.$on('store.reset', (repo) => {
+  EventEmitter.$on('store.reset', (repo) => {
     const { name, dirId } = repo;
     
     // style

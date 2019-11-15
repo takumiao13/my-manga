@@ -1,5 +1,5 @@
 import Service from './_base';
-import { isArray } from '@/helpers';
+import { isArray } from '@/helpers/utils';
 import { NAMESPACE as APP_NAMESPACE} from '@/store/modules/app';
 
 const DEFAULT = {

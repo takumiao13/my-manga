@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 
-import { errorCodeMap, ERR_CODE } from '@/helpers';
+import { errorCodeMap, ERR_CODE } from '@/helpers/error';
 
 // Load Modules
 import appModule, { types as appTypes } from './modules/app';

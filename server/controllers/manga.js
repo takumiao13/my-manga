@@ -1,9 +1,8 @@
 const fs = require('fs-extra');
 const pathFn = require('path');
 const Controller = require('./_base');
-const to = require('await-to-js').default;
 const { CustomError } = require('../error');
-const { ERR_CODE } = require('../helpers');
+const { ERR_CODE } = require('../helpers/error-code');
 
 class MangaController extends Controller {
 

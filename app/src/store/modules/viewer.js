@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { assign, isDef } from '@/helpers';
+import { safeAssign, isDef } from '@/helpers/utils';
 import { createTypesWithNamespace, createRequestStatus } from '../helpers';
 import mangaAPI from '@/apis/manga';
 
@@ -147,11 +147,11 @@ export default {
 
   mutations: {
     [LOAD](state, payload) {      
-      assign(state, payload);
+      safeAssign(state, payload);
     },
 
     [GO](state, payload) {
-      assign(state, payload);
+      safeAssign(state, payload);
     },
 
     [ZOOM](state, payload) {

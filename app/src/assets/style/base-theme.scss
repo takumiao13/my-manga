@@ -22,8 +22,13 @@
 
 #sidebar {
   background: $app-sidebar-bg !important;
+
   .topbar > .navbar {
     background: $app-sidebar-bg !important;
+  }
+
+  @include media-breakpoint-down(sm) {
+    box-shadow: 3px 0 3px rgba($black, .1);
   }
 }
 
@@ -163,6 +168,25 @@
         background: darken($app-lighter-bg, 5%);
       }
     }
+  }
+}
+
+.list-nested .manga-group-item {
+  .list-group {
+    .list-group-item {
+      background: $white;
+      border-top: .5px solid $app-border-color;
+      border-bottom: .5px solid $app-border-color;
+
+      &:hover {
+        background: $app-item-hover-bg;
+      }
+    }
+
+  }
+
+  .manga-group-btn {
+    border: .5px solid $app-muted-color;
   }
 }
 

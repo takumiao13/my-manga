@@ -1,6 +1,5 @@
 const Koa = require('koa');
 const koaSend = require('koa-send');
-const { assign } = require('./helpers');
 
 // Load Config
 const config = require('./configs');
@@ -45,7 +44,7 @@ class Application {
   _setOptions(options) {
     const { port } = this.config;
 
-    this.options = assign({}, {
+    this.options = Object.assign({}, {
       port,
       baseDir: process.cwd()
     }, options);

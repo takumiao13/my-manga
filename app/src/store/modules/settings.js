@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { assign, get, unset, isIndex, isArray, isUndef, stringToPath } from '@/helpers';
+import { safeAssign, get, unset, isIndex, isArray, isUndef, stringToPath } from '@/helpers/utils';
 import { createTypesWithNamespace } from '../helpers';
 import settingsAPI from '@/apis/settings';
 
@@ -59,7 +59,7 @@ export const createSettings = (scope) => ({
 
     [SET]({ commit }, payload = {}) {
       const { key } = payload;
-      const body = assign({ scope }, payload);
+      const body = safeAssign({ scope }, payload);
       
       return settingsAPI.post(body)
         .then(res => commit(SET, { key, value: res.data }));
@@ -67,7 +67,7 @@ export const createSettings = (scope) => ({
 
     [UNSET]({ commit }, payload = {}) {
       const { key } = payload;
-      const body = assign({ scope }, payload);
+      const body = safeAssign({ scope }, payload);
       
       return settingsAPI.post(body)
         .then(() => commit(UNSET, { key }));

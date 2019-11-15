@@ -1,4 +1,3 @@
-const { errorCodeMap } = require('../helpers');
 const { CustomError } = require('../error');
 
 module.exports = () => async (ctx, next) => {

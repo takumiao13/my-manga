@@ -1,6 +1,6 @@
 import { createTypesWithNamespace } from '../helpers';
 import { NAMESPACE as SETTINGS_NAMESPACE } from './settings'
-import { isUndef } from '@/helpers';
+import { isUndef } from '@/helpers/utils';
 
 // Namespace
 export const NAMESPACE = 'app';

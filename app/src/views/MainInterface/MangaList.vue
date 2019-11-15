@@ -180,7 +180,9 @@
 
 <script>
 import config from '@/config';
-import { isUndef, last, getScrollTop, inElectron } from '@/helpers';
+import { isUndef, last } from '@/helpers/utils';
+import { getScrollTop } from '@/helpers/dom';
+import platform from '@/helpers/platform';
 import { types as appTypes } from '@/store/modules/app';
 import { types as mangaTypes } from '@/store/modules/manga';
 import { types as viewerTypes } from '@/store/modules/viewer';
@@ -280,7 +282,7 @@ export default {
     
     qrcodeValue() {
       const { host, port } = config;
-      const protocol = inElectron ? 'http:' : window.location.protocol;
+      const protocol = platform.isElectron() ? 'http:' : window.location.protocol;
       return `${protocol}//${host}:${port}/s/${this.shortId}`
     },
   },
@@ -448,7 +450,7 @@ export default {
         window.location.port : // user client port
         config.port; // user server port
 
-      const protocol = inElectron ? 'http:' : window.location.protocol;
+      const protocol = platform.isElectron() ? 'http:' : window.location.protocol;
       const url = `${protocol}//${host}:${port}/${hash}`;
       
       this.$store.dispatch(mangaTypes.SHARE, { url }).then(() => {

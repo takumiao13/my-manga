@@ -1,9 +1,10 @@
 const Service = require('./_base');
 const pathFn = require('path');
-const fs = require('fs-extra');
 const to = require('await-to-js').default;
 const { CustomError} = require('../error');
-const { isUndef, isDef, set, get, unset, has, md5, cloneDeep, pathAccess, ERR_CODE } = require('../helpers');
+const fs = require('../helpers/fs');
+const { isUndef, isDef, set, get, unset, cloneDeep } = require('../helpers/utils');
+const { ERR_CODE } = require('../helpers/error-code');
 
 const FILE_NAME = 'settings.json';
 
