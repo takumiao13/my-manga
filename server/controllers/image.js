@@ -6,9 +6,12 @@ class ImageController extends Controller {
   async show(ctx) {
     const { app } = this;
     const { path, dirId } = ctx.params;
+
     const repo = this.app.service.repo.get(dirId);
     const root = repo.baseDir; // get real path;
-    const [ err, result ] = await to(app.send(ctx, path, { 
+    
+    // path should re-encode when if contains `%` will throw 400 error.
+    const [ err, result ] = await to(app.send(ctx, encodeURIComponent(path), { 
       root,
       hidden: true,
       setHeaders: (res) => {

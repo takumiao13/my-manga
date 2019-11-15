@@ -1,8 +1,6 @@
 const _set = require('lodash/set');
 const _get = require('lodash/get');
 const _unset = require('lodash/unset');
-const _has = require('lodash/has');
-const _cloneDeep = require('lodash/cloneDeep');
 const { isArray } = require('./type');
 const { stringToPath } = require('./string');
 
@@ -18,8 +16,6 @@ exports.set = _set;
 
 exports.get = _get;
 
-exports.has = _has;
-
 exports.unset = (obj, key) => {
   const path = stringToPath(key);
   
@@ -34,4 +30,7 @@ exports.unset = (obj, key) => {
   return obj;
 }
 
-exports.cloneDeep = _cloneDeep;
+
+exports.has = require('lodash/has');
+exports.cloneDeep = require('lodash/cloneDeep');
+exports.pick = require('lodash/pick');

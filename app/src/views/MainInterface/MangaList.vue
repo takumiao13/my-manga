@@ -3,31 +3,32 @@
     <div class="main-explorer">
       <div class="topbar" ref="topbar">
         <navbar
-          :class="{'no-shadow': !isManga && navs.length > 1}" 
-          :title="isManga ? '' : title" 
+          :class="{'no-shadow': !isManga && navs.length }" 
+          :title="isManga ? titleShown ? title : '' : title" 
           :left-btns="leftBtns"
           :right-btns="rightBtns"
           @click.native="handleBackToTop"
         />
         
         <addressbar
-          v-show="!isManga && navs.length > 1 " 
+          v-if="!isManga && navs.length" 
           :class="{ collapsed: addressbarCollapsed }"
           :navs="navs"
           @back="handleNavigateBack"
           @navigate="handleNavigate"
         />
-      </div>    
+      </div>
+      
       <data-view 
         class="main-explorer-container" 
         :loading="pending"
         :empty="empty"
         :error="error"
       >
-        <div class="row" v-show="isSuccess(immediatelyChange)">
+        <div class="row" v-show="success">
 
           <!-- META DATA -->
-          <div id="metadata" v-if="isManga && !empty" class="col-12" ref="metadata"> 
+          <div id="metadata" v-if="isManga" class="col-12" ref="metadata"> 
             <div class="metadata-share metadata-inner" v-if="sharing">
               <div class="modal mb-3" tabindex="-1" role="dialog">
                 <div class="modal-dialog">
@@ -73,8 +74,9 @@
             <div class="folder-area mb-4" v-show="folders.length">
               <p class="area-header">FOLDER</p>
               <div class="list-group">
+
                 <router-link 
-                  class="list-group-item list-group-item-action folder-item"
+                  class="list-group-item list-group-item-action folder-item text-truncate"
                   :class="{ active: item.path === activePath }"
                   v-for="item in folders" 
                   :key="item.path"
@@ -86,7 +88,7 @@
                     }
                   }"
                 >
-                  <icon name="folder" /> &nbsp; {{ item.name }}
+                  <icon name="folder" /> &nbsp; {{ item.name }} 
                 </router-link>
               </div>
             </div>
@@ -98,8 +100,8 @@
               <div class="row">
                 <div 
                   class="col-6 col-sm-4 col-md-3 col-xl-2 area-item"
-                  :class="{ active: item.path === activePath }"      
-                  v-for="item in mangas" 
+                  :class="{ active: item.path === activePath }"
+                  v-for="item in mangas"
                   :key="item.path"
                 >
 
@@ -129,6 +131,7 @@
             <!-- CHAPTER AREA -->
             <div class="chapter-area mb-4" v-show="chapters.length">
               <p class="area-header">CHAPTERS</p>
+
               <div class="list-group">
                 <a class="list-group-item list-group-item-action chapter-item"
                   :class="{ active: item.name === activeChapter}"
@@ -137,11 +140,13 @@
                   @click="readManga(item, 0)"
                 >
 
-                  <small class="float-right">
+                  <small class="text-muted float-right">
                     #{{ index + 1 }}
                   </small>
 
-                  {{ item.name }}
+                  <div class="text-truncate pr-2">
+                    {{ item.name }}
+                  </div>                
                 </a>
               </div>
             </div>
@@ -175,7 +180,7 @@
 
 <script>
 import config from '@/config';
-import { isUndef, last, debounce, getScrollTop, inElectron } from '@/helpers';
+import { isUndef, last, getScrollTop, inElectron } from '@/helpers';
 import { types as appTypes } from '@/store/modules/app';
 import { types as mangaTypes } from '@/store/modules/manga';
 import { types as viewerTypes } from '@/store/modules/viewer';
@@ -189,7 +194,6 @@ export default {
     return {
       activeChapter: '',
       addressbarCollapsed: false,
-      immediatelyChange: true, // immediately show / hide date-view
       titleShown: false,
       isManga: false,
       sharing: false
@@ -218,7 +222,7 @@ export default {
 
     ...mapGetters('app', [ 'repo' ]),
 
-    ...mapGetters('manga', [ 'pending', 'isSuccess', 'empty' ]),
+    ...mapGetters('manga', [ 'pending', 'success', 'empty' ]),
 
     title() {
       const repoName = this.repo.name;
@@ -231,17 +235,17 @@ export default {
     },
 
     navs() {
-      const { name } = this.repo;
       const { path } = this.$route.params;
-      const items = [{ name }];
+      const items = [];
 
       if (path) {
         const fragments = path.split('/');
-        fragments.forEach((item, idx) => {
-          // make path (the last ignore click)
-          const path = idx < fragments.length - 1 ? 
-            fragments.slice(0, idx + 1).join(PATH_SEP) : 
-            false;
+        const { name } = this.repo;
+        items.push({ name });
+        
+        fragments.pop(); // remove curr path
+        fragments.length && fragments.forEach((item, idx) => {
+          const path = fragments.slice(0, idx + 1).join(PATH_SEP);
           const data = { name: item, path };
           items.push(data);
         });
@@ -254,7 +258,6 @@ export default {
       return this.isManga ? [{
         icon: 'arrow-left',
         tip: 'Back',
-        title: 'Back',
         click: this.handleBack
       }] : [{
         icon: 'bars',
@@ -295,7 +298,7 @@ export default {
     this.sharing = false;
     this.addressbarCollapsed = false;
     this.isManga = this.$route.query.type === 'manga';
-    this.immediatelyChange = true;
+    this.titleShown = false;
     this.fetchMangas(this.$route.params.path);
   },
 
@@ -305,7 +308,7 @@ export default {
       this.sharing = false;
       this.addressbarCollapsed = false;
       this.isManga = to.query.type === 'manga';
-      this.immediatelyChange = from.query.type !== to.query.type;
+      this.titleShown = false;
       to.meta.scrollPromise = this.fetchMangas(to.params.path, isBack);
     }
     
@@ -411,7 +414,12 @@ export default {
       // handle navs show or hide
       if (!this.isManga) {  
         this.toggleAddressbar(scrollTop, this._prevScrollTop);
-      } 
+
+      // handle mange title show or hide
+      } else {
+        const metaH = this.$refs.metadata.clientHeight - 48;
+        this.titleShown = scrollTop >= metaH;
+      }
 
       this._prevScrollTop = scrollTop;
     },
@@ -434,7 +442,7 @@ export default {
 
     handleShareManga() {
       const { host } = config;
-      const { search, hash } = window.location;
+      const { hash } = window.location;
       
       const port = process.env.NODE_ENV === 'development' ?
         window.location.port : // user client port
@@ -456,6 +464,7 @@ export default {
 
 .addressbar {
   transition-duration: .3s;
+  height: 2rem;
 
   &.collapsed {
     transform: translateY(-100%);
@@ -471,6 +480,9 @@ export default {
   font-size: 80%;
 }
 
+
+// Area
+// ==
 .folder-area .list-group,
 .chapter-area .list-group {
   margin-left: -15px;
@@ -495,13 +507,12 @@ export default {
 
 .chapter-area .list-group {
   @include media-breakpoint-up(md) {
-    margin: -.2rem;
+    margin: 0 -.2rem;
     flex-direction: row;
     flex-wrap: wrap;
     align-items: flex-start;
 
     .list-group-item {
-      width: 50%;
       margin: .2rem;
       width: calc(50% - .4rem);
     }
@@ -617,6 +628,9 @@ export default {
   }
 }
 
+
+// Metadata
+// ==
 #metadata {
 
   .metadata-inner {
@@ -625,7 +639,7 @@ export default {
   }
 
   .metadata-share {
-    height: calc(100vh - 3rem);
+    min-height: calc(100vh - 3rem);
     justify-content: center;
     align-items: center;
     flex-direction: column;
@@ -753,6 +767,8 @@ export default {
   }
 }
 
+// Topbar
+// ==
 .topbar {
   .manga-title-shown {
     color: '';

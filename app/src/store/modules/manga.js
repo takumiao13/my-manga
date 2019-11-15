@@ -65,6 +65,10 @@ export default {
       return statusHelper.is.success(state, immediately);
     },
 
+    success(state) {
+      return statusHelper.is.success(state, true);
+    },
+
     empty(state) {
       return state.inited && !state.list.length;
     }

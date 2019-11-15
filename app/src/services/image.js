@@ -15,6 +15,7 @@ class ImageService extends Service {
     const path = isArray(paths) ? paths.join('/') : paths;
     let src = dirId && path && `${baseURL}img/${dirId}/${encodeURIComponent(path)}`;
     
+    // TODO: remove it ?
     if (src && escape) {
       src = src.replace(/(\(|\))/g, '\\$1');
     }

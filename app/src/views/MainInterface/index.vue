@@ -59,7 +59,7 @@ export default {
   }
 
   @include media-breakpoint-up(xl) {
-    flex: 0 1 360px;
+    flex: 0 1 320px;
   }
 }
 
@@ -67,6 +67,7 @@ export default {
   @include media-breakpoint-up(xl) {
     flex: 0 1 100%;
     max-width: 100%;
+    min-width: 0; // fix `white-space: nowrap` breaks flexbox layout when use `text-truncate`
   }
 
   .topbar {
@@ -87,12 +88,12 @@ export default {
 }
 
 .sidebar-open {
-  overflow: hidden !important; // hide body scroll
+  overflow-y: hidden !important; // hide body scroll
   
   /* fix android oveflow bug */
   width: 100%;
   height: 100%;
-  position: relative;
+  position: relative; // fixed will lost `scrollTop`
 
   #sidebar {
     transform: translateX(0);

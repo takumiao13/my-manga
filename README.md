@@ -33,16 +33,15 @@ start my manga server
 
 Options:
   -o, --open .................. open browser after starting the server
-  -p, --port <port> ........... port to use (default: 3033)  
-  -d, --dir <dir> ............. specify dir as manga repo
-  -s, --settings <settings> ... settings file
+  -p, --port .................. port to use (default: 3033)  
+  -d, --dir ................... specify dir as manga repo
+  -s, --settings .............. settings file
   -h, --help .................. output usage information
 ```
 
 ### settings
 
-**settings.json**
-```json
+```js
 {
   "repos": [ // multiple repos support
     "C:\\repo-a",

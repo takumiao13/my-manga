@@ -176,9 +176,6 @@ export default {
     .list-group-item {
       padding-left: 2rem !important;
       padding-right: 1rem;
-      background: #fff;
-      border-top: .5px solid #ddd;
-      border-bottom: .5px solid #ddd;
     }
 
     .list-nested-label {
@@ -187,8 +184,7 @@ export default {
   }
 
   .manga-group-btn {
-    border: 1px solid #999;
-    border-radius: 100px;
+    border-radius: 1rem;
     padding: .1rem .5rem .2rem;
   }
 }

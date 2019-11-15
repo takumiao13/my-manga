@@ -37,9 +37,8 @@
             size="20" 
             class="text-success mr-2"
           />
-
           <div 
-            v-if="repo.dirId !== repoId"
+            v-else
             class="svg-icon mr-2"
             style="display: inline-block; width: 20px; height: 20px;"
           />
@@ -108,7 +107,9 @@ export default {
       inElectron && ipc.send('open-file-dialog');
     },
 
-    handleToggleRepo($event, repo) {      
+    handleToggleRepo($event, repo) {
+      if (!repo.accessed) return;
+
       // 1.not from error page
       // 2.repo is not changed 
       // 3.can go back
@@ -162,6 +163,11 @@ export default {
     padding-left: 1rem;
     padding-right: 3rem;
     cursor: pointer;
+
+    // fixed allow remove repo when it is unaccessed.
+    &.disabled {
+      pointer-events: auto;
+    }
 
     @include media-breakpoint-up(sm) {
       border-width: 1px;

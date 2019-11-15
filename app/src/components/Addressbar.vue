@@ -157,6 +157,11 @@ export default {
   overflow-x: auto;
   list-style: none;
   min-width: 100%;
+
+  &:hover::-webkit-scrollbar {
+    width: auto;
+    height: auto;
+  }
 }
 
 .address-item {
@@ -169,7 +174,7 @@ export default {
     vertical-align: -0.2em;
   }
 
-  &:last-child.address-link {
+  &:last-child {
     padding-right: .25rem;
   }
 }

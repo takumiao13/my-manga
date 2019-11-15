@@ -3,7 +3,7 @@ const fs = require('fs-extra');
 const to = require('await-to-js').default;
 const sizeOf = require('image-size');
 const pathFn = require('path');
-const { pathExists, sortFiles, extname } = require('../helpers');
+const { pathExists, filenameComparator, extname } = require('../helpers');
 
 const FILE_TYPE = { 
   FOLDER: 'FOLDER', 
@@ -64,10 +64,14 @@ async function traverse({
 
     // simple check id path operation not permitted
     if (err) return null; 
-    
-    // sort files by filename
-    files = sortFiles(files);
 
+    // Sort files by filename
+    files.sort((a, b) => {
+      a = pathFn.parse(a).name;
+      b = pathFn.parse(b).name;
+      return filenameComparator(a, b);
+    });
+    
     for (let i = 0; i < files.length; i++) {
       let child;
       const childPath = pathFn.posix.join(path, files[i]);

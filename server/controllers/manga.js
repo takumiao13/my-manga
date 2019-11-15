@@ -31,6 +31,8 @@ class MangaController extends Controller {
       const baseDir = this._getBaseDir(dirId);
       const dirStat = await fs.stat(pathFn.resolve(baseDir, path));
       const lastModified = dirStat.mtime.toGMTString();
+
+      // TODO: check sub dir mtime is gt `ifModifiedSince`
       if (ifModifiedSince === lastModified) {
         response.status = 304;
       } else {

@@ -7,7 +7,7 @@
 .topbar > .navbar {
   background: $app-primary !important;
   //border-bottom: .5px solid $app-border-color;
-  box-shadow: 0 1px 2px rgba(0,0,0,.1);
+  box-shadow: 0 1px 2px rgba($black, .1);
   z-index: 1030;
 
   &.no-shadow {
@@ -15,16 +15,21 @@
   }
 
   & + .addressbar {
-    box-shadow: 0 1px 2px rgba(0,0,0,.1);
+    box-shadow: 0 1px 2px rgba($black, .1);
     z-index: 1020;
   }
 }
 
 #sidebar {
   background: $app-sidebar-bg !important;
-
   .topbar > .navbar {
     background: $app-sidebar-bg !important;
+  }
+}
+
+.sidebar-open #sidebar {
+  @include media-breakpoint-down(sm) {
+    box-shadow: 3px 0 3px rgba($black, .1);
   }
 }
 
@@ -61,7 +66,7 @@
     .area-item:hover {
       .cover,
       .caption {
-        box-shadow: 0 0 0 6px $app-item-hover-bg;
+        box-shadow: 0 0 0 8px $app-item-hover-bg;
       }
     }
 
@@ -84,6 +89,10 @@
   .gallery-area > .row {
     .area-item:hover {
       background: $app-item-hover-bg;
+    
+      .caption {
+        background: rgba($white, 0.65);
+      }
     }
 
     .area-item.active {
@@ -95,7 +104,7 @@
     .caption {
       background: $app-primary;
       border: .5px solid $app-border-color;
-      box-shadow: 0 1px 0px rgba(0,0,0,.1);
+      box-shadow: 0 1px 0px rgba($black, .1);
     }
   }
 
@@ -122,14 +131,14 @@
     background: $app-border-color;
   }
   
-  &:last-child,
-  &.muted {
-    color: $app-muted-color;
+  // &:last-child,
+  // &.muted {
+  //   color: $app-muted-color;
   
-    &:hover {
-      background: none;
-    }
-  }
+  //   &:hover {
+  //     background: none;
+  //   }
+  // }
 }
 
 .address-separator {
@@ -149,7 +158,30 @@
       &:hover {
         background: $app-bg;
       }
+
+      &.active:hover {
+        background: darken($app-lighter-bg, 5%);
+      }
     }
+  }
+}
+
+.list-nested .manga-group-item {
+  .list-group {
+    .list-group-item {
+      background: $white;
+      border-top: .5px solid $app-border-color;
+      border-bottom: .5px solid $app-border-color;
+
+      &:hover {
+        background: $app-item-hover-bg;
+      }
+    }
+
+  }
+
+  .manga-group-btn {
+    border: .5px solid $app-muted-color;
   }
 }
 
@@ -157,6 +189,12 @@
   background: $app-lighter-bg;
 }
 
+// Global
+// ==
+
+.text-muted {
+  color: $app-muted-color !important
+}
 
 // Metadata
 // ==
@@ -205,7 +243,7 @@ body::-webkit-scrollbar-thumb {
 
 // Viewer
 // ==
-// may be need not support themes
+// may be needn't support themes
 
 $viewer-bg: $black;
 $viewer-color: #eee;
