@@ -30,6 +30,7 @@ export default {
     gaps: true,
     autoScrolling: false,
     handMode: 'right',
+    name: '',
     path: '',
     images: [],
     chapters: [],

@@ -130,7 +130,7 @@ export default {
 
     ...mapGetters('viewer', [ 'count', 'chIndex', 'chCount', 'pending' ]),
 
-    ...mapState('viewer', [ 'path', 'mode', 'zoom', 'gaps', 'handMode', 'autoScrolling', 'page', 'ch', 'images', 'chapters' ]),
+    ...mapState('viewer', [ 'name', 'path', 'mode', 'zoom', 'gaps', 'handMode', 'autoScrolling', 'page', 'ch', 'images', 'chapters' ]),
 
     ...mapState('app', { appError: 'error' }),
 
@@ -265,10 +265,19 @@ export default {
   },
 
   beforeRouteUpdate (to, from, next) {
+    // when manga or chapter changed this function will be invoked
+    // we should stop scrolling and lock viewer to show title info.
     const { dirId, path, ch } = to.params;
     this.autoScrollToggle(false);
-    this.$store.dispatch(types.VIEW, { dirId, path, ch, page: 1 });
-    next();
+    this.locking = true;
+
+    // prevent locked when scroll.
+    window._ignoreScrollEvent = true;
+
+    // trigger action to update store
+    // then enter the view.
+    this.$store.dispatch(types.VIEW, { dirId, path, ch, page: 1 })
+      .then(next);
   },
 
   beforeRouteLeave (to, from, next) {
@@ -279,8 +288,9 @@ export default {
 
   mounted() {
     if (!this.appError) {  
-      const { dirId, path, ch } = this.$route.params;
+      const { dirId, path, ch = '' } = this.$route.params;
       const { start: page } = this.$route.query;
+
       this.$store.dispatch(types.VIEW, { dirId, path, ch, page });
     }
   },
@@ -315,8 +325,6 @@ export default {
         name: 'viewer',
         params: { dirId, path: this.path, ch }
       });
-
-      // this.$store.dispatch(types.GO_CH, { dirId, chIndex });
     },
     
     prev() {

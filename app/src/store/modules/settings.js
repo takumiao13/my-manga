@@ -45,7 +45,7 @@ export const createSettings = (scope) => ({
       if (!repos) return null;
 
       const parseRepo = (repo) => 
-        Object.assign(repo, { name: repo.name.toUpperCase()});
+        Object.assign(repo, { name: repo.name.toUpperCase() || 'ROOT' });
 
       return repos.map(parseRepo);
     }
