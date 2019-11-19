@@ -47,7 +47,7 @@ export default {
     path: '',
     metadata: null,
     list: [],
-    folders: [],
+    files: [],
     mangas: [],
     chapters: [],
     images: [],

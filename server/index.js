@@ -17,6 +17,8 @@ const staticMw     = require('./middlewares/static');
 // Load Controllers
 const IndexController    = require('./controllers/index');
 const ImageController    = require('./controllers/image');
+const VideoController    = require('./controllers/video');
+const PDFController      = require('./controllers/pdf');
 const MangaController    = require('./controllers/manga');
 const SettingsController = require('./controllers/settings');
 
@@ -55,7 +57,7 @@ class Application {
   }
 
   _loadMiddlewares() {
-    [ errorMw, corsMw, staticMw, bodyParserMw ].forEach(mw => {
+    [ errorMw, corsMw, ...staticMw, bodyParserMw ].forEach(mw => {
       this.koa.use(mw(this));
     });
   }
@@ -92,6 +94,8 @@ class Application {
     this.controller = {
       index: new IndexController(options),
       image: new ImageController(options),
+      video: new VideoController(options),
+      pdf: new PDFController(options),
       manga: new MangaController(options),
       settings: new SettingsController(options)
     };

@@ -6,14 +6,15 @@ const pathFn = require('path');
 
 // File Types Enum
 const FileTypes = {
-  FOLDER: 'FOLDER', 
+  FILE: 'FILE', 
   MANGA: 'MANGA', 
   CHAPTER: 'CHAPTER', 
   IMAGE: 'IMAGE' 
 };
 
 const METADATA_FILENAME = 'metadata.json';
-const imgRE = /\.(jpe?g|png|webp|gif|bmp)/i;
+const imgRE = /\.(jpe?g|png|webp|gif|bmp)$/i;
+const fileRE = /\.(mp4|pdf|zip)$/i;
 
 class MangaService extends Service {
 
@@ -46,10 +47,11 @@ async function traverse({
   const isDir = stat.isDirectory();
   
   // extra info
-  let metadata, type, cover, width, height, hasChildren = false;
+  let metadata, type, fileType, cover, width, height, hasChildren = false;
 
-  // Ignore if file is either image or directory type
-  if (!isDir && !imgRE.test(pathFn.extname(path))) return null;
+  // Ignore if file is either image or file or directory type
+  const extname = pathFn.extname(path).toLowerCase();
+  if (!isDir && !imgRE.test(extname) && !fileRE.test(extname)) return null;
   
   // Traverse sub directory
   if (isDir) {
@@ -90,45 +92,42 @@ async function traverse({
       } else {
         // when `maxDepth` is decrease to 0
         // we need do one more iteratee to check 
-        // current directory type is `MANGA` or `FOLDER`
-        // - if directory has sub folder then consider it as `FOLDER`
+        // current directory type is `MANGA` or `FILE`
+        // - if directory has sub folder then consider it as `FILE`
         // - if directory has more than 10 image then consider it as `MANGA`
 
         const filepath = pathFn.resolve(baseDir, childPath);
         const [ err, stat ] = await to(fs.stat(filepath));
 
-        //console.log(filepath);
         if (err) { continue }
 
         const isDir = stat.isDirectory();
+        const extname = pathFn.extname(filepath);
 
-        if (!isDir && !imgRE.test(pathFn.extname(filepath))) { continue }
+        if (!isDir && !imgRE.test(extname) && !fileRE.test(extname)) { 
+          continue 
+        }
 
         child = { path: childPath, isDir }
       } 
            
       if (child) {
+
         // if directory has not specify cover
         // use first image child as it's cover
-        if (!child.isDir && !cover) {
+        if (!child.isDir && !cover && imgRE.test(child.path)) {
           cover = child.path;
         }
 
-        // change child type to `CHAPTER` if contains metadata
-        if (child.isDir) {
-          child.type = metadata && metadata.chapters ?
-            FileTypes.CHAPTER :
-            FileTypes.FOLDER;
-        }
-        
         // sometimes we will not push child to `children` (onlyDir or performance)
         // so we can use `hasChildren` key to know the directory whether has children
         if (child.isDir && !hasChildren) {
           hasChildren = true;
         }
 
-        // if we get the directory type skip the loop for performance
-        if (maxDepth == 0 && (hasChildren || i >= 10)) {
+        // if we get the cover and directory type 
+        // skip the loop for performance
+        if (maxDepth == 0 && (cover && hasChildren || i >= 10)) {
           break;
         }
 
@@ -146,9 +145,28 @@ async function traverse({
   if (isDir) {
     type = metadata ? 
       FileTypes.MANGA :
-      FileTypes[hasChildren ? 'FOLDER' : 'MANGA'];
+      FileTypes[hasChildren ? 'FILE' : 'MANGA'];
+
+    // change child type if parent type is `MANGA`
+    if (type === FileTypes.MANGA) {
+      children.forEach(child => {
+        if (child.isDir) {
+          child.type = metadata.chapters ? 
+            FileTypes.CHAPTER : 
+            FileTypes.FILE;
+          
+        } else if (fileRE.test(child.path)) {
+          child.type = FileTypes.FILE;
+        }
+      });
+    }
+
   } else {
-    type = FileTypes.IMAGE;
+    type = imgRE.test(extname) ? 
+      FileTypes.IMAGE : 
+      FileTypes.MANGA;
+      
+    fileType = getFileType(extname);
   }
 
   // Determine the file path
@@ -171,7 +189,7 @@ async function traverse({
   }
 
   // Merge base info and extra info
-  return { isDir, path, name, type, cover, metadata, width, height, children, hasChildren };
+  return { isDir, path, name, type, fileType, cover, metadata, width, height, children, hasChildren };
 }
 
 async function readMeta(dir) {
@@ -185,7 +203,7 @@ async function readMeta(dir) {
 
   const data = await fs.readFile(path, 'utf8');
   try {
-    metadata = JSON.parse(data);
+    metadata = data ? JSON.parse(data) : {}; // handle empty file
   } catch (err) {
     metadata = { $error: err } // add error info to metadata
   }
@@ -199,6 +217,13 @@ const ignorePathFilter = (ignorePath) => (filename, index) => {
   } else {
     return true;
   }
+}
+
+const getFileType = (extname) => {
+  if (imgRE.test(extname)) return 'image';
+  if (extname === '.mp4') return 'video';
+  if (extname === '.zip') return 'zip';
+  if (extname === '.pdf') return 'pdf';
 }
 
 module.exports = MangaService;

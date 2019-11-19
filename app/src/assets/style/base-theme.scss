@@ -26,10 +26,6 @@
   .topbar > .navbar {
     background: $app-sidebar-bg !important;
   }
-
-  @include media-breakpoint-down(sm) {
-    box-shadow: 3px 0 3px rgba($black, .1);
-  }
 }
 
 .sidebar-open #sidebar {
@@ -61,8 +57,11 @@
 
     .cover {
       border: .5px solid $app-border-color;
-      img {
+
+      img,
+      .cover-placeholder {
         background: $app-cover-bg;
+        color: #ccc;
       }
     }
   }

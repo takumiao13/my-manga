@@ -49,7 +49,7 @@ export default {
           };
           const folders = [];
           res.children.forEach(child => {
-            if (child.type === 'FOLDER') {
+            if (child.type === 'FILE') {
               folders.push(child);
             } else {
               mangaGroup.children.push(child);

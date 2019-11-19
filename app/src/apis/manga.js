@@ -15,7 +15,7 @@ function transformResponse(res) {
   Object.assign(res, {
     list,
     cover,
-    folders: group.FOLDER || [],
+    files: group.FILE || [],
     mangas: group.MANGA || [],
     chapters: group.CHAPTER || [],
     images: group.IMAGE || []
