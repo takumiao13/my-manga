@@ -9,16 +9,16 @@ class MangaController extends Controller {
 
   async folder(ctx) {
     const { service } = this;
-    await this._cache(ctx, async ({ baseDir, path }) => {
-      const results = await service.manga.folder(path, baseDir);
+    await this._cache(ctx, async ({ baseDir, path, settings }) => {
+      const results = await service.manga.folder(path, baseDir, settings);
       ctx.body = { ...results };
     });
   }
   
   async list(ctx) {
     const { service } = this;
-    await this._cache(ctx, async ({ baseDir, path }) => {
-      const results = await service.manga.list(path, baseDir); 
+    await this._cache(ctx, async ({ baseDir, path, settings }) => {
+      const results = await service.manga.list(path, baseDir, settings); 
       ctx.body = { ...results };
     });
   }
@@ -29,6 +29,7 @@ class MangaController extends Controller {
       const { path = '', dirId } = ctx.params;
       const ifModifiedSince = request.headers['if-modified-since'];
       const baseDir = this._getBaseDir(dirId);
+      const settings = this.app.service.settings.get(dirId);
       const dirStat = await fs.stat(pathFn.resolve(baseDir, path));
       const lastModified = dirStat.mtime.toGMTString();
 
@@ -37,7 +38,7 @@ class MangaController extends Controller {
         response.status = 304;
       } else {
         ctx.response.lastModified = lastModified;
-        await process({ baseDir, path });
+        await process({ baseDir, path, settings });
       }
     } catch(err) {
       switch (err.errno) {

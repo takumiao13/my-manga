@@ -6,7 +6,7 @@ const pathFn = require('path');
 const { pathExists, filenameComparator, extname } = require('../helpers');
 
 const FILE_TYPE = { 
-  FOLDER: 'FOLDER', 
+  FOLDER: 'FOLDER',
   MANGA: 'MANGA', 
   CHAPTER: 'CHAPTER', 
   IMAGE: 'IMAGE' 
@@ -17,12 +17,12 @@ const imgRE = /(jpe?g|png|webp|gif|bmp)/i;
 
 class MangaService extends Service {
 
-  async list(path = '', baseDir) {
-    return await traverse({ path, baseDir, onlyDir: false });
+  async list(path = '', baseDir, settings) {
+    return await traverse({ path, baseDir, onlyDir: false, settings });
   }
 
-  async folder(path = '', baseDir) {
-    return await traverse({ path, baseDir });
+  async folder(path = '', baseDir, settings) {
+    return await traverse({ path, baseDir, settings });
   }
 }
 
@@ -31,7 +31,8 @@ async function traverse({
   path = '',
   baseDir,
   maxDepth = 1,
-  onlyDir = true
+  onlyDir = true,
+  settings = {}
 }) {
   let err, stat, files;
   const absPath = pathFn.resolve(baseDir, path);
@@ -66,11 +67,13 @@ async function traverse({
     if (err) return null; 
 
     // Sort files by filename
-    files.sort((a, b) => {
-      a = pathFn.parse(a).name;
-      b = pathFn.parse(b).name;
-      return filenameComparator(a, b);
-    });
+    files = files
+      .filter(ignorePathFilter(settings.ignorePath))
+      .sort((a, b) => {
+        a = pathFn.parse(a).name;
+        b = pathFn.parse(b).name;
+        return filenameComparator(a, b);
+      });
     
     for (let i = 0; i < files.length; i++) {
       let child;
@@ -81,7 +84,8 @@ async function traverse({
           baseDir, 
           path: childPath, 
           maxDepth: maxDepth-1, 
-          onlyDir
+          onlyDir,
+          settings
         });
       } else {
         // when `maxDepth` is decrease to 0
@@ -111,8 +115,10 @@ async function traverse({
         }
 
         // change child type to `CHAPTER` if contains metadata
-        if (child.isDir && metadata) {
-          child.type = FILE_TYPE.CHAPTER;
+        if (child.isDir) {
+          child.type = metadata && metadata.chapters ? 
+            FILE_TYPE.CHAPTER :
+            FILE_TYPE.FOLDER;
         }
         
         // sometimes we will not push child to `children` (onlyDir or performance)
@@ -185,6 +191,14 @@ async function readMeta(dir) {
   }
   
   return metadata;
+}
+
+const ignorePathFilter = (ignorePath) => (filename, index) => {
+  if (Array.isArray(ignorePath) && ignorePath.indexOf(filename) > -1) {
+    return false;
+  } else {
+    return true;
+  }
 }
 
 module.exports = MangaService;
