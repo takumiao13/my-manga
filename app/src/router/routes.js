@@ -28,7 +28,7 @@ const routes = [
 		path: '/viewer/:dirId/:path/:ch?',
 		component: Viewer,
 		meta: {
-			themeColor: '#000'
+			themeColor: '#333'
 		}
 	},
 	{

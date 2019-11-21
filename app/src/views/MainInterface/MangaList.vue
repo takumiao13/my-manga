@@ -71,25 +71,19 @@
           <div class="area-container col-12" v-show="!sharing">
 
             <!-- FOLDER AREA -->
-            <div class="folder-area mb-4" v-show="folders.length">
-              <p class="area-header">FOLDER</p>
+            <div class="folder-area mb-4" v-show="files.length">
+              <p class="area-header">FILES - {{ files.length }} items</p>
               <div class="list-group">
-
-                <router-link 
+                <a 
                   class="list-group-item list-group-item-action folder-item text-truncate"
                   :class="{ active: item.path === activePath }"
-                  v-for="item in folders" 
+                  v-for="item in files" 
                   :key="item.path"
-                  :to="{
-                    name: 'explorer', 
-                    params:{ 
-                      dirId: repo.dirId,
-                      path: item.path 
-                    }
-                  }"
+                  @click="readFile(item)"                 
                 >
-                  <icon name="folder" /> &nbsp; {{ item.name }} 
-                </router-link>
+                  <icon :name="item.fileType ? `file-${item.fileType}` : 'folder'" />
+                  &nbsp; {{ item.name }} 
+                </a>
               </div>
             </div>
             <!-- / FOLDER AREA -->
@@ -109,22 +103,16 @@
                   :key="item.path"
                 >
 
-                  <router-link 
+                  <a 
                     class="cover"
                     v-bind="$service.image.coverStyle(item)"
-                    :to="{
-                      name: 'explorer', 
-                      params: { 
-                        dirId: repo.dirId,
-                        path: item.path 
-                      },
-                      query: {
-                        type: 'manga'
-                      }
-                    }"
+                    @click="readFile(item, 'manga')"
                   >
-                    <img v-lazy="$service.image.makeSrc(item.cover)" />
-                  </router-link>
+                    <img v-if="item.cover" v-lazy="$service.image.makeSrc(item.cover)" />
+                    <div v-else class="cover-placeholder">
+                      <icon :name="`file-${item.fileType || 'image'}`" size="64" />
+                    </div>
+                  </a>
 
                   <div class="caption">{{ item.name }}</div>
                 </div>
@@ -210,7 +198,7 @@ export default {
     ...mapState('app', { appError: 'error' }),
 
     ...mapState('manga', [
-      'inited', 'path', 'list', 'cover', 'folders', 
+      'inited', 'path', 'list', 'cover', 'files', 
       'mangas', 'chapters', 'images', 'activePath', 
       'error', 'shortId'
     ]),
@@ -312,9 +300,11 @@ export default {
     const { isBack } = to.meta;
     if (!this.appError) {
       this.sharing = false;
-      this.addressbarCollapsed = false;
       this.isManga = to.query.type === 'manga';
       this.titleShown = false;
+
+      this.addressbarCollapsed = false; // always show addressbar when route update
+      this._ignoreScrollEvent = true; // prevent collapse addressbar
       to.meta.scrollPromise = this.fetchMangas(to.params.path, isBack);
     }
     
@@ -342,6 +332,34 @@ export default {
       this.addressbarCollapsed = scrollTop >= 160 ? 
         isUndef(prevScrollTop) || scrollTop > prevScrollTop :
         false;
+    },
+
+    readFile(item, type) {
+      const fileType = item.fileType;
+
+      if (!fileType) {
+        const query = type ? { type } : null;
+
+        this.$router.push({
+          name: 'explorer', 
+          params:{ 
+            dirId: this.repo.dirId,
+            path: item.path 
+          },
+          query
+        });
+
+      // handle pdf | mp4 | zip (support later)
+      } else {
+        let href;
+        if (fileType === 'video') {
+          href = this.$service.video.makeSrc(item.path, true);
+        } else if (fileType === 'pdf') {
+          href = this.$service.pdf.makeSrc(item.path, true)
+        }
+
+        href && window.open(href, 'target', '');
+      }
     },
 
     readManga(item, index = 0) {
@@ -374,14 +392,16 @@ export default {
         });
       }
 
-      this.$router.push({
-        name: 'viewer',
-        params: { dirId, path, ch },
-        query: {
-          // use a query from start page, prepare for history feature
-          start: index + 1
-        }
-      });
+        this.$router.push({
+          name: 'viewer',
+          params: { dirId, path, ch },
+          query: {
+            // use a query from start page, prepare for history feature
+            start: index + 1
+          }
+        });
+
+
     },
 
     // events
@@ -415,6 +435,11 @@ export default {
     },
 
     handleScroll() {
+      if (this._ignoreScrollEvent) {
+        setTimeout(() => this._ignoreScrollEvent = false);
+        return;
+      }
+
       const scrollTop = getScrollTop();
 
       // handle navs show or hide
@@ -423,7 +448,7 @@ export default {
 
       // handle mange title show or hide
       } else {
-        const metaH = this.$refs.metadata.clientHeight - 48;
+        const metaH = this.$refs.metadata.clientHeight - 16;
         this.titleShown = scrollTop >= metaH;
       }
 
@@ -551,6 +576,7 @@ export default {
   }
 
   .cover {
+    cursor: pointer;
     padding: 0 0 141.4%; // default size
     text-decoration: none;
     display: block;
@@ -569,6 +595,16 @@ export default {
       background: none;
       height: auto;
       border: 0;
+    }
+
+    .cover-placeholder {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      z-index: 1; // covered box-shadow
+      justify-content: center;
+      align-items: center;
     }
   }
 
@@ -602,6 +638,7 @@ export default {
   }
   
   .cover {
+    cursor: pointer;
     border-radius: .5rem .5rem 0 0;
 
     // scale img to fill cover
@@ -651,6 +688,7 @@ export default {
   }
 
   .cover {
+    cursor: pointer;
     transform: translateY(-50%);
     top: 50%;
   }

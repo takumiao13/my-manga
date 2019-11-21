@@ -35,3 +35,7 @@ export const parse = (url) => {
   }
   return params;
 }
+
+export default {
+  parse
+}

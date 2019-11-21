@@ -46,7 +46,7 @@ export default {
         className: (item) => item._mangaGroup ? 'manga-group-item' : '',
         title: 'name',
         children: 'children',
-        isBranch: (item) => item._mangaGroup || item.type === 'FOLDER' && item.hasChildren
+        isBranch: (item) => item._mangaGroup || item.type === 'FILE' && item.hasChildren
       }
     }
   },
