@@ -60,12 +60,17 @@ export default {
           if (count) {
             folders.unshift(mangaGroup);
           }
-          commit(FETCH, { path, folders })
+          commit(FETCH, { path, folders });
+
           if (global) {
             return statusHelper.success(commit)
           }
         })
-        .catch(error => global && statusHelper.error(commit, { error }));
+        .catch(error => {
+          console.error(error);
+          global && statusHelper.error(commit, { error })
+          throw error
+        });
     }
   },
 
@@ -90,9 +95,14 @@ function findStateByPath(children, path) {
   let i, l = children.length;
   for (i = 0; i < l; i++) {
     const node = children[i];
+    
+    // find the target node.
     if (node.path === path) {
-      return node;
-    } else if (node.children.length) {
+      return node; 
+
+    // skip _mangaGroup for performance
+    } else if (!node._mangaGroup && node.children.length) {
+      // dfs walk
       const state = findStateByPath(node.children, path);
       if (state) return state;
     }

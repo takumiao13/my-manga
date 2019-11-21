@@ -61,7 +61,8 @@ export default {
 
 <style lang="scss">
 .list-nested  {
-  .list-group-loading {
+  .list-group-loading,
+  .list-group-error {
     display: flex;
     flex-direction: column;
     align-items: center;

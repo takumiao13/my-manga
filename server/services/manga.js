@@ -134,7 +134,7 @@ async function traverse({
         // push `child` to `children`
         // - `maxDepth > 0` not the last iteratee
         // - `onlyDir` only push directory type
-        if (maxDepth > 0 && !onlyDir || onlyDir && child.isDir) {
+        if (maxDepth > 0 && (!onlyDir || onlyDir && child.isDir)) {
           children.push(child);
         }
       }

@@ -28,10 +28,13 @@
       >
       </div>
     </div>
-    <div class="list-group-loading" v-show="isLoading">
+    <div class="list-group-loading" v-show="loading">
       <spinner />
     </div>
-    <div class="list-group" v-show="open && !isLoading" v-if="isBranch">
+    <div class="list-group-error" v-show="open && error">
+      <icon name="folder-items" size="32" />
+    </div>
+    <div class="list-group" v-show="open && !error" v-if="isBranch">
       <list-item
         v-for="item in item[props.children]"
         :key="item[props.key]"
@@ -103,8 +106,12 @@ export default {
       return 'chevron-' + (['right', 'down'][+this.open]);
     },
 
-    isLoading() {
+    loading() {
       return this.status === 'pending';
+    },
+
+    error() {
+      return this.status === 'error';
     }
   },
 
