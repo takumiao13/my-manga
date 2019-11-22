@@ -140,7 +140,7 @@ function render({ error } = {}) {
 function showApp() {
   delay(1000)
     .then(() => $loading.classList.add('fade'))
-    .then(() => delay(1000))
+    .then(() => delay(2000))
     .then(() => {
       $loading.style.display = 'none';
       document.body.style.overflow = 'auto';
