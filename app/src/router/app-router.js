@@ -1,4 +1,5 @@
 import VueRouter from 'vue-router';
+import { get } from '@/helpers/utils';
 
 // sync history to rotuer
 const RH = '_RH';
@@ -35,15 +36,32 @@ export default class AppRouter extends VueRouter {
     }
   }
 
-  push(...args) {
+  push(location, onComplete, onAbort) {
     this._push = true;
-    const promise = super.push(...args);	
+    location = this._attachActivityQuery(location);
+    const promise = super.push(location, onComplete, onAbort);	
     if (promise) return promise.catch(err => err);
   }
 
-  replace(...args) {
+  replace(location, onComplete, onAbort) {
     this._replace = true;
-    return super.replace(...args);
+    location = this._attachActivityQuery(location);
+    const promise = super.replace(location, onComplete, onAbort);	
+    if (promise) return promise.catch(err => err);
+  }
+
+  _attachActivityQuery(location) {
+    const activity = get(location, 'query.activity');
+    
+    // Add global activity to location
+    if (!activity) {
+      location.query || (location.query = {});
+      Object.assign(location.query, { 
+        activity: this.app.$store.state.app.activity
+      })
+    }
+
+    return location;
   }
 
   popToRoot(done) {

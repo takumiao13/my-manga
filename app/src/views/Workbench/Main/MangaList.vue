@@ -1,178 +1,176 @@
 <template>
-  <div>
-    <div class="main-explorer">
-      <div class="topbar" ref="topbar">
-        <navbar
-          :class="{'no-shadow': !isManga && navs.length }" 
-          :title="isManga ? titleShown ? title : '' : title" 
-          :left-btns="leftBtns"
-          :right-btns="rightBtns"
-          @click.native="handleBackToTop"
-        />
-        
-        <addressbar
-          v-if="!isManga && navs.length" 
-          :class="{ collapsed: addressbarCollapsed }"
-          :navs="navs"
-          @back="handleNavigateBack"
-          @navigate="handleNavigate"
-        />
-      </div>
+  <div class="main-explorer">
+    <div class="topbar" ref="topbar">
+      <navbar
+        :class="{'no-shadow': !isManga && navs.length }" 
+        :title="isManga ? titleShown ? title : '' : title" 
+        :left-btns="leftBtns"
+        :right-btns="rightBtns"
+        @click.native="handleBackToTop"
+      />
       
-      <data-view 
-        class="main-explorer-container container" 
-        :loading="pending"
-        :empty="empty"
-        :error="error"
-      >
-        <div class="row" v-show="success">
+      <addressbar
+        v-if="!isManga && navs.length" 
+        :class="{ collapsed: addressbarCollapsed }"
+        :navs="navs"
+        @back="handleNavigateBack"
+        @navigate="handleNavigate"
+      />
+    </div>
+    
+    <data-view 
+      class="main-explorer-container container" 
+      :loading="pending"
+      :empty="empty"
+      :error="error"
+    >
+      <div class="row" v-show="success">
 
-          <!-- META DATA -->
-          <div id="metadata" v-if="isManga" class="col-12" ref="metadata"> 
-            <div class="metadata-share metadata-inner" v-if="sharing">
-              <div class="modal mb-3" tabindex="-1" role="dialog">
-                <div class="modal-dialog">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title">Share: {{ title }}</h5>
-                    </div>
-                    <div class="modal-body">
-                      <qriously class="mb-3 qr-code" :value="qrcodeValue" :size="160" />
-                      <p class="text-center text-muted">Scan it to get link</p>                    
-                      <hr/>
-                      <p class="text-center">
-                        Link: 
-                        <a :href="qrcodeValue" target="_blank">{{ qrcodeValue }}</a>
-                      </p>                    
-                    </div>
+        <!-- META DATA -->
+        <div id="metadata" v-if="isManga" class="col-12" ref="metadata"> 
+          <div class="metadata-share metadata-inner" v-if="sharing">
+            <div class="modal mb-3" tabindex="-1" role="dialog">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Share: {{ title }}</h5>
+                  </div>
+                  <div class="modal-body">
+                    <qriously class="mb-3 qr-code" :value="qrcodeValue" :size="160" />
+                    <p class="text-center text-muted">Scan it to get link</p>                    
+                    <hr/>
+                    <p class="text-center">
+                      Link: 
+                      <a :href="qrcodeValue" target="_blank">{{ qrcodeValue }}</a>
+                    </p>                    
                   </div>
                 </div>
               </div>
-              <div class="metadata-btn">
-                <a @click="sharing = false">
-                  <icon name="times" size="36" />
-                </a>
-                <span>Close</span>
-              </div>
             </div>
+            <div class="metadata-btn">
+              <a @click="sharing = false">
+                <icon name="times" size="36" />
+              </a>
+              <span>Close</span>
+            </div>
+          </div>
 
-            <div class="metadata-main metadata-inner" v-show="!sharing">
+          <div class="metadata-main metadata-inner" v-show="!sharing">
 
-              <a class="metadata-title" href="javascript:void 0;" title="Read Now" 
-                @click="readManga(chapters[0] || images[0], 0)"
+            <a class="metadata-title" href="javascript:void 0;" title="Read Now" 
+              @click="readManga(chapters[0] || images[0], 0)"
+            >
+              {{ title }}
+              <span>&rarr;</span>
+            </a>
+          </div>
+        </div>
+        <!-- / META DATA -->
+
+        <div class="area-container col-12" v-show="!sharing">
+
+          <!-- FOLDER AREA -->
+          <div class="folder-area mb-4" v-show="files.length">
+            <p class="area-header">FILES - {{ files.length }} items</p>
+            <div class="list-group">
+              <a 
+                class="list-group-item list-group-item-action folder-item text-truncate"
+                :class="{ active: item.path === activePath }"
+                v-for="item in files" 
+                :key="item.path"
+                @click="readFile(item)"                 
               >
-                {{ title }}
-                <span>&rarr;</span>
+                <icon :name="item.fileType ? `file-${item.fileType}` : 'folder'" />
+                &nbsp; {{ item.name }} 
               </a>
             </div>
           </div>
-          <!-- / META DATA -->
+          <!-- / FOLDER AREA -->
 
-          <div class="area-container col-12" v-show="!sharing">
+          <!-- MANGA AREA -->
+          <div class="manga-area mb-4" v-show="mangas.length">
+            <p class="area-header">MANGA - {{ mangas.length }} items</p>
+            <div class="row">
+              <div 
+                class="area-item"
+                :class="{ 
+                  active: item.path === activePath, 
+                  'col-6 col-sm-3 col-xl-2': !item.cover || (item.height > item.width),
+                  'col-12 col-sm-6 col-xl-4': item.height <= item.width 
+                }"
+                v-for="item in mangas"
+                :key="item.path"
+              >
 
-            <!-- FOLDER AREA -->
-            <div class="folder-area mb-4" v-show="files.length">
-              <p class="area-header">FILES - {{ files.length }} items</p>
-              <div class="list-group">
                 <a 
-                  class="list-group-item list-group-item-action folder-item text-truncate"
-                  :class="{ active: item.path === activePath }"
-                  v-for="item in files" 
-                  :key="item.path"
-                  @click="readFile(item)"                 
+                  class="cover"
+                  v-bind="$service.image.coverStyle(item)"
+                  @click="readFile(item, 'manga')"
                 >
-                  <icon :name="item.fileType ? `file-${item.fileType}` : 'folder'" />
-                  &nbsp; {{ item.name }} 
-                </a>
-              </div>
-            </div>
-            <!-- / FOLDER AREA -->
-
-            <!-- MANGA AREA -->
-            <div class="manga-area mb-4" v-show="mangas.length">
-              <p class="area-header">MANGA - {{ mangas.length }} items</p>
-              <div class="row">
-                <div 
-                  class="area-item"
-                  :class="{ 
-                    active: item.path === activePath, 
-                    'col-6 col-sm-3 col-xl-2': !item.cover || (item.height > item.width),
-                    'col-12 col-sm-6 col-xl-4': item.height <= item.width 
-                  }"
-                  v-for="item in mangas"
-                  :key="item.path"
-                >
-
-                  <a 
-                    class="cover"
-                    v-bind="$service.image.coverStyle(item)"
-                    @click="readFile(item, 'manga')"
-                  >
-                    <img v-if="item.cover" v-lazy="$service.image.makeSrc(item.cover)" />
-                    <div v-else class="cover-placeholder">
-                      <icon :name="`file-${item.fileType || 'image'}`" size="64" />
-                    </div>
-                  </a>
-
-                  <div class="caption">{{ item.name }}</div>
-                </div>
-              </div>
-            </div>
-            <!-- / MANGA AREA -->
-
-            <!-- CHAPTER AREA -->
-            <div class="chapter-area mb-4" v-show="chapters.length">
-              <p class="area-header">CHAPTERS</p>
-
-              <div class="list-group">
-                <a class="list-group-item list-group-item-action chapter-item"
-                  :class="{ active: item.name === activeChapter}"
-                  v-for="(item, index) in chapters" 
-                  :key="item.path"
-                  @click="readManga(item, 0)"
-                >
-
-                  <small class="text-muted float-right">
-                    #{{ index + 1 }}
-                  </small>
-
-                  <div class="text-truncate pr-2">
-                    {{ item.name }}
-                  </div>                
-                </a>
-              </div>
-            </div>
-            <!-- / CHAPTER AREA -->
-
-            <!-- GALLERY AREA -->
-            <div class="gallery-area mb-4" v-show="images.length">
-              <p class="area-header">GALLERY - {{ images.length }} pages</p>
-              <div class="row">
-                <div class="col-6 col-sm-3 col-xl-2 area-item" 
-                  v-for="(item, index) in images" 
-                  :key="item.path">
-
-                  <div class="cover"
-                    :style="$service.image.style(item)"
-                    @click="readManga(item, index)">
-                    <img v-lazy="$service.image.makeSrc(item.path)" />
+                  <img v-if="item.cover" v-lazy="$service.image.makeSrc(item.cover)" />
+                  <div v-else class="cover-placeholder">
+                    <icon :name="`file-${item.fileType || 'image'}`" size="64" />
                   </div>
+                </a>
 
-                  <div class="caption">{{ item.name }}</div>
-                </div>
+                <div class="caption">{{ item.name }}</div>
               </div>
             </div>
-            <!-- / GALLERY GALLERY -->
-          </div>      
-        </div>
-      </data-view>
-    </div>
+          </div>
+          <!-- / MANGA AREA -->
+
+          <!-- CHAPTER AREA -->
+          <div class="chapter-area mb-4" v-show="chapters.length">
+            <p class="area-header">CHAPTERS</p>
+
+            <div class="list-group">
+              <a class="list-group-item list-group-item-action chapter-item"
+                :class="{ active: item.name === activeChapter}"
+                v-for="(item, index) in chapters" 
+                :key="item.path"
+                @click="readManga(item, 0)"
+              >
+
+                <small class="text-muted float-right">
+                  #{{ index + 1 }}
+                </small>
+
+                <div class="text-truncate pr-2">
+                  {{ item.name }}
+                </div>                
+              </a>
+            </div>
+          </div>
+          <!-- / CHAPTER AREA -->
+
+          <!-- GALLERY AREA -->
+          <div class="gallery-area mb-4" v-show="images.length">
+            <p class="area-header">GALLERY - {{ images.length }} pages</p>
+            <div class="row">
+              <div class="col-6 col-sm-3 col-xl-2 area-item" 
+                v-for="(item, index) in images" 
+                :key="item.path">
+
+                <div class="cover"
+                  :style="$service.image.style(item)"
+                  @click="readManga(item, index)">
+                  <img v-lazy="$service.image.makeSrc(item.path)" />
+                </div>
+
+                <div class="caption">{{ item.name }}</div>
+              </div>
+            </div>
+          </div>
+          <!-- / GALLERY GALLERY -->
+        </div>      
+      </div>
+    </data-view>
   </div>
 </template>
 
 <script>
 import config from '@/config';
-import { isUndef, last } from '@/helpers/utils';
+import { isUndef, last, eq } from '@/helpers/utils';
 import { getScrollTop } from '@/helpers/dom';
 import platform from '@/helpers/platform';
 import { types as appTypes } from '@/store/modules/app';
@@ -297,17 +295,19 @@ export default {
   },
 
   beforeRouteUpdate(to, from, next) {
-    const { isBack } = to.meta;
-    if (!this.appError) {
-      this.sharing = false;
-      this.isManga = to.query.type === 'manga';
-      this.titleShown = false;
-
-      this.addressbarCollapsed = false; // always show addressbar when route update
-      this._ignoreScrollEvent = true; // prevent collapse addressbar
-      to.meta.scrollPromise = this.fetchMangas(to.params.path, isBack);
+    if (this.appError || eq(to.params, from.params)) {
+      return next();
     }
-    
+      
+    const { isBack } = to.meta;
+    this.sharing = false;
+    this.isManga = to.query.type === 'manga';
+    this.titleShown = false;
+
+    this.addressbarCollapsed = false; // always show addressbar when route update
+    this._ignoreScrollEvent = true; // prevent collapse addressbar
+    to.meta.scrollPromise = this.fetchMangas(to.params.path, isBack);
+
     next();
   },
 
@@ -491,7 +491,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import '../../assets/style/base';
+@import '../../../assets/style/base';
 
 .addressbar {
   transition-duration: .3s;

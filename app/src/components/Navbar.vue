@@ -202,9 +202,9 @@ export default {
       margin-right: .25rem;
 
       // increase gutter between last btn and title
-      &:last-child {
-        margin-right: -.5rem;
-      }
+      // &:last-child {
+      //   margin-right: -.5rem;
+      // }
     }
 
     &.navbar-nav-right .nav-item {

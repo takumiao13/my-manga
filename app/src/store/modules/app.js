@@ -6,10 +6,11 @@ import { isUndef } from '@/helpers/utils';
 export const NAMESPACE = 'app';
 
 // Types Enum
-const TOGGLE_ASIDE   = 'TOGGLE_ASIDE';
-const TOGGLE_SIDEBAR = 'TOGGLE_SIDEBAR';
-const TOGGLE_REPO    = 'TOGGLE_REPO';
-const ERROR          = 'ERROR';
+const TOGGLE_ASIDE    = 'TOGGLE_ASIDE';
+const TOGGLE_SIDEBAR  = 'TOGGLE_SIDEBAR';
+const TOGGLE_REPO     = 'TOGGLE_REPO';
+const TOGGLE_ACTIVITY = 'TOGGLE_ACTIVITY';
+const ERROR           = 'ERROR';
 
 const ClassNames = {
   ASIDE_OPEN: 'aside-open',
@@ -17,7 +18,7 @@ const ClassNames = {
 };
 
 export const types = createTypesWithNamespace([
-  TOGGLE_ASIDE, TOGGLE_SIDEBAR, TOGGLE_REPO, ERROR
+  TOGGLE_ASIDE, TOGGLE_SIDEBAR, TOGGLE_REPO, TOGGLE_ACTIVITY, ERROR
 ], NAMESPACE);
 
 export default {
@@ -27,6 +28,7 @@ export default {
     asideOpen: false, // TODO: use a more suitable name replace it
     sidebarOpen: true,
     repoId: '',
+    activity: '', // activity tab
     error: null,
   },
 
@@ -49,6 +51,10 @@ export default {
 
     [TOGGLE_REPO]({ commit }, payload = {}) {
       commit(TOGGLE_REPO, payload);
+    },
+
+    [TOGGLE_ACTIVITY]({ commit }, payload = {}) {
+      commit(TOGGLE_ACTIVITY, payload);
     },
 
     [ERROR]({ commit }, payload) {
@@ -87,6 +93,10 @@ export default {
 
     [TOGGLE_REPO](state, payload) {
       state.repoId = payload.repo;
+    },
+
+    [TOGGLE_ACTIVITY](state, payload) {
+      state.activity = payload.activity || 'explorer'; // default
     },
 
     [ERROR](state, payload) {
