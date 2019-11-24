@@ -9,11 +9,7 @@ class PDFService extends Service {
     const path = isArray(paths) ? paths.join('/') : paths;
 
     let src = dirId && path && `${baseURL}pdf/${dirId}/${encodeURIComponent(path)}`;
-    
-    if (src && escape) {
-      src = src.replace(/(\(|\))/g, "\\$1");
-    }
-
+  
     return src;
   }
 }

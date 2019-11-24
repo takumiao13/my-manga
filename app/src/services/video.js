@@ -9,10 +9,6 @@ class MotionService extends Service {
     const path = isArray(paths) ? paths.join('/') : paths;
 
     let src = dirId && path && `${baseURL}vid/${dirId}/${encodeURIComponent(path)}`;
-    
-    if (src && escape) {
-      src = src.replace(/(\(|\))/g, "\\$1");
-    }
 
     return src;
   }
