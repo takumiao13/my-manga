@@ -50,6 +50,7 @@ export default {
     files: [],
     mangas: [],
     chapters: [],
+    versions: [],
     images: [],
     activePath: '',
     shortId: false,

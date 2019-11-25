@@ -69,8 +69,26 @@
 
         <div class="area-container col-12" v-show="!sharing">
 
-          <!-- FOLDER AREA -->
-          <div class="folder-area mb-4" v-show="files.length">
+          <!-- VERSION AREA -->
+          <div class="folder-area mb-4" v-show="versions.length">
+            <p class="area-header">VERSIONS - {{ versions.length }} items</p>
+            <div class="list-group">
+              <a 
+                class="list-group-item list-group-item-action folder-item text-truncate"
+                :class="{ active: item.path === activePath }"
+                v-for="item in versions" 
+                :key="item.path"
+                @click="readFile(item, 'manga')"                 
+              >
+                <icon :name="item.fileType ? `file-${item.fileType}` : 'archive'" />
+                &nbsp; {{ item.versionName || item.name }} 
+              </a>
+            </div>
+          </div>
+          <!-- / VERSION AREA -->
+
+          <!-- FILE AREA -->
+          <div class="folder-area mb-4" v-show="filesShow">
             <p class="area-header">FILES - {{ files.length }} items</p>
             <div class="list-group">
               <a 
@@ -80,12 +98,12 @@
                 :key="item.path"
                 @click="readFile(item)"                 
               >
-                <icon :name="item.fileType ? `file-${item.fileType}` : 'folder'" />
+                <icon name="folder" />
                 &nbsp; {{ item.name }} 
               </a>
             </div>
           </div>
-          <!-- / FOLDER AREA -->
+          <!-- / FILE AREA -->
 
           <!-- MANGA AREA -->
           <div class="manga-area mb-4" v-show="mangas.length">
@@ -118,7 +136,7 @@
             </div>
           </div>
           <!-- / MANGA AREA -->
-
+          
           <!-- CHAPTER AREA -->
           <div class="chapter-area mb-4" v-show="chapters.length">
             <p class="area-header">CHAPTERS</p>
@@ -162,6 +180,7 @@
             </div>
           </div>
           <!-- / GALLERY GALLERY -->
+
         </div>      
       </div>
     </data-view>
@@ -170,7 +189,7 @@
 
 <script>
 import config from '@/config';
-import { isUndef, last, eq } from '@/helpers/utils';
+import { isUndef, last, get, eq } from '@/helpers/utils';
 import { getScrollTop } from '@/helpers/dom';
 import platform from '@/helpers/platform';
 import { types as appTypes } from '@/store/modules/app';
@@ -196,16 +215,10 @@ export default {
     ...mapState('app', { appError: 'error' }),
 
     ...mapState('manga', [
-      'inited', 'path', 'list', 'cover', 'files', 
-      'mangas', 'chapters', 'images', 'activePath', 
-      'error', 'shortId'
+      'inited', 'path', 'list', 'type', 'cover', 'files', 
+      'mangas', 'chapters', 'versions', 'images', 'activePath', 
+      'error', 'shortId', 'metadata'
     ]),
-
-    ...mapState('manga', {
-      metadata(state) {
-        return state.metadata || {}
-      }
-    }),
 
     ...mapState('viewer', {
       viewerPath: 'path',
@@ -220,7 +233,7 @@ export default {
       const repoName = this.repo.name;
       const path = this.$route.params.path;
       const title = path ? 
-        this.metadata.title || last(path.split(PATH_SEP)) : 
+        get(this.metadata, 'title') || last(path.split(PATH_SEP)) : 
         repoName;
       
       return title;
@@ -278,6 +291,11 @@ export default {
       const protocol = platform.isElectron() ? 'http:' : window.location.protocol;
       return `${protocol}//${host}:${port}/s/${this.shortId}`
     },
+
+    filesShow() {
+      console.log(this.type, this.files.length, this.metadata);
+      return this.type === 'FILE' && this.files.length && !this.metadata;
+    }
   },
 
   watch: {

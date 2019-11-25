@@ -1,5 +1,5 @@
 const Service = require('./_base');
-const fs = require('../helpers/fs');
+const fs = require('../helpers/fs'); 
 const to = require('await-to-js').default;
 const sizeOf = require('image-size');
 const pathFn = require('path');
@@ -8,8 +8,9 @@ const pathFn = require('path');
 const FileTypes = {
   FILE: 'FILE', 
   MANGA: 'MANGA', 
-  CHAPTER: 'CHAPTER', 
-  IMAGE: 'IMAGE' 
+  IMAGE: 'IMAGE',
+  CHAPTER: 'CHAPTER',
+  VERSION: 'VERSION'
 };
 
 const METADATA_FILENAME = 'metadata.json';
@@ -27,6 +28,8 @@ class MangaService extends Service {
   }
 }
 
+
+// TODO: put private to class
 // Private Methods
 async function traverse({ 
   path = '',
@@ -62,80 +65,93 @@ async function traverse({
     if (metadata && metadata.cover) {
       cover = pathFn.posix.join(path, metadata.cover);
     }
-  
-    [ err, files ] = await to(fs.readdir(absPath))
 
-    // simple check id path operation not permitted
-    if (err) return null; 
+    // try to find `cover.jpg` as cover
+    if (!cover && fs.accessSync(pathFn.join(absPath, 'cover.jpg'))) {
+      cover = pathFn.posix.join(path, 'cover.jpg');
+    }
 
-    // Sort files by filename
-    files = files
-      .filter(ignorePathFilter(settings.ignorePath))
-      .sort((a, b) => {
-        a = pathFn.parse(a).name;
-        b = pathFn.parse(b).name;
-        return fs.filenameComparator(a, b);
-      });
-    
-    for (let i = 0; i < files.length; i++) {
-      let child;
-      const childPath = pathFn.posix.join(path, files[i]);
+    // if find metadata and cover, needn't do one more check.
+    if (maxDepth === 0 && metadata && cover) {
+      // skip this
+    } else {
+      [ err, files ] = await to(fs.readdir(absPath))
 
-      if (maxDepth > 0) {
-        child = await traverse({ 
-          baseDir, 
-          path: childPath, 
-          maxDepth: maxDepth-1, 
-          onlyDir,
-          settings
+      // simple check id path operation not permitted
+      if (err) return null; 
+
+      // Sort files by filename
+      files = files
+        .filter(ignorePathFilter(settings.ignorePath))
+        .sort((a, b) => {
+          a = pathFn.parse(a).name;
+          b = pathFn.parse(b).name;
+          return fs.filenameComparator(a, b);
         });
-      } else {
-        // when `maxDepth` is decrease to 0
-        // we need do one more iteratee to check 
-        // current directory type is `MANGA` or `FILE`
-        // - if directory has sub folder then consider it as `FILE`
-        // - if directory has more than 10 image then consider it as `MANGA`
+      
+      for (let i = 0; i < files.length; i++) {
+        let child;
+        const childPath = pathFn.posix.join(path, files[i]);
 
-        const filepath = pathFn.resolve(baseDir, childPath);
-        const [ err, stat ] = await to(fs.stat(filepath));
+        if (maxDepth > 0) {
+          child = await traverse({ 
+            baseDir, 
+            path: childPath, 
+            maxDepth: maxDepth-1, 
+            onlyDir,
+            settings
+          });
+        } else if (maxDepth === 0) {
+          // when `maxDepth` is decrease to 0, if not metadata and not cover
+          // we need do one more iteratee to check 
+          // current directory type is `MANGA` or `FILE`
+          // - if directory has sub folder then consider it as `FILE`
+          // - if directory has more than 10 image then consider it as `MANGA`
+          // the end we cat get `cover` and know the current dir contains sub folder or not by `hasChildren`.
+          
+          // TODO: user other key replace `hasChildren`
 
-        if (err) { continue }
+          const filepath = pathFn.resolve(baseDir, childPath);
+          const [ err, stat ] = await to(fs.stat(filepath));
 
-        const isDir = stat.isDirectory();
-        const extname = pathFn.extname(filepath);
+          if (err) { continue }
 
-        if (!isDir && !imgRE.test(extname) && !fileRE.test(extname)) { 
-          continue 
-        }
+          const isDir = stat.isDirectory();
+          const { name } = pathFn.parse(filepath);
 
-        child = { path: childPath, isDir }
-      } 
-           
-      if (child) {
+          child = { name, path: childPath, isDir }
+        } 
+            
+        if (child) {
+          // if directory has not specify cover
+          // use first image child as cover
+          if (!child.isDir && !cover && imgRE.test(child.path)) {
+            cover = child.path;
+          }
 
-        // if directory has not specify cover
-        // use first image child as it's cover
-        if (!child.isDir && !cover && imgRE.test(child.path)) {
-          cover = child.path;
-        }
+          // sometimes we will not push child to `children` (onlyDir or performance)
+          // so we can use `hasChildren` key to know the directory whether has children
+          if (
+            child.isDir && 
+            !isChapter(child, { parentName: name, metadata }) && 
+            !isVersion(child, { parentName: name, metadata }) &&
+            !hasChildren
+          ) {
+            hasChildren = true;
+          }
 
-        // sometimes we will not push child to `children` (onlyDir or performance)
-        // so we can use `hasChildren` key to know the directory whether has children
-        if (child.isDir && !hasChildren) {
-          hasChildren = true;
-        }
+          // if we get the cover and directory type 
+          // skip the loop for performance
+          if (maxDepth == 0 && (cover && (hasChildren || i >= 10))) {
+            break;
+          }
 
-        // if we get the cover and directory type 
-        // skip the loop for performance
-        if (maxDepth == 0 && (cover && hasChildren || i >= 10)) {
-          break;
-        }
-
-        // push `child` to `children`
-        // - `maxDepth > 0` not the last iteratee
-        // - `onlyDir` only push directory type
-        if (maxDepth > 0 && (!onlyDir || onlyDir && child.isDir)) {
-          children.push(child);
+          // push `child` to `children`
+          // - `maxDepth > 0` not the last iteratee
+          // - `onlyDir` only push directory type
+          if (maxDepth > 0 && (!onlyDir || onlyDir && child.isDir)) {
+            children.push(child);
+          }
         }
       }
     }
@@ -147,17 +163,10 @@ async function traverse({
       FileTypes.MANGA :
       FileTypes[hasChildren ? 'FILE' : 'MANGA'];
 
-    // change child type if parent type is `MANGA`
+    // fix child type if parent type is `MANGA`
     if (type === FileTypes.MANGA) {
-      children.forEach(child => {
-        if (child.isDir) {
-          child.type = metadata.chapters ? 
-            FileTypes.CHAPTER : 
-            FileTypes.FILE;
-          
-        } else if (fileRE.test(child.path)) {
-          child.type = FileTypes.FILE;
-        }
+      children.forEach((child) => {
+        fixChildType(child, { parentName: name, metadata })
       });
     }
 
@@ -224,6 +233,64 @@ const getFileType = (extname) => {
   if (extname === '.mp4') return 'video';
   if (extname === '.zip') return 'zip';
   if (extname === '.pdf') return 'pdf';
+}
+
+const fixChildType = (child, options) => {
+  if (child.isDir) {
+    if (isChapter(child, options)) {
+      child.type = FileTypes.CHAPTER;
+    } else if (isVersion(child, options)) {
+      child.type = FileTypes.VERSION;
+    } else {
+      child.type = FileTypes.FILE;
+    }
+  } else if (fileRE.test(child.path)) {
+    child.type = isVersion(child, options) ?
+      FileTypes.VERSION :
+      FileTypes.FILE;
+  }
+}
+
+const isChapter = (child, { parentName, metadata }) => {
+  const chapterRE = new RegExp(`${parentName}\\s-\\s(.+)`);
+  const matched = child.name.match(chapterRE);
+
+  if (matched) {
+    child.chapterName = matched[1]; // add special chapter name to child
+    return true;
+  }
+
+  if (metadata && metadata.chapters) {
+    const chapters = metadata.chapters;
+    if (typeof chapters === 'string') {
+      return new RegExp(chapters).test(child.name)
+    } else {
+      return !!metadata.chapters;
+    }
+  }
+
+  return false;
+}
+
+const isVersion = (child, { parentName, metadata }) => {
+  const versionRE = new RegExp(`${parentName}\\s\\[(.*?)\\](\\.(mp4|pdf|zip))?$`)
+  const matched = child.name.match(versionRE);
+
+  if (matched) {
+    child.versionName = matched[1]; // add special chapter name to child
+    return true;
+  }
+
+  if (metadata && metadata.versions) {
+    const versions = metadata.versions;
+    if (typeof versions === 'string') {
+      return new RegExp(versions).test(child.name)
+    } else {
+      return !!metadata.versions;
+    }
+  }
+
+  return false;
 }
 
 module.exports = MangaService;

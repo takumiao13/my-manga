@@ -1,16 +1,16 @@
 
 import fetch from './fetch';
-import groupBy from 'lodash/groupBy';
+import { groupBy, orderBy } from '@/helpers/utils';
 
 function transformResponse(res) {
-  let { metadata, cover, path, children: list } = res;
-      
-  if (metadata && metadata.cover) {
-    cover = path + '/' + metadata.cover; // if cover specified use it
-    list = list.filter(img => img.name !== metadata.cover);
-  }
-
+  let { cover, children: list } = res;
+  
+  // FIXED: put this in store ??
   const group = groupBy(list, 'type');
+  const versions = group.VERSION ? orderBy(group.VERSION, ['fileType', 'name'], ['desc', 'asc']) : [];
+  
+  // FIXED: simple extract cover, but we should do more check later.
+  const images = group.IMAGE && group.IMAGE.length > 1 ? group.IMAGE : [];
 
   Object.assign(res, {
     list,
@@ -18,7 +18,8 @@ function transformResponse(res) {
     files: group.FILE || [],
     mangas: group.MANGA || [],
     chapters: group.CHAPTER || [],
-    images: group.IMAGE || []
+    images,
+    versions
   });
 
   return res;
