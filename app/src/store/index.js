@@ -47,7 +47,7 @@ function registerModules() {
 export default store;
 
 export function resetStore() {
-  store.dispatch(appTypes.TOGGLE_SIDEBAR, { open: false });
+  store.dispatch(appTypes.TOGGLE_ASIDE, { open: false });
   mangaCacheStack.clear();
   unregisterModules()
   registerModules()

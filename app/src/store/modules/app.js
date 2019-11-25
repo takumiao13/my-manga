@@ -6,23 +6,26 @@ import { isUndef } from '@/helpers/utils';
 export const NAMESPACE = 'app';
 
 // Types Enum
+const TOGGLE_ASIDE   = 'TOGGLE_ASIDE';
 const TOGGLE_SIDEBAR = 'TOGGLE_SIDEBAR';
 const TOGGLE_REPO    = 'TOGGLE_REPO';
 const ERROR          = 'ERROR';
 
 const ClassNames = {
+  ASIDE_OPEN: 'aside-open',
   SIDEBAR_OPEN: 'sidebar-open'
 };
 
 export const types = createTypesWithNamespace([
-  TOGGLE_SIDEBAR, TOGGLE_REPO, ERROR
+  TOGGLE_ASIDE, TOGGLE_SIDEBAR, TOGGLE_REPO, ERROR
 ], NAMESPACE);
 
 export default {
   namespaced: true,
 
   state: {
-    sidebarOpen: false,
+    asideOpen: false, // TODO: use a more suitable name replace it
+    sidebarOpen: true,
     repoId: '',
     error: null,
   },
@@ -36,6 +39,10 @@ export default {
   },
 
   actions: {
+    [TOGGLE_ASIDE]({ commit }, payload = {}) {
+      commit(TOGGLE_ASIDE, payload);
+    },
+
     [TOGGLE_SIDEBAR]({ commit }, payload = {}) {
       commit(TOGGLE_SIDEBAR, payload);
     },
@@ -50,6 +57,20 @@ export default {
   },
 
   mutations: {
+    [TOGGLE_ASIDE](state, payload) {
+      const body = window.document.body;
+      const { open } = payload;
+
+      if (isUndef(open)) {
+        body.classList.toggle(ClassNames.ASIDE_OPEN);
+        state.asideOpen = !state.asideOpen;
+        
+      } else {
+        body.classList[open ? 'add' : 'remove'](ClassNames.ASIDE_OPEN);
+        state.asideOpen = !!open;
+      }
+    },
+
     [TOGGLE_SIDEBAR](state, payload) {
       const body = window.document.body;
       const { open } = payload;
