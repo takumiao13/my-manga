@@ -57,17 +57,14 @@
 
           <div class="metadata-main metadata-inner" v-show="!sharing">
 
-            <a class="metadata-title" href="javascript:void 0;" title="Read Now" 
-              @click="readManga(chapters[0] || images[0], 0)"
-            >
+            <p class="metadata-title" href="javascript:void 0;">
               {{ title }}
-              <span>&rarr;</span>
-            </a>
+            </p>
           </div>
         </div>
         <!-- / META DATA -->
 
-        <div class="area-container col-12" v-show="!sharing">
+        <div class="area-container mt-3 col-12" v-show="!sharing">
 
           <!-- VERSION AREA -->
           <div class="folder-area mb-4" v-show="versions.length">
@@ -125,10 +122,10 @@
                   v-bind="$service.image.coverStyle(item)"
                   @click="readFile(item, 'manga')"
                 >
-                  <img v-if="item.cover" v-lazy="$service.image.makeSrc(item.cover)" />
-                  <div v-else class="cover-placeholder">
+                  <div class="cover-placeholder">
                     <icon :name="`file-${item.fileType || 'image'}`" size="64" />
                   </div>
+                  <img v-if="item.cover" v-lazy="$service.image.makeSrc(item.cover)" />
                 </a>
 
                 <div class="caption">{{ item.name }}</div>
@@ -365,7 +362,10 @@ export default {
           name: 'explorer', 
           params:{ 
             dirId: this.repo.dirId,
-            path: item.path 
+            path: item.path,
+            query: {
+              type: 'manga'
+            }
           },
           query
         });
@@ -605,14 +605,15 @@ export default {
     overflow: hidden;
     
     img {
+      visibility: hidden;
       position: absolute;
       width: 100%;
       height: 100%;
-      display: block;
       z-index: 1; // covered box-shadow
     }
 
     img[lazy="loaded"] {
+      visibility: visible;
       background: none;
       height: auto;
       border: 0;
@@ -797,10 +798,10 @@ export default {
   }
 
   .metadata-title {
-    margin: 1rem 0;
+    margin: 1rem 0 .5rem 0;
     font-size: 1.6rem;
     text-align: center;
-    font-weight: 200;
+    font-weight: 100;
     text-decoration: none;
 
     span {
@@ -809,12 +810,6 @@ export default {
 
     @include media-breakpoint-up(md) {
       font-size: 2rem;
-    }
-
-    &:hover {
-      span {
-        display: inline;
-      }
     }
   }
 

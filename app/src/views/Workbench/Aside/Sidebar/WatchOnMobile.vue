@@ -49,6 +49,7 @@ export default {
     background: #fff;
     padding: .5rem;
     border: 1px solid #ddd;
+    height: 178px;
   }
 }
 </style>

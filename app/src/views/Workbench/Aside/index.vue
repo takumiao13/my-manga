@@ -74,7 +74,7 @@ export default {
 }
 
 
-.sidebar-open:not(.aside-open) {
+.sidebar-collapsed:not(.aside-open) {
   #aside {
     max-width: 48px;
   }

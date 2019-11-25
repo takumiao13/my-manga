@@ -14,7 +14,7 @@ const ERROR           = 'ERROR';
 
 const ClassNames = {
   ASIDE_OPEN: 'aside-open',
-  SIDEBAR_OPEN: 'sidebar-open'
+  SIDEBAR_COLLAPSED: 'sidebar-collapsed'
 };
 
 export const types = createTypesWithNamespace([
@@ -63,6 +63,7 @@ export default {
   },
 
   mutations: {
+    // only in small device
     [TOGGLE_ASIDE](state, payload) {
       const body = window.document.body;
       const { open } = payload;
@@ -82,11 +83,11 @@ export default {
       const { open } = payload;
 
       if (isUndef(open)) {
-        body.classList.toggle(ClassNames.SIDEBAR_OPEN);
+        body.classList.toggle(ClassNames.SIDEBAR_COLLAPSED);
         state.sidebarOpen = !state.sidebarOpen;
         
       } else {
-        body.classList[open ? 'add' : 'remove'](ClassNames.SIDEBAR_OPEN);
+        body.classList[open ? 'remove' : 'add'](ClassNames.SIDEBAR_COLLAPSED);
         state.sidebarOpen = !!open;
       }
     },

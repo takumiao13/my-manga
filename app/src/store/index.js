@@ -48,7 +48,7 @@ export default store;
 
 export function resetStore() {
   store.dispatch(appTypes.TOGGLE_ASIDE, { open: false });
-  store.dispatch(appTypes.TOGGLE_SIDEBAR, { open: false });
+  store.dispatch(appTypes.TOGGLE_SIDEBAR, { open: true });
   store.dispatch(appTypes.TOGGLE_ACTIVITY, { activity: '' });
   mangaCacheStack.clear();
   unregisterModules()

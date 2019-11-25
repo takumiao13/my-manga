@@ -38,7 +38,9 @@ export default {
       treeProps: {
         key: 'name',
         label: (item) => item._mangaGroup ? 
-          `<span class="manga-group-btn">${item.children.length} mangas</span>` :
+          `<span class="manga-group-btn">
+            ${item.children.length} MANGA${item.children.length > 1 ? 'S' : ''}
+          </span>` :
           item.name
         ,
         className: (item) => item._mangaGroup ? 'manga-group-item' : '',

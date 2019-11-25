@@ -2,7 +2,7 @@
   <div class="menubar">
     <a
       class="menubar-btn" 
-      title="Toggle Sidebar"
+      :title="asideOpen ? 'Close Aside' : 'Toggle Sidebar'"
       @click="toggleSidebar"
     >
       <icon :name="asideOpen ? 'times' : 'bars'" />
@@ -75,7 +75,7 @@ export default {
       to.query = { ...to.query, activity };
       this.$router.replace(to);
 
-      this.$store.dispatch(types.TOGGLE_SIDEBAR, { open: false });
+      this.$store.dispatch(types.TOGGLE_SIDEBAR, { open: true });
       this.$store.dispatch(types.TOGGLE_ACTIVITY, { activity });
     },
 
