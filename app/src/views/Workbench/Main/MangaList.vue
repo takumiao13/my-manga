@@ -259,11 +259,14 @@ export default {
     },
 
     rightBtns() {
+      // hide share button use sidebar qrcode insteadof it
+      //
+      // {
+      //   icon: 'share-alt',
+      //   tip: 'Share Manga',
+      //   click: this.handleShareManga
+      // }
       return this.isManga ? [{
-        icon: 'share-alt',
-        tip: 'Share Manga',
-        click: this.handleShareManga
-      }, {
         icon: 'level-up-alt',
         tip: 'Back to parent',
         click: this.handleBackToParent

@@ -10,23 +10,34 @@
         <h1 class="page-header">{{ title }}</h1>
 
         <div>
-          <button class="btn" v-if="isElectron" @click="handleSelectRepo">
+          <button 
+            v-if="isElectron"
+            class="btn"
+            @click="handleSelectRepo"
+          >
             <icon name="plus" />
-            New Repository
+            Add Repository
           </button>
         </div>
         
       </div>
 
-      <div class="list-group mt-3">
-        <div class="list-group-item text-truncate"
-          :class="{ disabled: !repo.accessed }"
+      <p class="my-3 text-muted" style="font-size: 80%;">
+        REPOS - {{ repos.length }} items
+      </p>
+
+      <div class="list-group">
+        <div 
+          :class="['list-group-item', 'text-truncate', { disabled: !repo.accessed }]"
           v-for="(repo, index) in repos"
           :key="index"
           @click="handleToggleRepo($event, repo)"
         >
           <div class="list-group-item-actions" v-if="isElectron">
-            <button class="btn" @click="handleRemoveRepo($event, repo)">
+            <button 
+              class="btn" 
+              @click="handleRemoveRepo($event, repo)"
+            >
               <icon name="trash" />
             </button>
           </div>
@@ -34,13 +45,12 @@
           <icon 
             v-if="repo.dirId === repoId"
             name="check"
-            size="20" 
-            class="text-success mr-2"
+            class="mr-3"
           />
           <div 
             v-else
-            class="svg-icon mr-2"
-            style="display: inline-block; width: 20px; height: 20px;"
+            class="svg-icon mr-3"
+            style="display: inline-block; width: 16px; height: 16px;"
           />
 
           <strong>{{ repo.name }}</strong>&nbsp;
@@ -65,18 +75,21 @@ export default {
   data() {
     return {
       isElectron,
-      title: 'Manga Repository',
-      leftBtns: [{
-        icon: 'back',
-        click: this.handleBack
-      }]
+      title: 'Repository'
     }
   },
 
   computed: {
     ...mapState('app', [ 'repoId' ]),
     
-    ...mapGetters('settings/user', [ 'settings', 'repos' ])
+    ...mapGetters('settings/user', [ 'settings', 'repos' ]),
+
+    leftBtns() {
+      return this.$router.canGoBack() ? [{
+        icon: 'arrow-left',
+        click: this.handleBack
+      }] : null;
+    }
   },
 
   created() {
@@ -150,8 +163,10 @@ export default {
 @import '../../assets/style/base';
 
 .page-header {
-  margin: 2rem 0 1rem 0;
-  font-size: 2rem;
+  margin: 3rem 0 2rem 0;
+  font-size: 3rem;
+  font-weight: 100;
+  text-align: center;
 }
 
 .list-group {
