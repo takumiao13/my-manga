@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <server-error v-if="error" :error="error" />
-    <keep-alive include="MainInterface">
+    <keep-alive include="Workbench">
       <router-view v-show="!error" />
     </keep-alive>
   </div>

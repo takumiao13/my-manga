@@ -1,4 +1,4 @@
-<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="folder-tree" role="img" 
+<svg aria-hidden="true" focusable="false" data-prefix="far" data-icon="folder-tree" role="img" 
   xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" class="svg-inline--fa fa-folder-tree fa-w-18 fa-9x">
-  <path fill="currentColor" d="M544 32H432L400 0h-80a32 32 0 0 0-32 32v160a32 32 0 0 0 32 32h224a32 32 0 0 0 32-32V64a32 32 0 0 0-32-32zm0 288H432l-32-32h-80a32 32 0 0 0-32 32v160a32 32 0 0 0 32 32h224a32 32 0 0 0 32-32V352a32 32 0 0 0-32-32zM64 16A16 16 0 0 0 48 0H16A16 16 0 0 0 0 16v400a32 32 0 0 0 32 32h224v-64H64V160h192V96H64z" class=""></path>
+  <path fill="currentColor" d="M288 224h224a32 32 0 0 0 32-32V64a32 32 0 0 0-32-32H400L368 0h-80a32 32 0 0 0-32 32v72H80V16A16 16 0 0 0 64 0H48a16 16 0 0 0-16 16v392a32 32 0 0 0 32 32h192v40a32 32 0 0 0 32 32h224a32 32 0 0 0 32-32V352a32 32 0 0 0-32-32H400l-32-32h-80a32 32 0 0 0-32 32v72H80V152h176v40a32 32 0 0 0 32 32zm16-176h44.12l32 32H496v96H304zm0 288h44.12l32 32H496v96H304z" class=""></path>
 </svg>

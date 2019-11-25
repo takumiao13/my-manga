@@ -1,25 +1,23 @@
 <template>
-  <div>
-    <div class="explorer">
-      <div class="topbar">
-        <navbar :title="title" :right-btns="rightBtns" />
-      </div>
-      
-      <data-view 
-        class="explorer-container"
-        :loading="pending" 
-        :empty="empty"
-      >
-        <div class="explorer-repo-name" @click="handleBack">{{ repo.name }}</div>
-        <nested-list 
-          v-show="success"  
-          :props="treeProps"
-          :data="folders"
-          @expanded="handleItemExpanded"
-          @selected="handleItemSelected" 
-        />
-      </data-view>
+  <div class="explorer">
+    <div class="topbar">
+      <navbar :title="title" :right-btns="rightBtns" />
     </div>
+    
+    <data-view 
+      class="explorer-container"
+      :loading="pending" 
+      :empty="empty"
+    >
+      <div class="explorer-repo-name" @click="handleBack">{{ repo.name }}</div>
+      <nested-list 
+        v-show="success"  
+        :props="treeProps"
+        :data="folders"
+        @expanded="handleItemExpanded"
+        @selected="handleItemSelected" 
+      />
+    </data-view>
   </div>
 </template>
 

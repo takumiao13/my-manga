@@ -1,6 +1,5 @@
-import MainInterface from '@/views/MainInterface';
-import Explorer from '@/views/MainInterface/Explorer';
-import MangaList from '@/views/MainInterface/MangaList';
+import Workbench from '@/views/Workbench';
+import MangaList from '@/views/Workbench/Main/MangaList';
 import Viewer from '@/views/Viewer';
 import Repository from '@/views/Repository';
 
@@ -10,19 +9,17 @@ import store from '../store';
 
 const routes = [
 	{
-		path: '/manga', 
-		component: MainInterface,
+		path: '/repo', 
+		component: Workbench,
 		children: [
 			{ 
-				name: 'explorer', 
-				path: ':dirId/:path?', 
-				components: {
-					sidebar: Explorer,
-          main: MangaList
-				}
+				name: 'explorer',  // -> manga
+				path: ':dirId/manga/:path?', // fallback old route
+				component: MangaList
 			}
 		]
 	},
+
 	{
 		name: 'viewer',
 		path: '/viewer/:dirId/:path/:ch?',
@@ -31,6 +28,7 @@ const routes = [
 			themeColor: '#333'
 		}
 	},
+
 	{
 		name: 'repos',
 		path: '/repos',
