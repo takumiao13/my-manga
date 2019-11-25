@@ -151,7 +151,7 @@
                 </small>
 
                 <div class="text-truncate pr-2">
-                  {{ item.name }}
+                  {{ item.chapterName || item.name }}
                 </div>                
               </a>
             </div>
@@ -212,7 +212,7 @@ export default {
     ...mapState('app', { appError: 'error' }),
 
     ...mapState('manga', [
-      'inited', 'path', 'list', 'type', 'cover', 'files', 
+      'inited', 'name', 'path', 'list', 'type', 'cover', 'files', 
       'mangas', 'chapters', 'versions', 'images', 'activePath', 
       'error', 'shortId', 'metadata'
     ]),
@@ -388,7 +388,7 @@ export default {
       const { dirId } = this.repo;
       const ch = item.type === 'CHAPTER' ? item.name : undefined;
       
-      // sync state to viewer
+      // sync state to viewer store.
       const shouldSyncState = () => {
         if (item.type === 'IMAGE') {
           return !this.path || this.path !== this.viewerPath || this.viewerPath;
@@ -407,22 +407,21 @@ export default {
       // sync state to viewer store
       if (shouldSyncState()) {
         this.$store.dispatch(viewerTypes.LOAD, {
+          name: this.name,
           path: this.path,
           images: this.images,
           chapters: this.chapters
         });
       }
 
-        this.$router.push({
-          name: 'viewer',
-          params: { dirId, path, ch },
-          query: {
-            // use a query from start page, prepare for history feature
-            start: index + 1
-          }
-        });
-
-
+      this.$router.push({
+        name: 'viewer',
+        params: { dirId, path, ch },
+        query: {
+          // use a query from start page, prepare for history feature
+          start: index + 1
+        }
+      });
     },
 
     // events

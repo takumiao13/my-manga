@@ -25,7 +25,7 @@
 
     <div class="viewer-help-shortcuts">
       <div class="viewer-help-shortcuts-container">
-        <p>shortcuts</p>
+        <p>Shortcuts</p>
         <hr/>
         <dl class="row">
           <dt class="col-4 pr-0 text-right">
@@ -74,13 +74,13 @@ import { capitalize } from '@/helpers/utils';
 
 const HELP = {
   left: {
-    left: 'Next page &rarr;',
-    right: '&larr; Prev page'
+    left: 'Next &rarr;',
+    right: '&larr; Prev'
   },
 
   right: {
-    left: '&larr; Prev Page',
-    right: 'Next Page &rarr;',
+    left: '&larr; Prev',
+    right: 'Next &rarr;',
   }
 }
 
@@ -149,6 +149,10 @@ export default {
     flex-direction: column;
     padding: 0 .5rem;
     font-size: 110%;
+    
+    > p {
+      margin-top: -6rem;
+    }
   }
 
   > .viewer-help-hand-left {

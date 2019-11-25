@@ -154,7 +154,8 @@ export default {
 
     refresh() {
       // update viewWidth first
-      this.$refs.mode.style['max-width'] = this.zoom === 100 ? 'none' : null;
+      const { zoom } = this.settings;
+      this.$refs.mode.style['max-width'] = zoom === 100 ? 'none' : null;
 
       const imgWrappers = this.$refs.imgWrapper;
       const viewWidth = this.$refs.mode.clientWidth;
@@ -169,10 +170,10 @@ export default {
         const realWidth = Math.max(viewWidth, orgWidth);
         const ratio = realWidth / orgWidth;
         const realHeight = orgHeight * ratio;
+        
+        item.style['max-width'] = zoom === 100 ? 'none' : null;
 
-        item.style['max-width'] = this.zoom === 100 ? 'none' : null;
-
-        if (this.zoom === 'screen') {
+        if (zoom === 'screen') {
           if (realHeight > viewHeight) {
             const ratio = viewHeight / realHeight;
             item.style.width = orgWidth * ratio + 'px';

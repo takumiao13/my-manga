@@ -34,9 +34,9 @@ export const createSettings = (scope) => ({
       const settings = getters.settings;
 
       return (scope !== 'user' && settings) ? {
-         name: settings.name.toUpperCase(),
-         dirId: settings.dirId
-      } : {}
+        ...settings,
+        name: settings.name.toUpperCase(),
+      } : {};
     },
 
     repos(state) {

@@ -1,37 +1,23 @@
 <template>
-  <div class="viewer-container" :class="hand">
+  <div class="viewer-container">
     <div class="viewer-viewport-left" @click.stop="handleLeft"/>
-    <div class="viewer-viewport" 
-      :class="{ 'viewer-locking': shouldLock() }"
-    >
-      <!-- TODO: may be support more mode later -->
-      <scroll-mode
-        v-if="mode === 'scroll'"
-        v-bind="options"
-        @pageChange="handlePageChange"
-        @chapterChange="handleChapterChange"
-      />
+    <div :class="['viewer-viewport', { 'viewer-locking': shouldLock() }]">
+      <slot /> 
     </div>
     <div class="viewer-viewport-right" @click.stop="handleRight" />
   </div>
 </template>
 
 <script>
-import ScrollMode from './ScrollMode';
-
 export default {
   name: 'Viewport',
 
-  components: {
-    ScrollMode
-  },
-  
-  props: [ 'mode', 'hand', 'options' ],
+  props: [ 'hand', 'autoScrolling', 'locking' ],
 
   methods: {
     shouldLock() {
-      const { autoScrolling, locking } = this.options;
-      return (autoScrolling && !locking) || (!autoScrolling && locking);
+      return (this.autoScrolling && !this.locking) || 
+        (!this.autoScrolling && this.locking);
     },
 
     handleLeft() {
@@ -40,14 +26,6 @@ export default {
 
     handleRight() {
       this.$emit(this.hand === 'right' ? 'next' : 'prev');
-    },
-
-    handlePageChange(page) {
-      this.$emit('pageChange', page);
-    },
-
-    handleChapterChange(chIndex) {
-      this.$emit('chapterChange', chIndex);
     }
   }
 }
@@ -143,7 +121,7 @@ export default {
   right: 0;
 }
 
-.left {
+.viewer-left-hand {
   .viewer-viewport-left {
     cursor: url('../../assets/right_arrow.cur'), auto;
   }
@@ -153,7 +131,7 @@ export default {
   }
 }
 
-.right {
+.viewer-right-hand {
   .viewer-viewport-left {
     cursor: url('../../assets/left_arrow.cur'), auto;
   }

@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import { safeAssign, isDef } from '@/helpers/utils';
 import { createTypesWithNamespace, createRequestStatus } from '../helpers';
+import { NAMESPACE as APP_NAMESPACE } from './app'
 import mangaAPI from '@/apis/manga';
 
 // Namespace
@@ -10,34 +11,36 @@ export const NAMESPACE = 'viewer';
 const LOAD  = 'LOAD';
 const GO    = 'GO';
 const VIEW  = 'VIEW';
-const ZOOM  = 'ZOOM';
-const TOGGLE_GAPS           = 'TOGGLE_GAPS';
+const SETTINGS = 'SETTINGS';
 const TOGGLE_AUTO_SCROLLING = 'TOGGLE_AUTO_SCROLLING';
-const TOGGLE_HAND_MODE      = 'TOGGLE_HAND_MODE';
+
 
 const statusHelper = createRequestStatus('status');
 
 export const types = createTypesWithNamespace([ 
-  LOAD, GO, VIEW, ZOOM, TOGGLE_GAPS, TOGGLE_AUTO_SCROLLING, TOGGLE_HAND_MODE
+  LOAD, GO, VIEW, SETTINGS, TOGGLE_AUTO_SCROLLING
 ], NAMESPACE);
 
 export default {
   namespaced: true,
 
   state: {
-    mode: 'scroll',
-    zoom: 'width',
-    gaps: true,
+    mode: 'scroll',  
     autoScrolling: false,
-    handMode: 'right',
     name: '',
     path: '',
-    images: [],
-    chapters: [],
     page: 1,
     ch: '',
+    chName: '',
     chIndex: 0,
-    config: {},
+    images: [],
+    chapters: [],
+    settings: {
+      zoom: 'width',
+      gaps: true,
+      pagerInfo: true,
+      handMode: 'right',
+    },
     ...statusHelper.state()
   },
 
@@ -56,6 +59,32 @@ export default {
 
     chCount(state) {
       return state.chapters.length; 
+    },
+
+    settings(state, getters, allState, allGetters) {
+      let { gaps } = state.settings;
+      const { path } = state;
+      const repoState = allGetters[`${APP_NAMESPACE}/repo`];  // find nested state
+      const obj = repoState.viewer || {};
+
+      // handle settings gaps
+      if (obj.gaps) {
+        let rest;
+        gaps = obj.gaps['*'] || gaps;
+
+        // match gaps path
+        Object.keys(obj.gaps).forEach(p => {
+          if (path.indexOf(p) === 0) {
+            let r = path.slice(p).length;
+            if (!rest || r < rest) {
+              rest = r;
+              gaps = obj.gaps[p];
+            }
+          }
+        });
+      }
+
+      return Object.assign(state.settings, { gaps })
     }
   },
 
@@ -71,25 +100,34 @@ export default {
       const chResStub = () => {};
 
       const pathPromise = state.path !== path ? 
-        mangaAPI.list({ dirId, path }) : pathResStub;
+        mangaAPI.list({ dirId, path }) : 
+        pathResStub;
   
       promiseArray.push(pathPromise);
       
+      // should fetch chapters
       if (ch) {
         const chPromise = state.ch !== ch ? 
-          mangaAPI.list({ dirId, path: `${path}/${ch}` }) : chResStub;
+          mangaAPI.list({ dirId, path: `${path}/${ch}` }) : 
+          chResStub;
 
-        //const chPromise = mangaAPI.list({ dirId, path: `${path}/${ch}` })
         promiseArray.push(chPromise);
       }
   
+      // loading
       statusHelper.pending(commit);
+      
+      // fetch images and chapter parallelly
       Promise.all(promiseArray).then(([res1, res2]) => {
-        let path, chapters, images;
+        let name = state.name, 
+            path = state.path, 
+            chapters, 
+            images;
   
         // handle no chapters
         if (res2 === void 0) {
           if (res1 !== pathResStub) {
+            name = res1.name;
             path = res1.path;
             images = res1.images;
             chapters = res1.chapters;
@@ -98,6 +136,7 @@ export default {
         // handle chapters
         } else {
           if (res1 !== pathResStub) {
+            name = res1.name;
             path = res1.path;
             chapters = res1.chapters;
           }
@@ -106,11 +145,14 @@ export default {
             images = res2.images;
           }
         }
-
-        console.log(path, images, chapters);
-        console.log(page, ch);
   
-        commit(LOAD, { path, images, chapters });
+        // try to remove name prefix
+        const chName = ch.replace(`${name} - `, '');
+
+        // TODO: replace `safeAssign`
+        // sometimes images chapters will be undefined
+        // so we should safeAssign it.
+        commit(LOAD, { name, path, images, chapters, chName });
         commit(GO, { page, ch });
         Vue.nextTick(() => statusHelper.success(commit));
       }).catch(error => {
@@ -129,20 +171,12 @@ export default {
       commit(GO, payload);
     },
 
-    [ZOOM]({ commit }, payload = {}) {
-      commit(ZOOM, payload);
-    },
-
-    [TOGGLE_GAPS]({ commit }, payload = {}) {
-      commit(TOGGLE_GAPS, payload);
+    [SETTINGS]({ commit }, payload = {}) {
+      commit(SETTINGS, payload);
     },
 
     [TOGGLE_AUTO_SCROLLING]({ commit }, payload = {}) {
       commit(TOGGLE_AUTO_SCROLLING, payload);
-    },
-
-    [TOGGLE_HAND_MODE]({ commit }, payload = {}) {
-      commit(TOGGLE_HAND_MODE, payload);
     },
   },
 
@@ -155,12 +189,8 @@ export default {
       safeAssign(state, payload);
     },
 
-    [ZOOM](state, payload) {
-      state.zoom = payload.zoom;
-    },
-
-    [TOGGLE_GAPS](state) {
-      state.gaps = !state.gaps;
+    [SETTINGS](state, payload) {
+      safeAssign(state.settings, payload);
     },
 
     [TOGGLE_AUTO_SCROLLING](state, payload) {
@@ -168,14 +198,6 @@ export default {
       state.autoScrolling = isDef(autoScrolling) ? 
         !!autoScrolling :
         !state.autoScrolling;
-    },
-
-    [TOGGLE_HAND_MODE](state) {
-      if (state.handMode === 'right') {
-        state.handMode = 'left';
-      } else if (state.handMode === 'left') {
-        state.handMode = 'right';
-      }
     },
 
     ...statusHelper.mutation()

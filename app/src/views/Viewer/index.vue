@@ -1,16 +1,16 @@
 <template>
-  <div id="viewer" :class="{
-    'viewer-left-hand': this.handMode === 'left',
-    'viewer-right-hand': this.handMode === 'right'
-  }">
-    <div class="topbar viewer-topbar fixed-top" 
-      :class="{ 
-        'viewer-autoscrolling': autoScrolling,
-        open: locking 
-      }"
+  <div id="viewer" :class="`viewer-${settings.handMode}-hand`">
+    <div
+      :class="[
+        'topbar viewer-topbar fixed-top',
+        { 'viewer-autoscrolling': autoScrolling, open: locking }
+      ]"
     >
       <navbar
-        :title="{ content: pager, className: 'text-center d-none d-md-block' }"
+        :title="{ 
+          content: pager, 
+          className: 'text-center d-none d-md-block'
+        }"
         :left-btns="leftBtns"
         :right-btns="rightBtns"
       />
@@ -22,25 +22,27 @@
     />
 
     <viewport
-      :mode="mode"
-      :hand="handMode"
-      :options="{
-        gallery: images,
-        chapters: chapters,
-        page: page,
-        chIndex: chIndex,
-        settings: settings,
-        zoom: zoom,
-        isFullscreen: isFullscreen,
-        autoScrolling: autoScrolling,
-        locking: locking
-      }"
+      :hand="settings.handMode"
+      :locking="locking"
+      :autoScrolling="autoScrollToggle"
       @click.native="lockToggle()"
       @prev="prev"
       @next="next"
-      @pageChange="go"
-      @chapterChange="goChapter" 
-    />
+    >
+      <!-- TODO: may be support more mode later -->
+      <scroll-mode
+        :gallery="images"
+        :chapters="chapters"
+        :page="page"
+        :chIndex="chIndex"
+        :settings="settings"
+        :isFullscreen="isFullscreen"
+        :autoScrolling="autoScrolling"
+        :locking="locking"
+        @pageChange="go"
+        @chapterChange="goChapter"
+      />
+    </viewport>
 
     <div class="viewer-loading" v-show="pending">
       <spinner class="loading-spinner" size="lg" tip="Loading" />
@@ -48,7 +50,7 @@
 
     <help-overlay
       v-show="helpOpen"
-      :hand="handMode"
+      :hand="settings.handMode"
       @click.native="helpOpen = false"
     />
 
@@ -59,7 +61,10 @@
       <seekbar :value="page" :max="count" @end="go" />
     </div>
 
-    <div class="viewer-page-indicator py-1 px-2 d-md-none">
+    <div 
+      v-show="settings.pagerInfo" 
+      class="viewer-page-indicator py-1 px-2 d-md-none"
+    >
       {{ page }} / {{ images.length }}
     </div>
   </div>
@@ -74,6 +79,7 @@ import { types } from '@/store/modules/viewer';
 
 // Components
 import Viewport from './Viewport';
+import ScrollMode from './ScrollMode';
 import Seekbar from './Seekbar';
 import HelpOverlay from './HelpOverlay';
 
@@ -111,6 +117,7 @@ const KEYBOARD_ACTION = {
 export default {
   components: {
     Viewport,
+    ScrollMode,
     Seekbar,
     HelpOverlay
   },
@@ -126,46 +133,24 @@ export default {
   },
   
   computed: {
-    ...mapGetters('app', [ 'repo' ]),
-
-    ...mapGetters('viewer', [ 'count', 'chIndex', 'chCount', 'pending' ]),
-
-    ...mapState('viewer', [ 'name', 'path', 'mode', 'zoom', 'gaps', 'handMode', 'autoScrolling', 'page', 'ch', 'images', 'chapters' ]),
+    
+    ...mapState('viewer', [ 
+      'name', 'path', 'mode', 'settings', 'autoScrolling', 
+      'page', 'ch', 'chName', 'images', 'chapters' 
+    ]),
 
     ...mapState('app', { appError: 'error' }),
 
-    ...mapState('settings', {
-      settings(state) {
-        state = state[this.repo.dirId]; // find nested state
-        if (!state) return {}
-        const obj = state.data.viewer || {};
-        let gaps = this.gaps; // user viewer gaps as default
+    ...mapGetters('app', [ 'repo' ]),
 
-        // match image margin path
-        if (obj.imageMargin) {
-          let rest;
-          gaps = obj.imageMargin['*'] || gaps;
-
-          Object.keys(obj.imageMargin).forEach(p => {
-            if (this.path.indexOf(p) === 0) {
-              let r = this.path.slice(p).length;
-              if (!rest || r < rest) {
-                rest = r;
-                gaps = obj.imageMargin[p];
-              }
-            }
-          });
-        }
-
-        return { gaps }
-      }
-    }),
+    ...mapGetters('viewer', [ 'count', 'chIndex', 'chCount', 'pending', 'settings' ]),
 
     title() {
+      // FIXED: Why not use name directory ??
       let title = last(this.path.split('/'));
 
       // addon chapter name
-      if (this.ch) title = `${this.ch} / ${title}`;
+      if (this.ch) title = `${this.chName} / ${title}`;
       return ' ' + title;
     },
 
@@ -184,7 +169,6 @@ export default {
     },
 
     rightBtns() {
-
       const leftHandBack = {
         icon: 'arrow-left',
         tip: 'Back',
@@ -206,7 +190,7 @@ export default {
         click: () => this.zoomToggle(item.zoom)
       }));
 
-      const selected = menu.map(item => item.zoom).indexOf(this.zoom);
+      const selected = menu.map(item => item.zoom).indexOf(this.settings.zoom);
 
       return this.autoScrolling ? 
         [
@@ -233,15 +217,20 @@ export default {
                   html: `
                     Hand Mode : 
                     <strong class="text-primary">
-                      ${capitalize(this.handMode)}
+                      ${capitalize(this.settings.handMode)}
                     </strong>
                   `,
                   click: this.handModeToggle
                 }, {
                   type: 'check',
-                  checked: this.gaps,
+                  checked: this.settings.gaps,
                   text: 'Show Gaps Between Pages',
                   click: this.gapsToggle
+                }, {
+                  type: 'check',
+                  checked: this.settings.pagerInfo,
+                  text: 'Show Pager Info',
+                  click: this.pagerInfoToggle
                 }, {
                   text: 'Auto Scrolling',
                   click: () => this.autoScrollToggle(true)
@@ -341,26 +330,32 @@ export default {
         !this.locking;
     },
 
+    zoomToggle(zoom) {
+      this.$store.dispatch(types.SETTINGS, { zoom });
+    },
+
+    gapsToggle() {
+      this.$store.dispatch(types.SETTINGS, { gaps: !this.settings.gaps })
+    },
+
+    pagerInfoToggle() {
+      this.$store.dispatch(types.SETTINGS, { pagerInfo: !this.settings.pagerInfo })
+    },
+
+    handModeToggle() { 
+      const handMode = { left: 'right', right: 'left' }[this.settings.handMode];
+      this.$store.dispatch(types.SETTINGS, { handMode });
+      this.helpOpen = true;
+    },
+
     fullscreenToggle() {
       screenfull.toggle();
       this.isFullscreen = !this.isFullscreen;
     },
 
-    zoomToggle(zoom) {
-      this.$store.dispatch(types.ZOOM, { zoom });
-    },
-
-    gapsToggle() {
-      this.$store.dispatch(types.TOGGLE_GAPS);
-    },
-
-    handModeToggle() {
-      this.helpOpen = true;
-      this.$store.dispatch(types.TOGGLE_HAND_MODE);
-    },
-
     autoScrollToggle(val) {
       this.locking = false;
+      
       this.$store.dispatch(types.TOGGLE_AUTO_SCROLLING, { 
         autoScrolling: val 
       });
@@ -391,7 +386,7 @@ export default {
       
       $event.stopPropagation();
       const keyCode = $event.keyCode;
-      const action = KEYBOARD_ACTION[this.handMode];
+      const action = KEYBOARD_ACTION[this.settings.handMode];
 
       switch (keyCode) {
         case action.help:

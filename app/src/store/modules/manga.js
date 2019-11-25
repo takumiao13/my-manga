@@ -44,6 +44,7 @@ export default {
     inited: false,
     cover: '',
     type: '',
+    name: '',
     path: '',
     metadata: null,
     list: [],
