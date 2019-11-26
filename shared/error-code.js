@@ -1,7 +1,7 @@
 const REPO_ERROR = 'REPO ERROR';
 const MANGA_ERROR = 'MANGA ERROR';
 
-const REPO_ICON_NAME = 'home-damage';
+const REPO_ICON_NAME = 'warehouse';
 const MANGA_ICON_NAME = 'folder-items';
 
 const REPO_UNACCESSED = 10100;

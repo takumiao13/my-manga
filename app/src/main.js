@@ -2,7 +2,6 @@ import './assets/style/index.scss';
 
 import Vue from 'vue'
 import App from './App.vue'
-import router, { resetHistory } from './router';
 import config from '@/config';
 
 // Helpers
@@ -11,28 +10,29 @@ import { delay } from '@/helpers/promise';
 import platform from '@/helpers/platform';
 import EventEmitter from '@/helpers/eventemitter';
 
-// Store
-import store, { resetStore, loadSettingsState } from './store';
+// Store & Router (router is depend on store, so must after it)
+import store, { resetStore, loadSettingsState } from '@/store';
 import { types as settingTypes } from '@/store/modules/settings';
+import router, { resetHistory } from '@/router';
 
 // Global components
-import Spinner from './components/Spinner';
-import Navbar from './components/Navbar';
-import Toolbar from './components/Toolbar';
-import SvgIcon from './components/SvgIcon';
-import NestedList from './components/NestedList';
-import SideToolbar from './components/SideToolbar';
-import DataView from './components/DataView';
-import Addressbar from './components/Addressbar';
-import Dropdown from './components/Dropdown';
+import Spinner from '@/components/Spinner';
+import Navbar from '@/components/Navbar';
+import Toolbar from '@/components/Toolbar';
+import SvgIcon from '@/components/SvgIcon';
+import NestedList from '@/components/NestedList';
+import SideToolbar from '@/components/SideToolbar';
+import DataView from '@/components/DataView';
+import Addressbar from '@/components/Addressbar';
+import Dropdown from '@/components/Dropdown';
 
 // Third part components
 import VueLazyload from 'vue-lazyload';
 import VueQriously from 'vue-qriously';
 
 // Directives
-import loadingDirective from './directives/loading';
-import clickOutSideDirective from './directives/click-out-side';
+import loadingDirective from '@/directives/loading';
+import clickOutSideDirective from '@/directives/click-out-side';
 
 // Services
 import $Service from '@/services';
@@ -140,9 +140,11 @@ function render({ error } = {}) {
 function showApp() {
   delay(1000)
     .then(() => $loading.classList.add('fade'))
-    .then(() => delay(2000))
+    .then(() => {
+      document.body.style.overflow = 'auto'; // allow scroll
+      return delay(500) // transition-duration is 300s
+    })
     .then(() => {
       $loading.style.display = 'none';
-      document.body.style.overflow = 'auto';
     }); 
 }

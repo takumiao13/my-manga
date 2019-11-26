@@ -7,7 +7,9 @@
     <div class="container">
 
       <div class="d-none d-sm-block" style="overflow: hidden;">
-        <h1 class="page-header">{{ title }}</h1>
+        <h1 class="page-header">
+          {{ title }}
+        </h1>
 
         <div>
           <button 
@@ -164,7 +166,6 @@ export default {
 
 .page-header {
   margin: 3rem 0 2rem 0;
-  font-size: 3rem;
   font-weight: 100;
   text-align: center;
 }

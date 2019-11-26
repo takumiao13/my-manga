@@ -73,14 +73,15 @@ export default {
   }
 }
 
-
 .sidebar-collapsed:not(.aside-open) {
-  #aside {
-    max-width: 48px;
-  }
+  @include media-breakpoint-up(md) {
+    #aside {
+      max-width: 48px;
+    }
 
-  .sidebar {
-    display: none;
+    .sidebar {
+      display: none;
+    }
   }
 }
 </style>

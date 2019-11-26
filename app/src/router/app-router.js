@@ -1,5 +1,5 @@
 import VueRouter from 'vue-router';
-import { get } from '@/helpers/utils';
+import { get, isArray } from '@/helpers/utils';
 
 // sync history to rotuer
 const RH = '_RH';
@@ -14,6 +14,8 @@ export default class AppRouter extends VueRouter {
 
   _startHistoryLength = +sess.getItem(SHL) || window.history.length;
 
+  _middleware = [];
+
   constructor(...args) {
     window.onbeforeunload = () => {
       // store history when refresh
@@ -24,18 +26,29 @@ export default class AppRouter extends VueRouter {
     super(...args);
   }
 
-  navigate(to) {
-    const route = this.match(to);
+  /**
+   * 
+   * @param {*} location 
+   */
+  navigate(location, onComplete, onAbort) {
+    const route = this.match(location);
     const index = this._routerHistory.lastIndexOf(historyName(route));
   
     if (index > -1) {
       this._backdelta = this._routerHistory.length - index;
       this.go(-this._backdelta);
     } else {
-      this.push(to);
+      this.push(location, onComplete, onAbort);
     }
   }
 
+  /**
+   * 
+   * @override
+   * @param {*} location 
+   * @param {*} onComplete 
+   * @param {*} onAbort 
+   */
   push(location, onComplete, onAbort) {
     this._push = true;
     location = this._attachActivityQuery(location);
@@ -43,6 +56,13 @@ export default class AppRouter extends VueRouter {
     if (promise) return promise.catch(err => err);
   }
 
+  /**
+   * 
+   * @override
+   * @param {*} location 
+   * @param {*} onComplete 
+   * @param {*} onAbort 
+   */
   replace(location, onComplete, onAbort) {
     this._replace = true;
     location = this._attachActivityQuery(location);
@@ -64,6 +84,12 @@ export default class AppRouter extends VueRouter {
     return location;
   }
 
+  /**
+   * Pop history to root.
+   * 
+   * @param {function} done
+   * @returns {void}
+   */
   popToRoot(done) {
     const delta = -window.history.length + this._startHistoryLength;
     
@@ -79,8 +105,84 @@ export default class AppRouter extends VueRouter {
     }
   }
 
+  /**
+   * History is can go back.
+   * @returns {boolean}
+   */
   canGoBack() {
     return this._routerHistory.length > 1;
+  }
+
+  /**
+   * Use the given middleware `fn`.
+   *
+   * @param {Function} fn
+   * @return {AppRouter}
+   */
+  use(fn) {
+    if (typeof fn !== 'function') {
+      throw new TypeError('router mw must be a function!');
+    }
+
+    this._middleware.push(fn);
+    return this;
+  }
+
+  /**
+   * Handle route before enter.
+   * 
+   * @param {Location} to 
+   * @param {Location} from 
+   * @param {function} next 
+   */
+  handleBeforeEnter(to, from) {
+    const fnMiddleware = this._compose(this._middleware);
+    const context = { router: this, to, from};
+    return fnMiddleware(context);
+  }
+
+  /**
+   * Compose `middleware` returning
+   * a fully valid middleware comprised
+   * of all those which are passed.
+   *
+   * @param {Array} middleware
+   * @return {Function}
+   */
+
+  _compose (middleware) {
+    // check middleware first.
+    if (!isArray(middleware)) {
+      throw new TypeError('Middleware stack must be an array!')
+    }
+
+    for (const fn of middleware) {
+      if (typeof fn !== 'function') {
+        throw new TypeError('Middleware must be composed of functions!');
+      }
+    }
+
+    /**
+     * @param {Object} context
+     * @return {Promise}
+     */
+    return function (context, next) {
+      // last called middleware #
+      let index = -1;
+      return dispatch(0);
+      function dispatch (i) {
+        if (i <= index) return Promise.reject(new Error('next() called multiple times'));
+        index = i;
+        let fn = middleware[i];
+        if (i === middleware.length) fn = next;
+        if (!fn) return Promise.resolve();
+        try {
+          return Promise.resolve(fn(context, dispatch.bind(null, i + 1)));
+        } catch (err) {
+          return Promise.reject(err);
+        }
+      }
+    }
   }
 }
 

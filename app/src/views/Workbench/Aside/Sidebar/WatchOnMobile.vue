@@ -32,8 +32,16 @@ export default {
 
   computed: {
     qrcodeValue() {
-      const { host, port } = config;
-      const protocol = platform.isElectron() ? 'http:' : window.location.protocol;
+      const { host } = config;
+      
+      const protocol = platform.isElectron() ? 
+        'http:' : 
+        window.location.protocol;
+      
+      // when dev env use location port
+      const port = process.env.NODE_ENV === 'development' ?
+        window.location.port : config.port;
+
       return `${protocol}//${host}:${port}`
     },
   }

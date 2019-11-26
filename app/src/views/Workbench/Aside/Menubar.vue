@@ -11,7 +11,7 @@
     <a
       v-if="canChangeRepos"
       class="menubar-btn"
-      title="Change Repo"
+      title="Repository"
       @click="gotoRepos"
     >
       <icon name="warehouse" />

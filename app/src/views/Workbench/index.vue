@@ -74,13 +74,11 @@ export default {
   z-index: 1040;
   background: $black;
 
-  @include transition(opacity .3s,);
+  @include transition(opacity .3s);
 }
 
 .aside-open {
   overflow-y: hidden !important; // hide body scroll
-  
-  /* fix android oveflow bug */
   width: 100%;
   height: 100%;
   position: relative; // fixed will lost `scrollTop`
@@ -93,12 +91,6 @@ export default {
     opacity: .3;
     width: 100vw;
     height: 100vh;
-
-    @include media-breakpoint-up(md) {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
   }
 }
 </style>
