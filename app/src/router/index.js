@@ -17,13 +17,13 @@ const router = new AppRouter({
 	mode: 'hash',
 	strict: process.env.NODE_ENV !== 'production',
 	scrollBehavior (to, from, savedPosition) {
-    const { name, isBack, scrollPromise } = to.meta;
+    const { name, isBack, resolver } = to.meta;
     savedPosition || (savedPosition = { x: 0, y:0 });
     
-		if (isBack && scrollPromise) {	
+		if (isBack && resolver) {	
       return new Promise((resolve) => {
         // set scroll position when data has fetched
-        scrollPromise.then(() => {
+        resolver.then(() => {
           setTimeout(() => resolve(savedPosition), 16);
         });
       });			

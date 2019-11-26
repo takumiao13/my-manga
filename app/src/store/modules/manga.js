@@ -63,12 +63,8 @@ export default {
       return statusHelper.is.pending(state);
     },
 
-    isSuccess: (state) => (immediately) => {
-      return statusHelper.is.success(state, immediately);
-    },
-
     success(state) {
-      return statusHelper.is.success(state, true);
+      return statusHelper.is.success(state);
     },
 
     empty(state) {

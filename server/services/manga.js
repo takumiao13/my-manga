@@ -50,7 +50,8 @@ async function traverse({
   const isDir = stat.isDirectory();
   
   // extra info
-  let metadata, type, fileType, cover, width, height, hasChildren = false;
+  let metadata, type, fileType, cover, width, height, 
+      mtime = stat.mtime, hasSubfolder = false;
 
   // Ignore if file is either image or file or directory type
   const extname = pathFn.extname(path).toLowerCase();
@@ -107,9 +108,9 @@ async function traverse({
           // current directory type is `MANGA` or `FILE`
           // - if directory has sub folder then consider it as `FILE`
           // - if directory has more than 10 image then consider it as `MANGA`
-          // the end we cat get `cover` and know the current dir contains sub folder or not by `hasChildren`.
+          // the end we cat get `cover` and know the current dir contains sub folder or not by `hasSubfolder`.
           
-          // TODO: user other key replace `hasChildren`
+          // TODO: user other key replace `hasSubfolder`
 
           const filepath = pathFn.resolve(baseDir, childPath);
           const [ err, stat ] = await to(fs.stat(filepath));
@@ -130,19 +131,19 @@ async function traverse({
           }
 
           // sometimes we will not push child to `children` (onlyDir or performance)
-          // so we can use `hasChildren` key to know the directory whether has children
+          // so we can use `hasSubfolder` key to know the directory whether has children
           if (
             child.isDir && 
             !isChapter(child, { parentName: name, metadata }) && 
             !isVersion(child, { parentName: name, metadata }) &&
-            !hasChildren
+            !hasSubfolder
           ) {
-            hasChildren = true;
+            hasSubfolder = true;
           }
 
           // if we get the cover and directory type 
           // skip the loop for performance
-          if (maxDepth == 0 && (cover && (hasChildren || i >= 10))) {
+          if (maxDepth == 0 && (cover && (hasSubfolder || i >= 10))) {
             break;
           }
 
@@ -161,7 +162,7 @@ async function traverse({
   if (isDir) {
     type = metadata ? 
       FileTypes.MANGA :
-      FileTypes[hasChildren ? 'FILE' : 'MANGA'];
+      FileTypes[hasSubfolder ? 'FILE' : 'MANGA'];
 
     // fix child type if parent type is `MANGA`
     if (type === FileTypes.MANGA) {
@@ -198,7 +199,11 @@ async function traverse({
   }
 
   // Merge base info and extra info
-  return { isDir, path, name, type, fileType, cover, metadata, width, height, children, hasChildren };
+  return { 
+    isDir, path, name, type, fileType, mtime, 
+    cover, metadata, width, height, 
+    children, hasSubfolder 
+  };
 }
 
 async function readMeta(dir) {

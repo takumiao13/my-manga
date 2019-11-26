@@ -86,12 +86,8 @@ export function createRequestStatus(name, type = 'STATUS') {
         return state[name] === PENDING_DEBOUNCED;
       },
 
-      success(state, immediately) {
-        if (immediately) {
-          return state[name] === SUCCESS_DEBOUNCED;
-        } else {
-          return state[name] === SUCCESS_DEBOUNCED || state[name] === PENDING;
-        }
+      success(state) {
+        return state[name] === SUCCESS_DEBOUNCED;
       },
 
       error(state) {

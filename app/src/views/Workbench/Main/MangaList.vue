@@ -296,6 +296,7 @@ export default {
   },
 
   watch: {
+    // when route change (not update)
     $route(to, from) {
       if (from.name === 'viewer') {
         this.activeChapter = this.viewerCh;
@@ -304,33 +305,40 @@ export default {
   },
 
   activated() {
-    if (this.appError || (this.$route.meta.isBack && this.inited) || this.$router._reset) return;
+    if (
+      this.appError || // error
+      this.$router._reset || // reset store
+      (this.$route.meta.isBack && this.inited) // back
+    ) {
+      return;
+    }
+
     this.sharing = false;
-    this.addressbarCollapsed = false;
     this.isManga = this.$route.query.type === 'manga';
-    this.titleShown = false;
+    this.addressbarCollapsed = false;
     this.fetchMangas(this.$route.params.path);
   },
 
   beforeRouteUpdate(to, from, next) {
-    if (this.appError || eq(to.params, from.params)) {
+    if (
+      this.appError || 
+      eq(to.params, from.params) // only change activity
+    ) {
       return next();
     }
-      
+
     const { isBack } = to.meta;
     this.sharing = false;
     this.isManga = to.query.type === 'manga';
-    this.titleShown = false;
-
     this.addressbarCollapsed = false; // always show addressbar when route update
     this._ignoreScrollEvent = true; // prevent collapse addressbar
-    to.meta.scrollPromise = this.fetchMangas(to.params.path, isBack);
-
+    to.meta.resolver = this.fetchMangas(to.params.path, isBack)
     next();
   },
 
   created() {
     this._prevScrollTop;
+    this._metaHeight;
     window.addEventListener('scroll', this.handleScroll);
   },
 
@@ -424,6 +432,13 @@ export default {
       });
     },
 
+    _shouldShowTopTitle(scrollTop) {
+      if (!this.isManga) return
+
+      const metaHeight = this.$refs.metadata.clientHeight - 16;
+      this.titleShown = metaHeight > 0 && (scrollTop >= metaHeight);
+    },
+
     // events
     handleToggleSidebar() {
       this.$store.dispatch(appTypes.TOGGLE_ASIDE);
@@ -455,21 +470,21 @@ export default {
     },
 
     handleScroll() {
+      const scrollTop = getScrollTop();
+
+      // TODO: optimize
+      // not prevent title check !!.
+      // handle mange title show or hide
+      this._shouldShowTopTitle(scrollTop);
+
       if (this._ignoreScrollEvent) {
         setTimeout(() => this._ignoreScrollEvent = false);
         return;
       }
 
-      const scrollTop = getScrollTop();
-
       // handle navs show or hide
-      if (!this.isManga) {  
+      if (!this.isManga) {
         this.toggleAddressbar(scrollTop, this._prevScrollTop);
-
-      // handle mange title show or hide
-      } else {
-        const metaH = this.$refs.metadata.clientHeight - 16;
-        this.titleShown = scrollTop >= metaH;
       }
 
       this._prevScrollTop = scrollTop;
