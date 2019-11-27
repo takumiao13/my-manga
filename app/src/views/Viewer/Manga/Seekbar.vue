@@ -53,7 +53,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import '../../assets/style/base';
+@import '../../../assets/style/base';
 
 .viewer-seekbar-tip {
   margin: 1rem auto;

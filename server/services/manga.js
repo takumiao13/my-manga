@@ -281,6 +281,7 @@ const isVersion = (child, { parentName, metadata }) => {
   const versionRE = new RegExp(`${parentName}\\s\\[(.*?)\\](\\.(mp4|pdf|zip))?$`)
   const matched = child.name.match(versionRE);
 
+  console.log(child.name, parentName);
   if (matched) {
     child.versionName = matched[1]; // add special chapter name to child
     return true;

@@ -8,7 +8,7 @@
 </template>
 
 <script>
-import ServerError from '@/views/Error/ServerError';
+import ServerError from '@/views/Error/Server';
 import { mapState } from 'vuex';
 
 export default {

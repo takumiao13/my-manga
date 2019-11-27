@@ -32,7 +32,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import '../../assets/style/base';
+@import '../../../assets/style/base';
 
 .viewer-viewport.viewer-locking {
   &::after {
@@ -123,21 +123,21 @@ export default {
 
 .viewer-left-hand {
   .viewer-viewport-left {
-    cursor: url('../../assets/right_arrow.cur'), auto;
+    cursor: url('../../../assets/right_arrow.cur'), auto;
   }
 
   .viewer-viewport-right {
-    cursor: url('../../assets/left_arrow.cur'), auto;
+    cursor: url('../../../assets/left_arrow.cur'), auto;
   }
 }
 
 .viewer-right-hand {
   .viewer-viewport-left {
-    cursor: url('../../assets/left_arrow.cur'), auto;
+    cursor: url('../../../assets/left_arrow.cur'), auto;
   }
 
   .viewer-viewport-right {
-    cursor: url('../../assets/right_arrow.cur'), auto;
+    cursor: url('../../../assets/right_arrow.cur'), auto;
   }
 }
 

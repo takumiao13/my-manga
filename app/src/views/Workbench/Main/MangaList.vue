@@ -361,36 +361,32 @@ export default {
     },
 
     readFile(item, type) {
-      const fileType = item.fileType;
+      const { dirId } = this.repo;
+      const { fileType, path } = item;
 
       if (!fileType) {
         const query = type ? { type } : null;
 
         this.$router.push({
           name: 'explorer', 
-          params:{ 
-            dirId: this.repo.dirId,
-            path: item.path,
-            query: {
-              type: 'manga'
-            }
-          },
+          params:{ dirId, path },
           query
         });
 
       // handle pdf | mp4 | zip (support later)
-      } else {
-        let href;
-        if (fileType === 'video') {
-          href = this.$service.video.makeSrc(item.path, true);
-        } else if (fileType === 'pdf') {
-          href = this.$service.pdf.makeSrc(item.path, true)
-        }
-
+      } else if (fileType === 'video') {
+        this.$router.push({
+          name: 'viewer',
+          params: { type: 'video', dirId, path },
+        });
+      } else if (fileType === 'pdf') {
+        // use browser as pdf reader
+        const href = this.$service.pdf.makeSrc(path);
         href && window.open(href, 'target', '');
       }
     },
 
+    // when chapter and gallery click.
     readManga(item, index = 0) {
       const { path } = this.$route.params;
       const { dirId } = this.repo;
@@ -424,7 +420,7 @@ export default {
 
       this.$router.push({
         name: 'viewer',
-        params: { dirId, path, ch },
+        params: { type: 'manga', dirId, path, ch },
         query: {
           // use a query from start page, prepare for history feature
           start: index + 1

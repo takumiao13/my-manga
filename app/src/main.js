@@ -25,6 +25,7 @@ import SideToolbar from '@/components/SideToolbar';
 import DataView from '@/components/DataView';
 import Addressbar from '@/components/Addressbar';
 import Dropdown from '@/components/Dropdown';
+import VideoPlayer from '@/components/VideoPlayer';
 
 // Third part components
 import VueLazyload from 'vue-lazyload';
@@ -46,6 +47,7 @@ Vue.component('side-toolbar', SideToolbar);
 Vue.component('data-view', DataView);
 Vue.component('addressbar', Addressbar);
 Vue.component('dropdown', Dropdown);
+Vue.component('video-player', VideoPlayer);
 
 Vue.directive('loading', loadingDirective);
 Vue.directive('click-out-side', clickOutSideDirective);

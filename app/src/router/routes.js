@@ -20,7 +20,7 @@ const routes = [
 
 	{
 		name: 'viewer',
-		path: '/repo/:dirId/viewer/:path/:ch?',
+		path: '/repo/:dirId/viewer/:type/:path/:ch?',
 		component: Viewer,
 		meta: {
 			themeColor: '#333'

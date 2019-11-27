@@ -8,6 +8,7 @@ import appModule, { types as appTypes } from './modules/app';
 import explorerModule from './modules/explorer';
 import mangaModule, { cacheStack as mangaCacheStack } from './modules/manga';
 import viewerModule from './modules/viewer';
+import motionModule from './modules/motion';
 import settingsModule, { 
   types as settingTypes, 
   NAMESPACE as SETTINGS_NAMESPACE,
@@ -25,7 +26,8 @@ const staticModules = {
 const dynamicModules = {
   explorer: explorerModule,
   manga: mangaModule,
-  viewer: viewerModule
+  viewer: viewerModule,
+  motion: motionModule
 };
 
 const store = new Vuex.Store({
