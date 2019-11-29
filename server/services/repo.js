@@ -2,6 +2,8 @@ const Service = require('./_base');
 const pathFn = require('path');
 const crypto = require('../helpers/crypto');
 const fs = require('../helpers/fs');
+const { CustomError} = require('../error');
+const { ERR_CODE } = require('../helpers/error-code');
 
 class RepoService extends Service {
 
@@ -23,7 +25,13 @@ class RepoService extends Service {
       dirId = this.cryptoedRepos[0].dirId; 
     }
     
-    return this.repoMap[dirId];
+    const repo = this.repoMap[dirId];
+
+    if (!repo) {
+      throw new CustomError(ERR_CODE.REPO_UNACCESSED);
+    }
+
+    return repo;
   }
   
   add(baseDir) {

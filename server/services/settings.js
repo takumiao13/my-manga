@@ -1,10 +1,8 @@
 const Service = require('./_base');
 const pathFn = require('path');
 const to = require('await-to-js').default;
-const { CustomError} = require('../error');
 const fs = require('../helpers/fs');
 const { isUndef, isDef, omit, set, get, unset, cloneDeep } = require('../helpers/utils');
-const { ERR_CODE } = require('../helpers/error-code');
 
 const FILE_NAME = 'settings.json';
 
@@ -130,7 +128,7 @@ class SettingsService extends Service {
   _getScope(scope) {
     let settings = null;
 
-    const repo = this.service.repo.get(scope);
+    
 
     // scope ['user'] has loaded when init
     if (scope === 'user') {
@@ -140,12 +138,10 @@ class SettingsService extends Service {
       settings = this._settings.repo;
 
     // scope ['<hash>'] dynamic load
-    } else if (repo) {
+    } else {
+      const repo = this.service.repo.get(scope);
       const { baseDir } = repo // get real dir from repo
       settings = this._settings[scope] || this._setPath(scope, pathFn.resolve(baseDir, FILE_NAME));
-
-    } else {
-      throw new CustomError(ERR_CODE.REPO_UNACCESSED);
     }
 
     return settings;
