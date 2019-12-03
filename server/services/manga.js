@@ -1,5 +1,6 @@
 const Service = require('./_base');
-const fs = require('../helpers/fs'); 
+const fs = require('../helpers/fs');
+const { escapeRegExp } = require('../helpers/utils'); 
 const to = require('await-to-js').default;
 const sizeOf = require('image-size');
 const pathFn = require('path');
@@ -257,7 +258,8 @@ const fixChildType = (child, options) => {
 }
 
 const isChapter = (child, { parentName, metadata }) => {
-  const chapterRE = new RegExp(`${parentName}\\s-\\s(.+)`);
+  const regstr = `${escapeRegExp(parentName)}\\s-\\s(.+)`;
+  const chapterRE = new RegExp(regstr);
   const matched = child.name.match(chapterRE);
 
   if (matched) {
@@ -278,7 +280,8 @@ const isChapter = (child, { parentName, metadata }) => {
 }
 
 const isVersion = (child, { parentName, metadata }) => {
-  const versionRE = new RegExp(`${parentName}\\s\\[(.*?)\\](\\.(mp4|pdf|zip))?$`)
+  const regstr = `${escapeRegExp(parentName)}\\s\\[(.*?)\\](\\.(mp4|pdf|zip))?$`;
+  const versionRE = new RegExp(regstr);
   const matched = child.name.match(versionRE);
 
   console.log(child.name, parentName);
