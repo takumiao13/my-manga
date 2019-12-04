@@ -56,7 +56,7 @@
     border-color: $app-border-color;
 
     .cover {
-      border: .5px solid $app-border-color;
+      //border: .5px solid $app-border-color;
 
       img,
       .cover-placeholder {
@@ -87,8 +87,7 @@
     }
 
     .area-item.active {
-      .cover,
-      .caption {
+      .cover {
         box-shadow: 0 0 0 4px $app-item-active-bg;
       }
     }
@@ -113,10 +112,9 @@
   }
 
   .manga-area {
-    .caption {
-      background: $app-primary;
-      border: .5px solid $app-border-color;
-      box-shadow: 0 1px 0px rgba($black, .1);
+    .cover {
+      box-shadow: 0 0 3px rgba($black, 0.2), 
+                  0 1px 0 rgba($black, 0.2);
     }
   }
 

@@ -65,11 +65,12 @@ export default {
   }
 
   @include media-breakpoint-up(xl) {
-    flex: 0 1 360px;
+    flex: 0 1 420px;
   }
 
   .sidebar {
     flex: 1;
+    overflow: auto;
   }
 }
 

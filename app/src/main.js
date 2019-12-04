@@ -143,7 +143,7 @@ function showApp() {
   delay(1000)
     .then(() => $loading.classList.add('fade'))
     .then(() => {
-      document.body.style.overflow = 'auto'; // allow scroll
+      document.body.style.overflow = ''; // allow scroll
       return delay(500) // transition-duration is 300s
     })
     .then(() => {

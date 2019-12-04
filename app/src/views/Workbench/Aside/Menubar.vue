@@ -88,7 +88,7 @@ export default {
 
 <style lang="scss" scoped>
 .menubar {
-  width: 48px;
+  min-width: 48px;
   background: #ddd;
   position: sticky;
   top: 0;

@@ -200,6 +200,7 @@ export default {
     width: 100% !important;
   }
 
+  // volume bar
   .vjs-volume-control .vjs-control .vjs-volume-horizontal {
     height: 3rem !important;
   }
@@ -212,6 +213,11 @@ export default {
 
   .vjs-volume-panel.vjs-volume-panel-vertical {
     width: 3rem !important;
+  }
+
+  .vjs-volume-panel .vjs-volume-control {
+    width: auto !important;
+    height: auto !important;
   }
 
   .vjs-volume-bar .vjs-volume-level {

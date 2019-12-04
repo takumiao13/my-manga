@@ -7,7 +7,11 @@ const Ratio = {
   H: 65 // old -> 70.1
 }
 
-const BOUNDING = 1;
+const Bounding = {
+  EDGE: 1,
+  MAX: (Ratio.V - 100)/2,
+  MIN: (100 - Ratio.H)/2
+};
 
 class ImageService extends Service {
 
@@ -26,7 +30,7 @@ class ImageService extends Service {
   }
   
   coverStyle({ width, height }) {
-    let ratio = (height / width) * 100;
+    let ratio = (height / width) * 100 || Ratio.V;
     let scale = false, fitW = false, fitH = false;
 
     if (isNaN(ratio)) ratio = Ratio.V;
@@ -39,40 +43,37 @@ class ImageService extends Service {
     // - > secondary max 
 
     // should adjust v-ratio to scale image
-    if (ratio > 100 || isNaN(ratio)) {
+    if (ratio > 100) {
+      
       if (
-        ratio >= Ratio.V - BOUNDING && 
-        ratio <= Ratio.V + BOUNDING
+        ratio >= Ratio.V - Bounding.EDGE && 
+        ratio <= Ratio.V + Bounding.EDGE
       ) {
         scale = true;
-      } else if (ratio < Ratio.V - BOUNDING) {
-        fitH = true;
-      } else if (ratio > Ratio.V + BOUNDING) {
+        ratio = Ratio.V;
+      } else if (ratio >= Ratio.V + Bounding.MAX) {
         fitW = true;
+        ratio = Ratio.V + Bounding.MAX;
       }
-
-      ratio = Ratio.V;
 
     // should adjust h-ratio to scale image
     } else {
       
       if (
-        ratio >= Ratio.H - BOUNDING && 
-        ratio <= Ratio.H + BOUNDING
+        ratio >= Ratio.H - Bounding.EDGE && 
+        ratio <= Ratio.H + Bounding.EDGE
       ) {
         scale = true;
-      } else if (ratio < Ratio.H - BOUNDING) {
+        ratio = Ratio.H;
+      } else if (ratio <= Ratio.H - Bounding.MIN) {
         fitH = true;
-      } else if (ratio > Ratio.H + BOUNDING) {
-        fitW = true;
+        ratio = Ratio.H - Bounding.MIN; 
       }
-
-      ratio = Ratio.H;
     }
 
     return {
       class: { scale, fitW, fitH },
-      style: { padding:'0 0 ' + ratio + '%', height: '100%' }
+      style: { padding:'0 0 ' + ratio + '%' } // height: '100%'
     }
   }
 

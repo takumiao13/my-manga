@@ -36,7 +36,7 @@ export default {
       },
 
       treeProps: {
-        key: 'name',
+        key: 'path',
         label: (item) => item._mangaGroup ? 
           `<span class="manga-group-btn">
             ${item.children.length} MANGA${item.children.length > 1 ? 'S' : ''}

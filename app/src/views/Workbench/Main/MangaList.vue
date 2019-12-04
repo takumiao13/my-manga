@@ -290,8 +290,7 @@ export default {
     },
 
     filesShow() {
-      console.log(this.type, this.files.length, this.metadata);
-      return this.type === 'FILE' && this.files.length && !this.metadata;
+      return this.files.length;
     }
   },
 
@@ -594,16 +593,6 @@ export default {
   .area-item {
     padding: .5rem;
     margin-bottom: 3rem;
-
-    &:hover {
-      z-index: 2;
-
-      .caption {
-        min-height: 2.8625rem;
-        height: auto;
-        overflow: visible;
-      }
-    }
   }
 
   .cover {
@@ -615,7 +604,6 @@ export default {
     overflow: hidden;
     
     img {
-      visibility: hidden;
       position: absolute;
       width: 100%;
       height: 100%;
@@ -625,7 +613,7 @@ export default {
     img[lazy="loaded"] {
       visibility: visible;
       background: none;
-      height: auto;
+      //height: auto;
       border: 0;
     }
 
@@ -645,7 +633,8 @@ export default {
     right: .5rem;
     position: absolute;
     overflow: hidden;
-    height: 2.8625rem;
+    height: 46px;
+    line-height: 1.6;
     padding: .2rem .4rem;
     display: block;
     font-size: 13px;
@@ -657,6 +646,7 @@ export default {
 .manga-area {
   > .row {
     padding: 0 .5rem;
+    align-items: flex-end;
 
     @include media-breakpoint-up(md) {
       margin-left: -.5rem;
@@ -671,7 +661,11 @@ export default {
   
   .cover {
     cursor: pointer;
-    border-radius: .5rem .5rem 0 0;
+    border-radius: .25rem;
+
+    img {
+      visibility: hidden;
+    }
 
     // scale img to fill cover
     &.scale img[lazy="loaded"] {
@@ -699,7 +693,6 @@ export default {
   }
 
   .caption {
-    border-radius: 0 0 .5rem .5rem;
     font-weight: 600;
     text-align: left;
   }
@@ -727,6 +720,7 @@ export default {
 
   .caption {
     top: 100%;
+    text-align: center;
   }
 }
 
@@ -809,7 +803,7 @@ export default {
 
   .metadata-title {
     margin: 1rem 0 .5rem 0;
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     text-align: center;
     font-weight: 100;
     text-decoration: none;
