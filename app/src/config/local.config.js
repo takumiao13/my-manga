@@ -1,9 +1,9 @@
 const env = process.env;
-const hostname = window.location.hostname;
+const { hostname, protocol } = window.location;
 const port = env.PORT;
 
 export default {
   host: hostname,
   port,
-  baseURL: `http://${hostname}:${port}/`,
+  baseURL: `${protocol}//${hostname}:${port}/`,
 }

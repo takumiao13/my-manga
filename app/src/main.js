@@ -1,4 +1,5 @@
 import './assets/style/index.scss';
+import './registerServiceWorker'
 
 import Vue from 'vue'
 import App from './App.vue'
@@ -12,6 +13,7 @@ import EventEmitter from '@/helpers/eventemitter';
 
 // Store & Router (router is depend on store, so must after it)
 import store, { resetStore, loadSettingsState } from '@/store';
+import { types as appTypes } from '@/store/modules/app';
 import { types as settingTypes } from '@/store/modules/settings';
 import router, { resetHistory } from '@/router';
 
@@ -37,6 +39,8 @@ import clickOutSideDirective from '@/directives/click-out-side';
 
 // Services
 import $Service from '@/services';
+
+
 
 Vue.component('spinner', Spinner);
 Vue.component('navbar', Navbar);
@@ -84,6 +88,15 @@ function bootstrapApp() {
     window.onload = () => ipc.send('win-load');
   }
 
+  // Add app to Home Screen
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    store.dispatch(appTypes.PWA_INSTALL_PROMPT, e);
+    console.log(appTypes.PWA_INSTALL_PROMPT, 'install prompt called');
+  });
+
   EventEmitter.$on('store.reset', (repo) => {
     const { name, dirId } = repo;
     
@@ -98,9 +111,9 @@ function bootstrapApp() {
 
     // reset store
     resetHistory(() => {
-      resetStore();     
+      resetStore();
       router.push({ name: 'explorer', params: { dirId }});
-      showApp();
+      showSplashScreen();
     });
   });
 
@@ -110,10 +123,10 @@ function bootstrapApp() {
     store.dispatch(settingTypes.repo.INIT)  
   ])
     .then(checkCurrentRepo)
-    .then(render)
+    .then(renderApp)
     .catch(error => {
       window.localStorage.removeItem(REPO_KEY);
-      render({ error });
+      renderApp({ error });
       console.error('setting error', error);
     });
 }
@@ -129,8 +142,14 @@ function checkCurrentRepo() {
   }
 }
 
-function render({ error } = {}) {
-  showApp();
+function renderApp({ error } = {}) {
+  // not show custom splash screen when lanuched form pwa
+  if (platform.isLaunchedFromHS()) {
+    $loading.style.display = 'none';
+  } else {
+    showSplashScreen();
+  }
+
   new Vue({
     data: { error },
     router,
@@ -139,7 +158,7 @@ function render({ error } = {}) {
   }).$mount('#app');
 }
 
-function showApp() {
+function showSplashScreen() {
   delay(1000)
     .then(() => $loading.classList.add('fade'))
     .then(() => {

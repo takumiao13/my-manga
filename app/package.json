@@ -14,6 +14,7 @@
     "colorthief": "^2.3.0",
     "core-js": "^2.6.5",
     "lodash": "^4.17.11",
+    "register-service-worker": "^1.6.2",
     "screenfull": "^5.0.0",
     "video.js": "^7.6.5",
     "videojs-hotkeys": "^0.2.25",
@@ -26,6 +27,7 @@
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.8.0",
     "@vue/cli-plugin-eslint": "^3.8.0",
+    "@vue/cli-plugin-pwa": "^4.1.1",
     "@vue/cli-service": "^3.8.0",
     "babel-eslint": "^10.0.1",
     "babel-plugin-transform-remove-console": "^6.9.4",

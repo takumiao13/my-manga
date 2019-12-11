@@ -11,6 +11,7 @@ const TOGGLE_SIDEBAR  = 'TOGGLE_SIDEBAR';
 const TOGGLE_REPO     = 'TOGGLE_REPO';
 const TOGGLE_ACTIVITY = 'TOGGLE_ACTIVITY';
 const ERROR           = 'ERROR';
+const PWA_INSTALL_PROMPT = 'PWA_INSTALL_PROMPT';
 
 const ClassNames = {
   ASIDE_OPEN: 'aside-open',
@@ -18,7 +19,8 @@ const ClassNames = {
 };
 
 export const types = createTypesWithNamespace([
-  TOGGLE_ASIDE, TOGGLE_SIDEBAR, TOGGLE_REPO, TOGGLE_ACTIVITY, ERROR
+  TOGGLE_ASIDE, TOGGLE_SIDEBAR, TOGGLE_REPO, TOGGLE_ACTIVITY, 
+  ERROR, PWA_INSTALL_PROMPT
 ], NAMESPACE);
 
 export default {
@@ -30,6 +32,7 @@ export default {
     repoId: '',
     activity: '', // activity tab
     error: null,
+    pwaInstallPrompt: null
   },
 
   getters: {
@@ -59,6 +62,10 @@ export default {
 
     [ERROR]({ commit }, payload) {
       commit(ERROR, payload);
+    },
+
+    [PWA_INSTALL_PROMPT]({ commit }, payload) {
+      commit(PWA_INSTALL_PROMPT, payload);
     }
   },
 
@@ -102,6 +109,11 @@ export default {
 
     [ERROR](state, payload) {
       state.error = payload;
+    },
+
+    [PWA_INSTALL_PROMPT](state, payload) {
+      console.log(payload);
+      state.pwaInstallPrompt = payload;
     }
   }
 };

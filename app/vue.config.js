@@ -12,12 +12,12 @@ module.exports = {
     '/',
   chainWebpack: config => {
     const sharedPath = pathFn.resolve(__dirname, '../shared');
-
     config.plugin('define').use(DefinePlugin, [
       {
         'process.env': { 
           PORT: 8000, // dev server port
           NODE_NEV: JSON.stringify(env.NODE_ENV),
+          BASE_URL: JSON.stringify('/'),
           IS_ELECTRON: JSON.stringify(env.IS_ELECTRON)
         }
       }
@@ -47,5 +47,12 @@ module.exports = {
       .options();
 
     const jsRule = config.module.rule('js');
+  },
+  pwa: {
+    name: 'My Manga',
+    themeColor: '#fff',
+    msTileColor: '#000000',
+    appleMobileWebAppCapable: 'yes',
+    appleMobileWebAppStatusBarStyle: 'black',
   }
 }

@@ -9,6 +9,7 @@
 
 <script>
 import ServerError from '@/views/Error/Server';
+import { byId } from '@/helpers/dom';
 import { mapState } from 'vuex';
 
 export default {

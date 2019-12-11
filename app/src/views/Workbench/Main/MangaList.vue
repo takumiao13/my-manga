@@ -110,7 +110,7 @@
                 class="area-item"
                 :class="{ 
                   active: item.path === activePath, 
-                  'col-6 col-sm-3 col-xl-2': !item.cover || (item.height > item.width),
+                  'col-6 col-sm-3 col-xl-2': !item.cover || !item.width || (item.height > item.width),
                   'col-12 col-sm-6 col-xl-4': item.height <= item.width 
                 }"
                 v-for="item in mangas"
