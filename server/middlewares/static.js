@@ -2,20 +2,19 @@ const mount = require('koa-mount');
 const static = require('koa-static');
 const pathFn = require('path');
 
-const staticDist = ({ config, options }) => {
-  const { isElectron } = options;
-  const { context } = config.appinfo;
+const staticDist = ({ options }) => {
+  const { isElectron, appinfo } = options;
   const assetsPath = isElectron ? 'electron_dist/assets' : 'dist';
 
-  return static(pathFn.resolve(context, assetsPath))
+  return static(pathFn.resolve(appinfo.context, assetsPath))
 }
 
-const staticAssets = ({ config, options }) => {
+const staticAssets = ({ options }) => {
   const maxage = 30 * 24 * 60 * 60;
 
   return mount(
     '/assets', 
-    staticDist({ config, options }), 
+    staticDist({ options }), 
     { maxage }
   )
 }

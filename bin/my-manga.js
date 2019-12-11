@@ -7,12 +7,12 @@ program
   .version(require('../package').version)
   .usage('<command> [options]');
 
-program
-  .command('serve')
-  .description('start server for development')
-  .option('-d, --dir <dir>', 'specify dir')
-  .option('-s, --settings <settings>', 'settings file')
-  .action((cmd) => require('../lib/serve')(cmd));
+// program
+//   .command('serve')
+//   .description('start server for development')
+//   .option('-d, --dir <dir>', 'specify dir')
+//   .option('-s, --settings <settings>', 'settings file')
+//   .action((cmd) => require('../lib/serve')(cmd));
 
 program
   .command('start')

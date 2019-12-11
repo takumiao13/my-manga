@@ -3,7 +3,7 @@ const pathFn = require('path');
 const to = require('await-to-js').default;
 const { CustomError} = require('../error');
 const fs = require('../helpers/fs');
-const { isUndef, isDef, set, get, unset, cloneDeep } = require('../helpers/utils');
+const { isUndef, isDef, omit, set, get, unset, cloneDeep } = require('../helpers/utils');
 const { ERR_CODE } = require('../helpers/error-code');
 
 const FILE_NAME = 'settings.json';
@@ -160,7 +160,8 @@ class SettingsService extends Service {
         value.repos = this.service.repo.list();
       } 
 
-      return value;
+      // TODO: Optimize Later
+      return omit(value, 'server', 'ignorePath');
 
     } else if (key === 'repos') {
       return this.service.repo.list();

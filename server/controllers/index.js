@@ -5,9 +5,8 @@ class IndexController extends Controller {
 
   async render(ctx) {
     const { app } = this;
-    const { isElectron } = app.options;
-    const { context } = app.config.appinfo; // project dir
-    await app.send(ctx, `${isElectron ? 'electron_' : '' }dist/index.html`, { root: context });    
+    const { isElectron, appinfo } = app.options;
+    await app.send(ctx, `${isElectron ? 'electron_' : '' }dist/index.html`, { root: appinfo.context });    
   }
 
 }
