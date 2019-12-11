@@ -1,6 +1,6 @@
 {
   "name": "my-manga",
-  "version": "0.8.2",
+  "version": "0.10.0-0",
   "description": "view your local comics",
   "scripts": {
     "serve": "cross-env NODE_ENV=development ./node_modules/.bin/nodemon ./bin/my-manga.js start"
