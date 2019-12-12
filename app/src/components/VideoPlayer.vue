@@ -61,11 +61,10 @@ export default {
             });
 
             this.on('useractive', function(event) {
-              console.log('active', event);
+              self.$emit('active');
             });
 
             this.on('userinactive', function(event) {
-              console.log('inactive', event);
               self.$emit('inactive');
             })
         });

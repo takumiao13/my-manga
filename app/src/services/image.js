@@ -77,7 +77,9 @@ class ImageService extends Service {
     }
   }
 
-  style({ width, height }, maxRatio = 240) {
+  // when thumb should use maxRatio to prevent size to long
+  // when in viewer must no maxRation to show origin size
+  style({ width, height }, maxRatio) {
     let ratio = (height / width) * 100;
 
     if (maxRatio) {

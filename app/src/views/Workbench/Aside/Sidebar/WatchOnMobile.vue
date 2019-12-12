@@ -15,7 +15,7 @@
 
       <hr/>
 
-      <div class="a2hs" v-show="pwaInstallPrompt || true">
+      <div class="a2hs" v-show="pwaInstallPrompt">
         <img class="a2hs-logo my-3" src="@/assets/logo.png" />
 
         <button type="button"

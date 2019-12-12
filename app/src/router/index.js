@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import routes from './routes';
 import AppRouter from './app-router';
+import { eq } from '@/helpers/utils';
 
 // Middleware
 import titleMw from './middleware/title';
@@ -18,8 +19,11 @@ const router = new AppRouter({
 	strict: process.env.NODE_ENV !== 'production',
 	scrollBehavior (to, from, savedPosition) {
     const { name, isBack, resolver } = to.meta;
-    savedPosition || (savedPosition = { x: 0, y:0 });
     
+    if (eq(to.params, from.params)) return null;
+
+    savedPosition || (savedPosition = { x: 0, y:0 });
+
 		if (isBack && resolver) {	
       return new Promise((resolve) => {
         // set scroll position when data has fetched
@@ -28,7 +32,7 @@ const router = new AppRouter({
         });
       });			
 		} else {
-			return name !== 'viewer' && savedPosition;
+      return name !== 'viewer' && savedPosition;
 		}
   }
 });

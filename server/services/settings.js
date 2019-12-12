@@ -161,7 +161,7 @@ class SettingsService extends Service {
       } 
 
       // TODO: Optimize Later
-      return omit(value, 'server', 'ignorePath');
+      return omit(value, 'server');
 
     } else if (key === 'repos') {
       return this.service.repo.list();

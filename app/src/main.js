@@ -74,9 +74,19 @@ const $loading = byId('app-loading');
 const $message = byId('app-message');
 const REPO_KEY = '_REPO';
 
+
+
 bootstrapApp();
 
 function bootstrapApp() {
+  let hideSplashScreen;
+  // not show custom splash screen when lanuched form pwa
+  if (platform.isLaunchedFromHS()) {
+    $loading.style.display = 'none';
+    document.body.style.overflow = '';
+  } else {
+    hideSplashScreen = showSplashScreen();
+  }
 
   if (platform.isElectron()) {
     const ipc = window.require('electron').ipcRenderer;
@@ -113,7 +123,11 @@ function bootstrapApp() {
     resetHistory(() => {
       resetStore();
       router.push({ name: 'explorer', params: { dirId }});
-      showSplashScreen();
+      // delay 1000 ms wait fetch data to render view 
+      delay(1000).then(() => {
+        const hide = showSplashScreen();
+        hide(); // hide self
+      })
     });
   });
 
@@ -123,10 +137,15 @@ function bootstrapApp() {
     store.dispatch(settingTypes.repo.INIT)  
   ])
     .then(checkCurrentRepo)
-    .then(renderApp)
+    .then(() => {
+      renderApp();
+      // wait for data fetch
+      delay(1000).then(hideSplashScreen);
+    })
     .catch(error => {
       window.localStorage.removeItem(REPO_KEY);
       renderApp({ error });
+      hideSplashScreen();
       console.error('setting error', error);
     });
 }
@@ -143,13 +162,6 @@ function checkCurrentRepo() {
 }
 
 function renderApp({ error } = {}) {
-  // not show custom splash screen when lanuched form pwa
-  if (platform.isLaunchedFromHS()) {
-    $loading.style.display = 'none';
-  } else {
-    showSplashScreen();
-  }
-
   new Vue({
     data: { error },
     router,
@@ -159,13 +171,16 @@ function renderApp({ error } = {}) {
 }
 
 function showSplashScreen() {
-  delay(1000)
-    .then(() => $loading.classList.add('fade'))
-    .then(() => {
-      document.body.style.overflow = ''; // allow scroll
-      return delay(500) // transition-duration is 300s
-    })
-    .then(() => {
-      $loading.style.display = 'none';
-    }); 
+  $loading.classList.add('fade')
+ 
+  return function hide() {
+    Promise.resolve()
+      .then(() => {
+        document.body.style.overflow = ''; // allow scroll
+        return delay(500) // transition-duration is 300s
+      })
+      .then(() => {
+        $loading.style.display = 'none';
+      });
+  }
 }

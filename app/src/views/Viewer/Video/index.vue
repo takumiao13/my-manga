@@ -11,6 +11,7 @@
           :options="options"
           @play="handlePlay"
           @pause="handlePause"
+          @active="handleActive"
           @inactive="handleInactive"
         />
       </div>
@@ -29,6 +30,7 @@ export default {
   data() {
     return {
       inited: false,
+      paused: true,
       locking: true,
       isFullscreen: false
     }
@@ -47,7 +49,7 @@ export default {
         autoplay: false,
         preload: 'auto',
         fluid: true,
-        playbackRates: [0.5, 1, 1.5, 2],
+        //playbackRates: [0.5, 1, 1.5, 2],
         controlBar: {
           fullscreenToggle: false,
           pictureInPictureToggle: false
@@ -94,15 +96,22 @@ export default {
     },
 
     handlePlay() {
-      console.log('play');
+      this.paused = false;
     },
 
     handlePause() {
+      this.paused = true;
+      this.locking = true;
+    },
+
+    handleActive() {
       this.locking = true;
     },
 
     handleInactive() {
-      this.locking = false;
+      if (!this.paused) {
+        this.locking = false;
+      }
     }
   },
 
@@ -208,7 +217,16 @@ export default {
   .vjs-volume-bar {
     margin: 0 !important;
     top: 50% !important;
-    margin-top: -0.3em !important;
+    margin-top: -0.15em !important;
+  }
+
+  .vjs-slider-horizontal .vjs-volume-level:before {
+    top: -0.4em;
+    right: -0.5em;
+  }
+
+  .vjs-volume-panel {
+    width: 10em !important;
   }
 
   .vjs-volume-panel.vjs-volume-panel-vertical {
@@ -218,6 +236,7 @@ export default {
   .vjs-volume-panel .vjs-volume-control {
     width: auto !important;
     height: auto !important;
+    opacity: 1 !important;
   }
 
   .vjs-volume-bar .vjs-volume-level {

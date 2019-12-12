@@ -167,7 +167,7 @@
                 :key="item.path">
 
                 <div class="cover"
-                  :style="$service.image.style(item)"
+                  :style="$service.image.style(item, 240)"
                   @click="readManga(item, index)">
                   <img v-lazy="$service.image.makeSrc(item.path)" />
                 </div>
@@ -613,7 +613,7 @@ export default {
     img[lazy="loaded"] {
       visibility: visible;
       background: none;
-      //height: auto;
+      height: auto; // when loaded use img origin height
       border: 0;
     }
 
