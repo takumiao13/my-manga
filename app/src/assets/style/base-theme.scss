@@ -70,6 +70,31 @@
     }
   }
 
+  .folder-area > .row {
+    .area-item-inner {
+      background: $app-light-bg;
+      box-shadow: 0 0 2px rgba($black, 0.2), 
+                  0 1px 0 rgba($black, 0.2);
+    }
+
+    .area-item:hover {
+      .area-item-inner {
+        filter: brightness(80%);
+      }
+
+      .caption {
+        color: $app-main;
+      }
+    }
+
+    .area-item.active {
+      .area-item-inner {
+        background: $app-light-bg;
+        box-shadow: 0 0 0 4px $app-lighter-bg;
+      }  
+    }
+  }
+
   .manga-area > .row {
     .area-item:hover {
     
@@ -122,8 +147,7 @@
     }
   }
 
-  .folder-area .list-group,
-  .chapter-area .list-group {
+  .list-group {
     .list-group-item {
       &.active {
         color: $app-color;

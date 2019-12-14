@@ -64,6 +64,10 @@ export default {
     //border-right: 1px solid rgba(0, 0, 0, .1);  
   }
 
+  @include media-breakpoint-up(md) {
+    flex: 0 1 360px;
+  }
+
   @include media-breakpoint-up(xl) {
     flex: 0 1 420px;
   }

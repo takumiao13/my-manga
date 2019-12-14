@@ -1,6 +1,4 @@
-$theme-colors: (
-  "primary": #dc143c
-);
+$primary: #dc143c;
 
 @import "../../../node_modules/bootstrap/scss/bootstrap.scss";
 @import "./simple-slider.scss";

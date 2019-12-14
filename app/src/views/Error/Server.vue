@@ -12,7 +12,7 @@
       <p class="error-code">Error Code: {{ error_.code }}</p>
 
       <p>
-        <button class="btn btn-primary" @click="handleBackHome">BACK HOME</button>
+        <button class="btn btn-outline-secondary" @click="handleBackHome">BACK HOME</button>
       </p>
     </div>
   </div>

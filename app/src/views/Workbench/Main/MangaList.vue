@@ -19,7 +19,7 @@
     </div>
     
     <data-view 
-      class="main-explorer-container container" 
+      class="main-explorer-container" 
       :loading="pending"
       :empty="empty"
       :error="error"
@@ -84,55 +84,40 @@
           </div>
           <!-- / VERSION AREA -->
 
-          <!-- FILE AREA -->
-          <div class="folder-area mb-4" v-show="filesShow">
-            <p class="area-header">FILES - {{ files.length }} items</p>
-            <div class="list-group">
-              <a 
-                class="list-group-item list-group-item-action folder-item text-truncate"
-                :class="{ active: item.path === activePath }"
-                v-for="item in files" 
-                :key="item.path"
-                @click="readFile(item)"                 
-              >
-                <icon name="folder" />
-                &nbsp; {{ item.name }} 
-              </a>
-            </div>
-          </div>
-          <!-- / FILE AREA -->
+          <!-- FILE GROUP -->
+          <FileGroup
+            v-show="filesShow"
+            :view-mode="viewMode.file"
+            :list="files"
+            @viewModeChange="(mode) => viewMode.file = mode"
+          >
+            <FileItem 
+              v-for="item in files"
+              :key="item.path"
+              :active-path="activePath"
+              :view-mode="viewMode.file"
+              :item="item"
+              @click.native="readFile(item)"
+            />
+          </FileGroup>
+          <!-- / FILE GROUP -->
 
-          <!-- MANGA AREA -->
-          <div class="manga-area mb-4" v-show="mangas.length">
-            <p class="area-header">MANGA - {{ mangas.length }} items</p>
-            <div class="row">
-              <div 
-                class="area-item"
-                :class="{ 
-                  active: item.path === activePath, 
-                  'col-6 col-sm-3 col-xl-2': !item.cover || !item.width || (item.height > item.width),
-                  'col-12 col-sm-6 col-xl-4': item.height <= item.width 
-                }"
-                v-for="item in mangas"
-                :key="item.path"
-              >
-
-                <a 
-                  class="cover"
-                  v-bind="$service.image.coverStyle(item)"
-                  @click="readFile(item, 'manga')"
-                >
-                  <div class="cover-placeholder">
-                    <icon :name="`file-${item.fileType || 'image'}`" size="64" />
-                  </div>
-                  <img v-if="item.cover" v-lazy="$service.image.makeSrc(item.cover)" />
-                </a>
-
-                <div class="caption">{{ item.name }}</div>
-              </div>
-            </div>
-          </div>
-          <!-- / MANGA AREA -->
+          <!-- MANGA GROUP -->
+          <MangaGroup
+            :view-mode="viewMode.manga"
+            :list="mangas"
+            @viewModeChange="(mode) => viewMode.manga = mode"
+          >
+            <MangaItem 
+              v-for="item in mangas"
+              :key="item.path"
+              :active-path="activePath"
+              :view-mode="viewMode.manga"
+              :item="item"
+              @click.native="readFile(item, 'manga')"
+            />
+          </MangaGroup>
+          <!-- / MANGA GROUP -->
           
           <!-- CHAPTER AREA -->
           <div class="chapter-area mb-4" v-show="chapters.length">
@@ -162,7 +147,7 @@
           <div class="gallery-area mb-4" v-show="images.length">
             <p class="area-header">GALLERY - {{ images.length }} pages</p>
             <div class="row">
-              <div class="col-6 col-sm-3 col-xl-2 area-item" 
+              <div class="col-4 col-sm-3 col-xl-2 area-item" 
                 v-for="(item, index) in images" 
                 :key="item.path">
 
@@ -195,16 +180,34 @@ import { types as viewerTypes } from '@/store/modules/viewer';
 import { mapState, mapGetters } from 'vuex';
 import animateScrollTo from 'animate-scroll-to.js';
 
+// Components
+import FileGroup from './FileGroup';
+import FileItem from './FileItem';
+
+import MangaGroup from './MangaGroup';
+import MangaItem from './MangaItem';
+
 const PATH_SEP = '/';
 
 export default {
+  components: {
+    FileGroup,
+    FileItem,
+    MangaGroup,
+    MangaItem
+  },
+
   data() {
     return {
       activeChapter: '',
       addressbarCollapsed: false,
       titleShown: false,
       isManga: false,
-      sharing: false
+      sharing: false,
+      viewMode: {
+        file: 'grid',
+        manga: 'grid'
+      }
     }
   },
 
@@ -536,18 +539,32 @@ export default {
   min-height: calc(100vh - 5rem);
   padding-left: 0;
   padding-right: 0;
+
+  @include media-breakpoint-up(xl) {
+    max-width: 1140px;
+    margin-right: auto;
+    margin-left: auto;
+  }
 }
 
 .area-header {
   margin: .5rem 0;
   font-size: 80%;
+
+  .actions {
+    .svg-icon {
+      margin-left: .5rem;
+      cursor: pointer;
+    }
+  }
 }
 
 
 // Area
 // ==
 .folder-area .list-group,
-.chapter-area .list-group {
+.chapter-area .list-group,
+.manga-area .list-group {
   margin-left: -15px;
   margin-right: -15px;
   
@@ -588,9 +605,11 @@ export default {
   }
 }
 
+.folder-area,
 .manga-area,
 .gallery-area {
   .area-item {
+    cursor: pointer;
     padding: .5rem;
     margin-bottom: 3rem;
   }
@@ -633,13 +652,50 @@ export default {
     right: .5rem;
     position: absolute;
     overflow: hidden;
-    height: 46px;
+    max-height: 46px;
     line-height: 1.6;
     padding: .2rem .4rem;
     display: block;
     font-size: 13px;
     word-wrap: break-word;
-    word-break:break-all;
+    word-break: break-all;
+  }
+}
+
+.folder-area {
+  .row {
+    padding: 0 .5rem;
+
+    @include media-breakpoint-up(md) {
+      margin-left: -.5rem;
+      margin-right: -.5rem;
+      padding: 0;
+    }
+  }
+
+  .area-item {
+    // 1/8
+    @include media-breakpoint-up(xl) {
+      flex: 0 0 12.5%;
+      max-width: 12.5%;
+    }
+  }
+
+  .area-item-inner {
+    display: block;
+    position: relative;
+    border-radius: .25rem;
+    padding: 0px 0px 100%;
+
+    > div {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
   }
 }
 
@@ -803,7 +859,7 @@ export default {
 
   .metadata-title {
     margin: 1rem 0 .5rem 0;
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     text-align: center;
     font-weight: 100;
     text-decoration: none;
@@ -813,7 +869,7 @@ export default {
     }
 
     @include media-breakpoint-up(md) {
-      font-size: 2rem;
+      font-size: 1.6rem;
     }
   }
 

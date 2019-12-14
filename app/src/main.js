@@ -1,8 +1,8 @@
 import './assets/style/index.scss';
-import './registerServiceWorker'
+import './registerServiceWorker';
 
-import Vue from 'vue'
-import App from './App.vue'
+import Vue from 'vue';
+import App from './App.vue';
 import config from '@/config';
 
 // Helpers

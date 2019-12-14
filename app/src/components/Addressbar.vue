@@ -177,6 +177,12 @@ export default {
   &:last-child {
     padding-right: .25rem;
   }
+
+  &:first-child {
+    .address-link {
+      padding-left: 1rem;
+    }
+  }
 }
 
 .address-link {

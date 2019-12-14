@@ -1,12 +1,12 @@
 <template>
   <div id="workbench">
     <div class="container-fluid">
-      <div class="row flex-xl-nowrap">
+      <div class="row flex-nowrap">
         <!-- Aside Part -->
-        <Aside class="col-12 col-md-3 col-xl-4" />
+        <Aside class="col-12" />
         
         <!-- Main Part -->
-        <div id="main" class="col-12 col-md-9 col-xl-8">
+        <div id="main" class="col-12">
           <router-view />
         </div>
 
@@ -54,11 +54,11 @@ export default {
 @import '../../assets/style/base';
 
 #main {
-  @include media-breakpoint-up(xl) {
+  //@include media-breakpoint-up(xl) {
     flex: 0 1 100%;
     max-width: 100%;
     min-width: 0; // fix `white-space: nowrap` breaks flexbox layout when use `text-truncate`
-  }
+  //}
 
   .topbar {
     margin-left: -15px;
