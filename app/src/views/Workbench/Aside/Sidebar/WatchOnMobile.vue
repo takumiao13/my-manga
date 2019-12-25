@@ -4,7 +4,7 @@
       <navbar :title="title" />
     </div>
     <div>
-      <div class="qrcode-wrapper my-3">
+      <div class="qrcode-wrapper mb-3 mt-5">
         <qriously class="qrcode" :value="qrcodeValue" :size="140" />
       </div>
 

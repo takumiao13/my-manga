@@ -52,7 +52,7 @@ export default class AppRouter extends VueRouter {
   push(location, onComplete, onAbort) {
     this._push = true;
     location = this._attachActivityQuery(location);
-    const promise = super.push(location, onComplete, onAbort);	
+    const promise = super.push(location, onComplete, onAbort);
     if (promise) return promise.catch(err => err);
   }
 
@@ -66,7 +66,7 @@ export default class AppRouter extends VueRouter {
   replace(location, onComplete, onAbort) {
     this._replace = true;
     location = this._attachActivityQuery(location);
-    const promise = super.replace(location, onComplete, onAbort);	
+    const promise = super.replace(location, onComplete, onAbort);
     if (promise) return promise.catch(err => err);
   }
 

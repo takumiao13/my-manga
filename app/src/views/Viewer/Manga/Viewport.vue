@@ -1,7 +1,10 @@
 <template>
   <div class="viewer-container">
     <div class="viewer-viewport-left" @click.stop="handleLeft"/>
-    <div :class="['viewer-viewport', { 'viewer-locking': shouldLock() }]">
+    <div 
+      :class="['viewer-viewport', { 'viewer-locking': shouldLock() }]"
+      @click.stop="$emit('click')"
+    >
       <slot /> 
     </div>
     <div class="viewer-viewport-right" @click.stop="handleRight" />
@@ -110,7 +113,7 @@ export default {
   position: fixed;
   top: 3rem;
   bottom: 3rem;
-  z-index: 1;
+  z-index: 3; // over viewer-viewport
 }
 
 .viewer-viewport-left {

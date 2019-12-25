@@ -112,9 +112,10 @@ function bootstrapApp() {
     
     // style
     document.body.style.overflow = 'hidden';
-    $message.innerHTML = '<p>Change Repository</p> <strong>' + name + '</strong>';
     $loading.classList.remove('fade');
     $loading.style.display = '';
+    $message.innerHTML = '<p>Change Repository</p> <strong>' + name + '</strong>';
+    
     
     // store repo key
     window.localStorage.setItem(REPO_KEY, dirId);
@@ -171,11 +172,13 @@ function renderApp({ error } = {}) {
 }
 
 function showSplashScreen() {
-  $loading.classList.add('fade')
- 
+  document.body.style.overflow = 'hidden';
+  $loading.style.display = '';
+
   return function hide() {
     Promise.resolve()
       .then(() => {
+        $loading.classList.add('fade');
         document.body.style.overflow = ''; // allow scroll
         return delay(500) // transition-duration is 300s
       })

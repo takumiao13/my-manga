@@ -277,6 +277,8 @@ export default {
   font-size: 110%;
   text-align: center;
   cursor: pointer;
+  position: relative;
+  z-index: 3; // over `viewer-viewport`
 
   &:hover {
     color: #fff;

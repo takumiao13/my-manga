@@ -1,6 +1,6 @@
 <template>
-  <MangaViewer v-if="type === 'manga'" />
-  <videoViewer v-else-if="type === 'video'" />
+  <MangaViewer ref="viewer" v-if="type === 'manga'" />
+  <VideoViewer ref="viewer" v-else-if="type === 'video'" />
 </template>
 
 <script>
@@ -17,6 +17,24 @@ export default {
     return {
       type: this.$route.params.type || 'manga'
     }
+  },
+
+  beforeRouteLeave(to, from, next) {
+    this.$refs.viewer.$emit('leave');
+    next();
+  },
+
+  beforeRouteUpdate(to, from, next) {
+    // trigger action to update store
+    // then enter the view.
+    this.$refs.viewer.$emit('update', to);
+    next();
+  },
+
+  mounted() {
+    this.$nextTick(() => {
+      this.$refs.viewer.$emit('update', this.$route);
+    });
   }
 }
 </script>

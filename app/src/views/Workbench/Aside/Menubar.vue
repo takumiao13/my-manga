@@ -9,15 +9,6 @@
     </a>
 
     <a
-      v-if="canChangeRepos"
-      class="menubar-btn"
-      title="Repository"
-      @click="gotoRepos"
-    >
-      <icon name="warehouse" />
-    </a>
-
-    <a
       title="Explorer"
       :class="['menubar-btn', { active: isActive('explorer') }]" 
       @click="toggleActivity('explorer')"
@@ -31,6 +22,15 @@
       @click="toggleActivity('mobile')"
     >
       <icon name="mobile" />
+    </a>
+
+    <a
+      v-if="canChangeRepos"
+      class="menubar-btn bottom"
+      title="Repository"
+      @click="gotoRepos"
+    >
+      <icon name="warehouse" />
     </a>
 
     <!-- support later

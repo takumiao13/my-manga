@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex';
+import { mapState } from 'vuex';
 import { types } from '@/store/modules/motion';
 
 import screenfull from 'screenfull';
@@ -115,20 +115,22 @@ export default {
     }
   },
 
-  beforeRouteLeave (to, from, next) {
-    setTimeout(() => screenfull.exit());
-    next();
-  },
-
   mounted() {
-    if (!this.appError) {
-      const { dirId, path } = this.$route.params;
+    if (this.appError) return
+    
+    this.$on('leave', () => {
+      setTimeout(() => screenfull.exit());
+    });
+
+    this.$on('update', (route) => {
+      const { dirId, path } = route.params;
       this.$store.dispatch(types.VIEW, { dirId, path })
         .then(() => {
           // TODO: tmp use inited to support async init videojs
           this.inited = true;
-        })
-    }
+        });
+    });
+    
   }
 }
 </script>

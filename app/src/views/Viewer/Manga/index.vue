@@ -1,5 +1,6 @@
 <template>
   <div id="viewer" :class="`viewer-${settings.handMode}-hand`">
+    <!-- TOPBAR -->
     <div
       :class="[
         'topbar viewer-topbar fixed-top',
@@ -20,12 +21,14 @@
       class="viewer-topbar-placeholder" 
       @mouseenter="locking = true"
     />
+    <!-- /TOPBAR -->
 
+    <!-- VIEWPORT -->
     <viewport
       :hand="settings.handMode"
       :locking="locking"
       :autoScrolling="autoScrollToggle"
-      @click.native="lockToggle()"
+      @click="lockToggle()"
       @prev="prev"
       @next="next"
     >
@@ -43,6 +46,7 @@
         @chapterChange="goChapter"
       />
     </viewport>
+    <!-- /VIEWPORT -->
 
     <div class="viewer-loading" v-show="pending">
       <spinner class="loading-spinner" size="lg" tip="Loading" />
@@ -122,14 +126,27 @@ export default {
     HelpOverlay
   },
 
+  props: {
+    fullscreen: Boolean
+  },
+
   data() {
     return {
       locking: true,
 
-      isFullscreen: false,
+      isFullscreen: this.fullscreen,
 
       helpOpen: false
     }
+  },
+
+  watch: {
+    // when prop change
+    fullscreen() {
+      this.isFullscreen = this.fullscreen;
+    },
+
+    isFullscreen() {}
   },
   
   computed: {
@@ -253,35 +270,31 @@ export default {
     }
   },
 
-  beforeRouteUpdate (to, from, next) {
-    // when manga or chapter changed this function will be invoked
-    // we should stop scrolling and lock viewer to show title info.
-    const { dirId, path, ch } = to.params;
-    this.autoScrollToggle(false);
-    this.locking = true;
-
-    // prevent locked when scroll.
-    window._ignoreScrollEvent = true;
-
-    // trigger action to update store
-    // then enter the view.
-    this.$store.dispatch(types.VIEW, { dirId, path, ch, page: 1 })
-      .then(next);
-  },
-
-  beforeRouteLeave (to, from, next) {
-    this.autoScrollToggle(false);
-    setTimeout(() => screenfull.exit());
-    next();
-  },
-
   mounted() {
-    if (!this.appError) {  
-      const { dirId, path, ch = '' } = this.$route.params;
-      const { start: page } = this.$route.query;
+    if (this.appError) return
+
+    this.$on('leave', () => {
+      // when manga or chapter changed this function will be invoked
+      // we should stop scrolling and lock viewer to show title info.
+      this.autoScrollToggle(false);
+      
+     // prevent locked when scroll.
+      this.locking = true;
+      window._ignoreScrollEvent = true;
+
+      setTimeout(() => screenfull.exit());
+    });
+
+    this.$on('update', (route) => {
+      const { dirId, path, ch = '' } = route.params;
+      const page = route.query.start || 1;
+
+      // prevent locked when scroll.
+      this.locking = true;
+      window._ignoreScrollEvent = true;
 
       this.$store.dispatch(types.VIEW, { dirId, path, ch, page });
-    }
+    });
   },
 
   created() { this._$effects(true) },
@@ -302,18 +315,16 @@ export default {
 
     goChapter(chIndex) {
       if (chIndex < 1 || chIndex > this.chCount) return;
-
       const chapter = this.chapters[chIndex-1];
-      const ch = chapter.name;
 
+      const params = {
+        type: 'manga',
+        dirId: this.repo.dirId,
+        path: this.path,
+        ch: chapter.name
+      };
 
-      console.log(this.path, ch);
-      const { dirId } = this.repo;
- 
-      this.$router.replace({
-        name: 'viewer',
-        params: { type: 'manga', dirId, path: this.path, ch }
-      });
+      this.$router.replace({ name: 'viewer', params });
     },
     
     prev() {
