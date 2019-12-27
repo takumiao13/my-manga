@@ -17,6 +17,14 @@
     </a>
 
     <a
+      title="Search"
+      :class="['menubar-btn', { active: isActive('search') }]" 
+      @click="toggleActivity('search')"
+    >
+      <icon name="search" />
+    </a>
+
+    <a
       title="Watch on Mobile"
       :class="['menubar-btn', { active: isActive('mobile') }]"
       @click="toggleActivity('mobile')"

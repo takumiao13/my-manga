@@ -13,10 +13,29 @@
       v-show="viewMode == 'grid'"
       v-bind="$service.image.coverStyle(item)"
     >
-      <div class="cover-placeholder">
-        <icon :name="`file-${item.fileType || 'image'}`" size="64" />
+      <div class="tags" v-if="item.version">
+        <ul>
+          <li 
+            v-for="ver in item.version
+              .filter(item => item !== 'default')
+              .map(item => {
+                const parts = item.split('.');
+                return parts[1] || parts[0];
+              })" 
+            :key="ver"
+          >
+            {{ ver.toUpperCase() }}
+          </li>
+        </ul>
+      </div>      
+      <div class="cover-inner" :class="{
+        loading: item.cover
+      }">
+        <img v-if="item.cover" class="cover-image" v-lazy="$service.image.makeSrc(item.cover)" />
+        <div v-else class="cover-placeholder">
+          <icon :name="`file-${item.fileType || 'image'}`" size="64" />
+        </div>
       </div>
-      <img v-if="item.cover" v-lazy="$service.image.makeSrc(item.cover)" />
     </a>
 
     <div v-show="viewMode == 'grid'" class="caption">{{ item.name }}</div>
@@ -25,9 +44,6 @@
       <icon name="file-image" size="18" />
       &nbsp; {{ item.name }} 
     </div>
-
-    <!-- <div style="border: 1px solid red;">{{ item.name }}</div> -->
-
   </div>
 </template>
 
@@ -38,12 +54,6 @@ export default {
     activePath: String,
     item: Object,
     viewMode: String
-  },
-
-  methods: {
-    isViewMode(type) {
-      return this.viewMode === type;
-    }
   }
 }
 </script>

@@ -1,8 +1,13 @@
-
 import fetch from './fetch';
 import { groupBy, orderBy } from '@/helpers/utils';
 
-function transformResponse(res) {
+function _buildURL(dirId, path) {
+  let url = `api/mangas/${dirId}`;
+  if (path) url += `/${encodeURIComponent(path)}`;
+  return url;
+}
+
+function _transformResponse(res) {
   let { cover, children: list } = res;
   
   // FIXED: put this in store ??
@@ -25,26 +30,52 @@ function transformResponse(res) {
   return res;
 }
 
-function list({ path, dirId }) {
-  let url = `api/manga/list/${dirId}`;
-  if (path) url += `/${encodeURIComponent(path)}`;
-  return fetch(url).then(transformResponse)
+function search({ dirId, path, keyword }) {
+  const url = `${_buildURL(dirId, path)}/search?keyword=${keyword}`;
+  return fetch(url).then(res => {
+    const obj = { path: '', children: res };
+    return _transformResponse(obj);
+  });
 }
 
-function pick({ path, dirId }) {
-  let url = `api/manga/pick/${dirId}`;
-  if (path) url += `/${encodeURIComponent(path)}`;
-  return fetch(url).then(transformResponse)
+function list({ dirId, path }) {
+  const url = `${_buildURL(dirId, path)}/list`;
+  return fetch(url).then(_transformResponse)
 }
 
-function folder({ path, dirId }) {
-  let url = `api/manga/folder/${dirId}`;
-  if (path) url += `/${encodeURIComponent(path)}`;
+function folder({ dirId, path }) {
+  const url = `${_buildURL(dirId, path)}/folder`;
+  return fetch(url).then(res => {
+    // group manga
+    const mangaGroup = {
+      _mangaGroup: true,
+      children: []
+    };
+    const folders = [];
+    res.children.forEach(child => {
+      if (child.type === 'FILE') {
+        folders.push(child);
+      } else {
+        mangaGroup.children.push(child);
+      }
+    });
+
+    const count = mangaGroup.children.length;
+    if (count) {
+      folders.unshift(mangaGroup);
+    }
+
+    return { folders }
+  })
+}
+
+function pick({ dirId, path }) {
+  const url = `${_buildURL(dirId, path)}/pick`;
   return fetch(url);
 }
 
 function share(longUrl) {
-  const url = 'api/manga/share';
+  const url = 'api/mangas/share';
   return fetch(url, {
     method: 'post',
     headers: {
@@ -55,8 +86,9 @@ function share(longUrl) {
 }
 
 export default {
+  search,
   list,
-  pick,
   folder,
+  pick,
   share
 }

@@ -60,7 +60,17 @@ Vue.use(VueQriously);
 Vue.use(VueLazyload, {
   preLoad: 1.3,
   attempt: 1,
-  lazyComponent: true
+  lazyComponent: true,
+  adapter: {
+    loaded ({ bindType, el, naturalHeight, naturalWidth, $parent, src, loading, error, Init }) {
+      // handle manga cover loaded
+      if (el.classList.contains('cover-image')) {        
+        el.parentNode.classList.remove('loading');
+        el.parentNode.classList.add('loaded');
+      }
+        
+    }
+}
 });
 
 Vue.use($Service, {

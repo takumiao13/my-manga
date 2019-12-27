@@ -42,11 +42,11 @@ export default {
 
       statusHelper.pending(commit);
       return mangaAPI.list({ dirId, path }).then(res => {
-        const { name, path, cover, mime, isDir, children } = res;
+        const { name, path, cover, mime, type, children } = res;
         
         commit(VIEW, {
           name,
-          path: isDir ? 
+          path: type === 'FILE' ? 
             children.filter(item => item.fileType === 'video')[0].path : path, 
           cover: cover || '',
           mime 

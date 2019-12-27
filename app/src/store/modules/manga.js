@@ -1,4 +1,4 @@
-import { safeAssign, last } from '@/helpers/utils';
+import { safeAssign, last, find, pick } from '@/helpers/utils';
 import { createTypesWithNamespace, createRequestStatus } from '../helpers';
 import mangaAPI from '@/apis/manga';
 
@@ -6,22 +6,25 @@ import mangaAPI from '@/apis/manga';
 export const NAMESPACE = 'manga';
 
 // Types Enum
-const LIST  = 'LIST';
+const FETCH = 'FETCH';
+const TOGGLE_VERSION = 'TOGGLE_VERSION';
 const SHARE = 'SHARE';
 
 const statusHelper = createRequestStatus('status');
 
-export const types = createTypesWithNamespace([ LIST, SHARE ], NAMESPACE);
+export const types = createTypesWithNamespace([ FETCH, SHARE, TOGGLE_VERSION ], NAMESPACE);
 
 export const cacheStack = {
   _value: [],
 
   push(item) {
     this._value.push(item);
+    console.log('--->', item, this._value);
   },
 
   pop(index) {
-    const next = this._value.splice(index+1)[0];
+    const next = this._value[index + 1];
+    this._value = this._value.slice(0, index + 1);
     return Object.assign(last(this._value), {
       activePath: next ? next._prevPath : ''
     });
@@ -31,9 +34,24 @@ export const cacheStack = {
     this._value.length = 0;
   },
 
-  find(dirId, path) {
-    const index = this._value.map(item => item.path).lastIndexOf(path);
-    return ~index && this._value[index]._dirId === dirId ? index : -1;
+  find(dirId, path = '', kw) {
+    const index = this._value
+      .map(item => item.path)
+      .lastIndexOf(path);
+
+    console.log('--->', index, dirId, kw);
+    if (~index) {
+      const target = this._value[index];
+      console.log(target);
+
+      if (target._dirId === dirId && target._kw === kw) {
+        return index;
+      } else {
+        return -1
+      }
+    } else {
+      return -1;
+    }
   }
 };
 
@@ -47,14 +65,14 @@ export default {
     name: '',
     path: '',
     metadata: null,
-    list: [],
-    files: [],
+    activePath: '',
+    shortId: false,
+    list: [], // <-- all children
+    files: [], 
     mangas: [],
     chapters: [],
     versions: [],
     images: [],
-    activePath: '',
-    shortId: false,
     ...statusHelper.state()
   },
 
@@ -73,24 +91,30 @@ export default {
   },
 
   actions: {
-    [LIST]({ commit }, payload = {}) { 
+    [FETCH]({ commit }, payload = {}) { 
       let index = -1;
-      const { path, isBack, dirId } = payload;
-      if (isBack) index = cacheStack.find(dirId, path);
-
+      const { dirId, path, isBack, search, keyword } = payload;
+      if (isBack) index = cacheStack.find(dirId, path, keyword);
+      console.log(isBack, index, path);
       // hack no flashing when random manga
       statusHelper.pending(commit);
       
       // if cannot find cache
       if (index === -1) {
-        return mangaAPI.list({ dirId, path })
+        const method = search ? 'search' : 'list';
+        const params = { dirId, path };
+        if (search) {
+          params.keyword = keyword;
+        }
+        return mangaAPI[method](params)
           .then(res => {
-            cacheStack.push(Object.assign(res, { 
+            cacheStack.push(Object.assign(res, {
               _prevPath: path,
-              _dirId: dirId
+              _dirId: dirId,
+              _kw: keyword
             }));
    
-            commit(LIST, res);
+            commit(FETCH, res);
             return statusHelper.success(commit);
           })
           .catch(error => {
@@ -100,8 +124,27 @@ export default {
       // get result from cache
       } else {
         const result = cacheStack.pop(index);
-        commit(LIST, result);
+        console.log(cacheStack)
+        commit(FETCH, result);
         return statusHelper.success(commit);
+      }
+    },
+
+    [TOGGLE_VERSION]({ commit, state }, payload = {}) {
+      const { dirId, ver } = payload;
+      // FIXED: when not found path ??
+      const currentVersion = find(state.versions, { versionName: ver });
+      const { inited, path } = currentVersion;
+
+
+      // TODO: pretty code
+      if (inited) {
+        commit(TOGGLE_VERSION, { ver, res: currentVersion });
+      } else {
+        mangaAPI.list({ dirId, path })
+          .then(res => {
+            commit(TOGGLE_VERSION, { ver, res });
+          });
       }
     },
 
@@ -114,13 +157,25 @@ export default {
   },
   
   mutations: {
-    [LIST](state, payload) {
+    [FETCH](state, payload) {
       state.inited || (state.inited = true);
       safeAssign(state, { 
         ...payload, 
         error: null,
         shortId: false
       });
+    },
+
+    [TOGGLE_VERSION](state, payload) {
+      const { ver, res } = payload;
+      const version = find(state.versions, {
+        versionName: ver
+      });
+
+      const obj = pick(res, ['list', 'files', 'mangas', 'chapters', 'images']);
+      safeAssign(version, { ...res, inited: true });
+      safeAssign(state, obj);
+      console.log(version, state);
     },
 
     [SHARE](state, payload) {

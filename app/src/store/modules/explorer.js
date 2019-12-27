@@ -41,25 +41,7 @@ export default {
       if (global) statusHelper.pending(commit);
 
       return mangaAPI.folder({ path, dirId })
-        .then(res => {
-          // group manga
-          const mangaGroup = {
-            _mangaGroup: true,
-            children: []
-          };
-          const folders = [];
-          res.children.forEach(child => {
-            if (child.type === 'FILE') {
-              folders.push(child);
-            } else {
-              mangaGroup.children.push(child);
-            }
-          });
-
-          const count = mangaGroup.children.length;
-          if (count) {
-            folders.unshift(mangaGroup);
-          }
+        .then(({ folders }) => {
           commit(FETCH, { path, folders });
 
           if (global) {

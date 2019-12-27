@@ -1,4 +1,7 @@
-$primary: #dc143c;
+$theme-colors: (
+  "primary": #dc143c,
+  "secondary": #999
+);
 
 @import "../../../node_modules/bootstrap/scss/bootstrap.scss";
 @import "./simple-slider.scss";
@@ -40,11 +43,16 @@ $primary: #dc143c;
 }
 
 .btn {
+  border-radius: 0 !important;
   cursor: pointer;
 
   &:focus {
     box-shadow: none;
   }
+}
+
+input {
+  border-radius: 0 !important;
 }
 
 .app-toast {

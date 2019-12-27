@@ -37,9 +37,16 @@ export default {
     }),
   },
 
-  mounted() {
+  // when route change should show correct activity
+  activated() {
     const { activity } = this.$route.query;
     this.$store.dispatch(types.TOGGLE_ACTIVITY, { activity });
+  },
+
+  beforeRouteUpdate(to, from, next) {
+    const { activity } = to.query;
+    this.$store.dispatch(types.TOGGLE_ACTIVITY, { activity });
+    next();
   },
 
   methods: {

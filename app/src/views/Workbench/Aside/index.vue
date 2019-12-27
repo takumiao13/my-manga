@@ -3,6 +3,7 @@
     <Menubar />
     <div class="sidebar">
       <Explorer v-show="!activity || activity === ActivityTypes.EXPLORER" />
+      <Search v-show="activity === ActivityTypes.SEARCH" />
       <WatchOnMobile v-show="activity === ActivityTypes.MOBILE" />
     </div>
   </div>  
@@ -12,17 +13,20 @@
 import { mapState } from 'vuex';
 import Menubar from './Menubar';
 import Explorer from './Sidebar/Explorer';
+import Search from './Sidebar/Search';
 import WatchOnMobile from './Sidebar/WatchOnMobile';
 
 const ActivityTypes = {
   EXPLORER: 'explorer',
-  MOBILE: 'mobile'
+  MOBILE: 'mobile',
+  SEARCH: 'search'
 }
 
 export default {
   components: {
     Menubar,
     Explorer,
+    Search,
     WatchOnMobile
   },
 

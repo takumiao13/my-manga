@@ -60,29 +60,30 @@
             <p class="metadata-title" href="javascript:void 0;">
               {{ title }}
             </p>
-          </div>
-        </div>
-        <!-- / META DATA -->
 
-        <div class="area-container mt-3 col-12" v-show="!sharing">
+          </div>
 
           <!-- VERSION AREA -->
-          <div class="folder-area mb-4" v-show="versions.length">
-            <p class="area-header">VERSIONS - {{ versions.length }} items</p>
+          <div class="version-area mb-4" v-show="versions.length">
+            <p class="area-header">VERSIONS</p>
             <div class="list-group">
               <a 
-                class="list-group-item list-group-item-action folder-item text-truncate"
-                :class="{ active: item.path === activePath }"
+                class="list-group-item list-group-item-action version-item text-truncate"
+                :class="{ 'version-active': item.versionName === $route.query.ver }"
                 v-for="item in versions" 
                 :key="item.path"
-                @click="readFile(item, 'manga')"                 
+                @click="readVersion(item)"
               >
-                <icon :name="item.fileType ? `file-${item.fileType}` : 'archive'" />
-                &nbsp; {{ item.versionName || item.name }} 
+                <!-- when no versionname ?? -->
+                {{ (item.versionName || item.name).toUpperCase() }} 
               </a>
             </div>
           </div>
           <!-- / VERSION AREA -->
+        </div>
+        <!-- / META DATA -->
+
+        <div class="area-container mt-3 col-12" v-show="!sharing">
 
           <!-- FILE GROUP -->
           <FileGroup
@@ -118,7 +119,7 @@
             />
           </MangaGroup>
           <!-- / MANGA GROUP -->
-          
+
           <!-- CHAPTER AREA -->
           <div class="chapter-area mb-4" v-show="chapters.length">
             <p class="area-header">CHAPTERS</p>
@@ -203,6 +204,7 @@ export default {
       addressbarCollapsed: false,
       titleShown: false,
       isManga: false,
+      isSearch: false,
       sharing: false,
       viewMode: {
         file: 'grid',
@@ -230,6 +232,10 @@ export default {
     ...mapGetters('manga', [ 'pending', 'success', 'empty' ]),
 
     title() {
+      if (this.isSearch) {
+        return 'Search: ' + this.$route.query.kw;
+      }
+
       const repoName = this.repo.name;
       const path = this.$route.params.path;
       const title = path ? 
@@ -260,7 +266,7 @@ export default {
     },
 
     leftBtns() {
-      return this.isManga ? [{
+      return (this.isManga || this.isSearch) ? [{
         icon: 'arrow-left',
         tip: 'Back',
         click: this.handleBack
@@ -279,11 +285,37 @@ export default {
       //   tip: 'Share Manga',
       //   click: this.handleShareManga
       // }
-      return this.isManga ? [{
+
+      let listType;
+
+      if (this.isManga) {
+        listType = 'manga'
+      } else if (this.isSearch) {
+        listType = 'search'
+      } else {
+        listType = 'file'
+      }
+
+      const mangaBtns = [{
         icon: 'level-up-alt',
         tip: 'Back to parent',
         click: this.handleBackToParent
-      }] : null;
+      }];
+
+      const searchBtns = [{
+        icon: 'search',
+        tip: 'Search',
+        className: 'd-inline-block d-md-none',
+        click: () => this.handleToggleSidebar('search')
+      }];
+
+      const btnsMap = {
+        manga: mangaBtns,
+        search: searchBtns,
+        file: null
+      }
+
+      return btnsMap[listType];
     },
     
     qrcodeValue() {
@@ -317,24 +349,24 @@ export default {
 
     this.sharing = false;
     this.isManga = this.$route.query.type === 'manga';
+    this.isSearch = this.$route.query.search == 1;
     this.addressbarCollapsed = false;
-    this.fetchMangas(this.$route.params.path);
+    this.fetchMangas(this.$route);
   },
 
   beforeRouteUpdate(to, from, next) {
-    if (
-      this.appError || 
-      eq(to.params, from.params) // only change activity
-    ) {
+    // check only change activity 
+    if (this.appError || (eq(to.params, from.params))) {
       return next();
     }
 
     const { isBack } = to.meta;
     this.sharing = false;
     this.isManga = to.query.type === 'manga';
+    this.isSearch = to.query.search == 1;
     this.addressbarCollapsed = false; // always show addressbar when route update
     this._ignoreScrollEvent = true; // prevent collapse addressbar
-    to.meta.resolver = this.fetchMangas(to.params.path, isBack)
+    to.meta.resolver = this.fetchMangas(to, isBack);
     next();
   },
 
@@ -349,11 +381,26 @@ export default {
   },
 
   methods: {
-    fetchMangas(path = '', isBack) {
+    fetchMangas(route, isBack) {
+      const { params: { path }, query: { kw, search, ver } } = route;
       const { dirId } = this.repo;
-      const payload = { path, dirId, isBack }
 
-      return this.$store.dispatch(mangaTypes.LIST, payload);
+      let promise = Promise.resolve();
+
+      if (path !== this.path) {
+        promise = promise.then(() => this.$store.dispatch(mangaTypes.FETCH, { 
+          isBack, dirId, path, ver, search, keyword: kw,
+        }));
+      }
+
+      // handle multi versions
+      if (ver) {
+        promise = promise.then(() => this.$store.dispatch(mangaTypes.TOGGLE_VERSION, {
+          dirId, ver
+        }));
+      }
+
+      return promise;
     },
 
     toggleAddressbar(scrollTop, prevScrollTop) {
@@ -366,7 +413,8 @@ export default {
       const { dirId } = this.repo;
       const { fileType, path } = item;
 
-      if (!fileType) {
+      // handle manga or dir
+      if (item.isDir || item.type === 'MANGA') {
         const query = type ? { type } : null;
 
         this.$router.push({
@@ -386,6 +434,19 @@ export default {
         const href = this.$service.pdf.makeSrc(path);
         href && window.open(href, 'target', '');
       }
+    },
+
+    readVersion(item) {
+      const { dirId } = this.repo;
+
+      this.$router.replace({
+        name: 'explorer', 
+        params: { dirId, path: this.path },
+        query: {
+          ver: item.versionName,
+          type: 'manga'
+        }
+      });
     },
 
     // when chapter and gallery click.
@@ -438,8 +499,11 @@ export default {
     },
 
     // events
-    handleToggleSidebar() {
+    handleToggleSidebar(activity) {
       this.$store.dispatch(appTypes.TOGGLE_ASIDE);
+      if (activity) {
+        this.$store.dispatch(appTypes.TOGGLE_ACTIVITY, { activity });
+      }
     },
 
     handleBack() {
@@ -524,6 +588,19 @@ export default {
 </script>
 
 <style lang="scss">
+/* active */
+@-webkit-keyframes ant-progress-active {
+  0% { width: 0; opacity: .1 }
+  20% { width: 0; opacity: .5 }
+  100% { width: 100%; opacity: 0 }
+}
+
+@keyframes ant-progress-active {
+  0% { width: 0; opacity: .1 }
+  20% { width: 0; opacity: .5 }
+  100% { width: 100%; opacity: 0 }
+}
+
 @import '../../../assets/style/base';
 
 .addressbar {
@@ -564,7 +641,8 @@ export default {
 // ==
 .folder-area .list-group,
 .chapter-area .list-group,
-.manga-area .list-group {
+.manga-area .list-group,
+.version-area .list-group {
   margin-left: -15px;
   margin-right: -15px;
   
@@ -605,6 +683,40 @@ export default {
   }
 }
 
+.version-area .list-group {
+  margin: 0 -.2rem;
+  
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+
+  .list-group-item {
+    margin: .2rem;
+    border-width: .5px;
+    width: calc(33.3% - .4rem);
+  }
+
+  @include media-breakpoint-up(md) {
+    .list-group-item {
+      width: calc(25% - .4rem);
+    }
+  }
+
+  @include media-breakpoint-up(lg) {
+    .list-group-item {
+      width: calc(20% - .4rem);
+    }
+  }
+}
+
+.version-area .list-group-item {
+  border-left: 4px solid #ddd !important;
+
+  &.version-active {
+    border-left-color: #dc143c !important;
+  }
+}
+
 .folder-area,
 .manga-area,
 .gallery-area {
@@ -620,8 +732,29 @@ export default {
     text-decoration: none;
     display: block;
     position: relative;
-    overflow: hidden;
-    
+
+    .cover-inner {
+      overflow: hidden;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+
+      &.loading::before {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background: #999;
+        opacity: 0;
+        -webkit-animation: ant-progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
+        animation: ant-progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
+        z-index: 2;
+        content: '';
+      }
+    }
+
     img {
       position: absolute;
       width: 100%;
@@ -630,7 +763,7 @@ export default {
     }
 
     img[lazy="loaded"] {
-      visibility: visible;
+      //visibility: visible;
       background: none;
       height: auto; // when loaded use img origin height
       border: 0;
@@ -660,6 +793,10 @@ export default {
     word-wrap: break-word;
     word-break: break-all;
   }
+}
+
+.gallery-area .cover {
+  overflow: hidden;
 }
 
 .folder-area {
@@ -715,13 +852,9 @@ export default {
     flex-grow: 1;
   }
   
-  .cover {
+  .cover-inner {
     cursor: pointer;
     border-radius: .25rem;
-
-    img {
-      visibility: hidden;
-    }
 
     // scale img to fill cover
     &.scale img[lazy="loaded"] {
@@ -751,6 +884,49 @@ export default {
   .caption {
     font-weight: 600;
     text-align: left;
+  }
+
+  .tags {
+    position: absolute;
+    bottom: .5rem;
+    right: -3px;
+    z-index: 2;
+
+    > ul {
+      list-style: none;
+      padding: 0px;
+      margin: 0px;
+      box-shadow: 0px 0px 3px rgba(0, 0, 0, 3);   
+  
+      > li {
+        display: block;
+        right: 0px;
+        color: #fff;
+        padding: 3px 16px 5px 13px;
+        background-color: #333;
+        border-bottom: .5px solid #666;
+        font-size: 12px;
+        overflow: hidden;
+
+        &::after {
+          content:"";
+          position: absolute;
+          top: 0px;
+          right: 0px;
+          height: 100%;
+          border-right: 3px solid #dc143c;
+        }
+      }
+    }
+
+    // > ul:hover > li,
+    > ul > li:last-child {
+      border-bottom: 0;
+    }
+
+    > ul > li:hover { 
+      background-color: #dc143c; 
+    }
   }
 }
 

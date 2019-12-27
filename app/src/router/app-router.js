@@ -186,6 +186,15 @@ export default class AppRouter extends VueRouter {
   }
 }
 
+// remove activity queryparams
+// ?[activity=1] -> ''
+// ?[activity=2&]foo-3 -> /foo=3
+// ?foo=3&[activity=4&]bar=4 -> ?foo=3&bar=4
 export function historyName(route) {
-	return decodeURIComponent(route.fullPath);
+  const name = decodeURIComponent(route.fullPath)
+    .replace(/activity=([^&#]*)&?/, '')
+    .replace(/\?$/, '');
+
+  console.log(name);
+  return name;
 }

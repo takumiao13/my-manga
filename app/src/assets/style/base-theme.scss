@@ -116,7 +116,7 @@
     }
 
     .area-item.active {
-      .cover {
+      .cover-inner {
         box-shadow: 0 0 0 4px $app-item-active-bg;
       }
     }
@@ -141,9 +141,9 @@
   }
 
   .manga-area {
-    .cover {
-      box-shadow: 0 0 3px rgba($black, 0.2), 
-                  0 1px 0 rgba($black, 0.2);
+    .cover-inner {
+      box-shadow: 0 0 2px rgba($black, 0.2), 
+                  0 1.5px 0 rgba($black, 0.2);
     }
   }
 
