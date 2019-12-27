@@ -47,7 +47,13 @@ Options:
     "C:\\repo-a",
     "D:/repo-b"
     "/volume1/repo-c"
-  ]
+  ],
+  "server": {
+    "port": 3033, // Server port
+    "ssl": true, // Enable https
+    "cert": "cert.pem", // Path to ssl cert file
+    "key": "key.pem", // Path to ssl key file
+  }
 }
 ```
 
@@ -71,9 +77,20 @@ Chapters of a comic can be stored together and presented as a single title. Plac
 To distinguish between chapters, each filename needs to have a space, hyphen, space.
 
 
+### Version
+
+Version of a comic can be placed between brackets added to the end of filenames.
+
+```
+/Comics
+  /Foo [DL版]
+  /Bar [English]
+  /Baz [中国翻译]
+```
+
 ### Multi-version
 
-You can also store multiple versions of a comic in a single folder as chapters. 
+You can also store multiple versions of a comic in a single folder as versions. 
 Versions should be placed between brackets with the same result as seen below.
 
 ```
