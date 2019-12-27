@@ -1,8 +1,7 @@
 const Service = require('./_base');
-const pathFn = require('path');
+const pathFn = require('../helpers/path');
 const crypto = require('../helpers/crypto');
 const fs = require('../helpers/fs');
-const { CustomError} = require('../error');
 const { ERR_CODE } = require('../helpers/error-code');
 
 class RepoService extends Service {
@@ -28,7 +27,7 @@ class RepoService extends Service {
     const repo = this.repoMap[dirId];
 
     if (!repo) {
-      throw new CustomError(ERR_CODE.REPO_UNACCESSED);
+      this.app.throwError(ERR_CODE.REPO_UNACCESSED);
     }
 
     return repo;
@@ -46,8 +45,9 @@ class RepoService extends Service {
       const name = pathFn.basename(baseDir) || 
         pathFn.dirname(baseDir).replace(pathFn.sep, '');
 
-      const dirId = this.hashBaseDir(baseDir);
-
+      // normalize dir first
+      baseDir = pathFn.slash(baseDir);
+      const dirId = this.dirId(baseDir);
       this.set(dirId, { name, baseDir });
     });
   }
@@ -62,7 +62,7 @@ class RepoService extends Service {
     return this.cryptoedRepos;
   }
 
-  hashBaseDir(baseDir) {
+  dirId(baseDir) {
     return crypto.md5(baseDir);
   }
 }

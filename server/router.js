@@ -4,10 +4,12 @@ module.exports = app => {
 
   router.get('/', controller.index.render);
 
-  // TODO: combind folder & list later
-  router.get('/api/manga/folder/:dirId/:path?', controller.manga.folder);
-  router.get('/api/manga/list/:dirId/:path?', controller.manga.list);
-  router.post('/api/manga/share', controller.manga.share);
+  router.get('/api/mangas/:dirId/:path?/folder', controller.manga.folder);
+  router.get('/api/mangas/:dirId/:path?/list', controller.manga.list);
+  router.get('/api/mangas/:dirId/:path?/pick', controller.manga.pick);
+  router.get('/api/mangas/:dirId/:path?/search', controller.manga.search);
+  router.get('/api/mangas/:dirId/version', controller.manga.version);
+  router.post('/api/mangas/share', controller.manga.share);
 
   router.get('/api/settings', controller.settings.get);
   router.post('/api/settings', controller.settings.post);

@@ -1,7 +1,6 @@
 const fs = require('fs-extra');
 const pathFn = require('path');
 const Controller = require('./_base');
-const { CustomError } = require('../error');
 const { ERR_CODE } = require('../helpers/error-code');
 
 class MangaController extends Controller {
@@ -9,7 +8,7 @@ class MangaController extends Controller {
   async folder(ctx) {
     const { service } = this;
     await this._cache(ctx, async ({ baseDir, path, settings }) => {
-      const results = await service.manga.folder(path, baseDir, settings);
+      const results = await service.manga.folder(baseDir, path, settings);
       ctx.body = { ...results };
     });
   }
@@ -17,9 +16,30 @@ class MangaController extends Controller {
   async list(ctx) {
     const { service } = this;
     await this._cache(ctx, async ({ baseDir, path, settings }) => {
-      const results = await service.manga.list(path, baseDir, settings); 
+      const results = await service.manga.list(baseDir, path, settings); 
       ctx.body = { ...results };
     });
+  }
+
+  async search(ctx) {
+    const { service } = this;
+    const { path = '', dirId } = ctx.params;
+    const data = await service.manga.search(dirId, path, ctx.query);
+    ctx.body = data;
+  }
+
+  async version(ctx) {
+    const { service } = this;
+    const { dirId } = ctx.params;
+    const data = await service.manga.version(dirId, ctx.query);
+    ctx.body = data;
+  }
+
+  async pick(ctx) {
+    const { service } = this;
+    const { path = '', dirId } = ctx.params;
+    const results = await service.manga.pick(dirId, path);
+    ctx.body = results;
   }
 
   async _cache(ctx, process) {
@@ -27,8 +47,10 @@ class MangaController extends Controller {
       const { request, response } = ctx;
       const { path = '', dirId } = ctx.params;
       const ifModifiedSince = request.headers['if-modified-since'];
-      const baseDir = this._getBaseDir(dirId);
+
+      const { baseDir } = this.app.service.repo.get(dirId);
       const settings = this.app.service.settings.get(dirId);
+
       const dirStat = await fs.stat(pathFn.resolve(baseDir, path));
       const lastModified = dirStat.mtime.toGMTString();
 
@@ -42,35 +64,26 @@ class MangaController extends Controller {
     } catch(err) {
       switch (err.errno) {
         case -4058: // no such file or directory
-          throw new CustomError(ERR_CODE.MANGA_NO_DIR)
+          this.app.throwError(ERR_CODE.MANGA_NO_DIR);
         default:
           throw err;
       }
     }
   }
 
-  _getBaseDir(dirId) {
-    const repo = this.app.service.repo.get(dirId);
-    
-    if (!repo) throw new CustomError(ERR_CODE.REPO_UNACCESSED);
-    return repo.baseDir;
-  }
-
   async share(ctx) {
-    const { service } = this;
     const { url } = ctx.request.body;
-    const shortId = service.share.generate(url);
+    const shortId = this.service.share.generate(url);
     ctx.body = { shortId }
   }
 
   async expand(ctx) {
-    const { service } = this;
     const { shortId } = ctx.params;
-    const url = service.share.expand(shortId);
+    const url = this.service.share.expand(shortId);
     ctx.redirect(url || '/');
   }
 }
 
-MangaController.actions = [ 'folder', 'list', 'share', 'expand' ];
+MangaController.actions = [ 'folder', 'list', 'pick', 'search', 'version', 'share', 'expand' ];
 
 module.exports = MangaController;

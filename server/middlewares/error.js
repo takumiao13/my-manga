@@ -5,7 +5,6 @@ module.exports = () => async (ctx, next) => {
     await next();
   } catch (err) {
     console.log(err);
-    debugger;
     if (err instanceof CustomError) {
       ctx.body = {
         ...err.value()

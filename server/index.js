@@ -3,7 +3,9 @@ const koaSend = require('koa-send');
 const http = require('http');
 const https = require('https');
 const fs = require('./helpers/fs');
-const { pick, get } = require('./helpers/utils'); 
+const { pick, get } = require('./helpers/utils');
+const { CustomError } = require('./error');
+const EventEmitter = require('events');
 
 // Load Config
 const config = require('./configs');
@@ -33,20 +35,22 @@ const SettingsService = require('./services/settings');
 const RepoService     = require('./services/repo');
 const ShareService    = require('./services/share');
 
-class Application {
+class Application extends EventEmitter {
 
   constructor(options) {
+    super();
     this.koa = new Koa();
     this.router = new KoaRouter();
     this.config = config;
-
     this._setOptions(options);
+  }
+
+  async setup() {
     this._loadMiddlewares();
-    this._loadServices();
+    await this._loadServices();
     this._loadControllers();
     this._loadRouter();
   }
-
 
   /**
    * Ensure app options
@@ -104,7 +108,7 @@ class Application {
     });
   }
 
-  _loadServices() {
+  async _loadServices() {
     const service = {};
     const options = {
       app: this,
@@ -119,11 +123,12 @@ class Application {
       repo: new RepoService(options)
     });
 
-    this.service = service;
+    const keys = Object.keys(service)
+    for (let i = 0; i < keys.length; i++) {
+      await service[keys[i]].initialize();
+    }
 
-    Object.keys(this.service).forEach((key) => {
-      this.service[key].initialize();
-    });
+    this.service = service;
   }
 
   _loadControllers() {
@@ -182,6 +187,10 @@ class Application {
   
   async send(...args) {
     return await koaSend(...args)
+  }
+  
+  throwError(code) {
+    throw new CustomError(code)
   }
 }
 

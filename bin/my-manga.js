@@ -7,13 +7,6 @@ program
   .version(require('../package').version)
   .usage('<command> [options]');
 
-// program
-//   .command('serve')
-//   .description('start server for development')
-//   .option('-d, --dir <dir>', 'specify dir')
-//   .option('-s, --settings <settings>', 'settings file')
-//   .action((cmd) => require('../lib/serve')(cmd));
-
 program
   .command('start')
   .description('start my manga server')
@@ -21,6 +14,15 @@ program
   .option('-p, --port <port>', 'port to use (default: 3033)')
   .option('-d, --dir <dir>', 'specify dir')
   .option('-s, --settings <settings>', 'settings file')
-  .action((cmd) => require('../lib/start')(cmd));
+  .option('--index', 'rebuild index')
+  .action(cmd => require('../lib/start')(cmd));
+
+program
+  .command('index')
+  .option('-d, --dir <dir>', 'specify dir')
+  .option('--create', 'create index')
+  .option('--drop', 'drop index')
+  .option('--rebuild', 'rebuild index')
+  .action(cmd => require('../lib/indexing')(cmd))
 
 program.parse(process.argv);
