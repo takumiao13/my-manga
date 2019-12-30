@@ -10,7 +10,6 @@
   >
     <a 
       class="cover"
-      v-show="viewMode == 'grid'"
       v-bind="$service.image.coverStyle(item)"
     >
       <div class="tags" v-if="item.version">
@@ -28,9 +27,11 @@
           </li>
         </ul>
       </div>      
-      <div class="cover-inner" :class="{
-        loading: item.cover
-      }">
+      <div class="cover-inner" 
+        :class="{
+          loading: item.cover
+        }"
+      >
         <img v-if="item.cover" class="cover-image" v-lazy="$service.image.makeSrc(item.cover)" />
         <div v-else class="cover-placeholder">
           <icon :name="`file-${item.fileType || 'image'}`" size="64" />

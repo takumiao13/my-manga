@@ -58,19 +58,18 @@ Vue.directive('click-out-side', clickOutSideDirective);
 
 Vue.use(VueQriously);
 Vue.use(VueLazyload, {
-  preLoad: 1.3,
+  preLoad: 1.5,
   attempt: 1,
-  lazyComponent: true,
+  observer: true, // when image in slot observer is need.
   adapter: {
     loaded ({ bindType, el, naturalHeight, naturalWidth, $parent, src, loading, error, Init }) {
       // handle manga cover loaded
       if (el.classList.contains('cover-image')) {        
         el.parentNode.classList.remove('loading');
         el.parentNode.classList.add('loaded');
-      }
-        
+      }  
     }
-}
+  }
 });
 
 Vue.use($Service, {

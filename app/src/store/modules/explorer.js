@@ -83,7 +83,7 @@ function findStateByPath(children, path) {
       return node; 
 
     // skip _mangaGroup for performance
-    } else if (!node._mangaGroup && node.children.length) {
+    } else if (!node._mangaGroup && node.children && node.children.length) {
       // dfs walk
       const state = findStateByPath(node.children, path);
       if (state) return state;

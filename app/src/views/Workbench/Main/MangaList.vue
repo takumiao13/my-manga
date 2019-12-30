@@ -148,10 +148,11 @@
           <div class="gallery-area mb-4" v-show="images.length">
             <p class="area-header">GALLERY - {{ images.length }} pages</p>
             <div class="row">
-              <div class="col-4 col-sm-3 col-xl-2 area-item" 
+              <div 
+                class="col-4 col-sm-3 col-xl-2 area-item" 
                 v-for="(item, index) in images" 
-                :key="item.path">
-
+                :key="item.path"
+              >
                 <div class="cover"
                   :style="$service.image.style(item, 240)"
                   @click="readManga(item, index)">
