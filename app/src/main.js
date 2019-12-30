@@ -113,7 +113,6 @@ function bootstrapApp() {
     e.preventDefault();
     // Stash the event so it can be triggered later.
     store.dispatch(appTypes.PWA_INSTALL_PROMPT, e);
-    console.log(appTypes.PWA_INSTALL_PROMPT, 'install prompt called');
   });
 
   EventEmitter.$on('store.reset', (repo) => {
@@ -124,7 +123,6 @@ function bootstrapApp() {
     $loading.classList.remove('fade');
     $loading.style.display = '';
     $message.innerHTML = '<p>Change Repository</p> <strong>' + name + '</strong>';
-    
     
     // store repo key
     window.localStorage.setItem(REPO_KEY, dirId);

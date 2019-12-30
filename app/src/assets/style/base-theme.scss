@@ -5,7 +5,7 @@
 }
 
 .topbar > .navbar {
-  background: $app-primary !important;
+  background: $app-main !important;
   //border-bottom: .5px solid $app-border-color;
   box-shadow: 0 1px 2px rgba($black, .1);
   z-index: 1030;
@@ -83,7 +83,7 @@
       }
 
       .caption {
-        color: $app-main;
+        color: $app-primary;
       }
     }
 
@@ -111,7 +111,7 @@
       }
 
       .caption {
-        color: $app-main;
+        color: $app-primary;
       }
     }
 
@@ -127,7 +127,7 @@
   }
 
   .gallery-area > .row {
-    background: $app-primary;
+    background: $app-main;
   }
 
   .gallery-area > .row {
@@ -141,9 +141,14 @@
   }
 
   .manga-area {
-    .cover-inner {
-      box-shadow: 0 0 2px rgba($black, 0.2), 
-                  0 1.5px 0 rgba($black, 0.2);
+    .cover-inner.loading {
+      box-shadow: 0 0 2px rgba($black, .2), 
+                  0 1.5px 0 rgba($black, .2);
+    }
+
+    .cover-inner.loaded {
+      box-shadow: 0 0 2px rgba($black, .6), 
+                  0 2px 0 rgba($black, .6);
     }
   }
 
@@ -161,7 +166,7 @@
 // Addressbar
 //==
 .addressbar {
-  background: $app-primary;
+  background: $app-main;
 }
 
 .address-item {
@@ -334,7 +339,7 @@ body.viewer-active {
   }
 
   .viewer-topbar.viewer-autoscrolling > .navbar {
-    background: $app-main !important;
+    background: $app-primary !important;
   }
 
   .viewer-loading {

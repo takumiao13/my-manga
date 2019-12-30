@@ -16,7 +16,7 @@
       <hr/>
 
       <div class="a2hs" v-show="pwaInstallPrompt">
-        <img class="a2hs-logo my-3" src="@/assets/logo.png" />
+        <img class="a2hs-logo my-3" :src="appLogoPath" />
 
         <button type="button"
           class="btn btn-outline-secondary"
@@ -42,7 +42,7 @@ export default {
         content: 'Read on Mobile',
         className: 'navbar-brand-xs'
       },
-
+      appLogoPath: process.env.APP_LOGO,
       installed: platform.isLaunchedFromHS()
     }
   },

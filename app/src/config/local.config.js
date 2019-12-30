@@ -1,9 +1,7 @@
-const env = process.env;
-const { hostname, protocol } = window.location;
-const port = env.PORT;
+const { hostname } = window.location;
 
 export default {
   host: hostname,
-  port,
-  baseURL: `${protocol}//${hostname}:${port}/`,
+  port: process.env.API_PORT,
+  apiBaseURL: process.env.API_BASE_URL
 }

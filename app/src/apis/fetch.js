@@ -3,7 +3,7 @@ import store from '@/store';
 import { types as appTypes } from '@/store/modules/app';
 
 function fetch$(input, options) {
-  input  = config.baseURL + input;
+  input  = config.apiBaseURL + input;
   return fetch(input, options)
     .then(res => res.json())
     .then(res => {

@@ -16,10 +16,10 @@ const Bounding = {
 class ImageService extends Service {
 
   makeSrc(paths, escape) {
-    const { baseURL } = this.$config;
+    const { apiBaseURL } = this.$config;
     const { dirId } = this.$store.getters[`${APP_NAMESPACE}/repo`];
     const path = isArray(paths) ? paths.join('/') : paths;
-    let src = dirId && path && `${baseURL}img/${dirId}/${encodeURIComponent(path)}`;
+    let src = dirId && path && `${apiBaseURL}img/${dirId}/${encodeURIComponent(path)}`;
     
     // TODO: remove it ?
     if (src && escape) {

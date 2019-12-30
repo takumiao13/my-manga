@@ -200,7 +200,7 @@ export default {
   }
 
   .vjs-play-progress {
-    background: #dc143c !important;
+    background: $primary !important;
   }
 
   .vjs-progress-control {

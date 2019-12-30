@@ -714,7 +714,7 @@ export default {
   border-left: 4px solid #ddd !important;
 
   &.version-active {
-    border-left-color: #dc143c !important;
+    border-left-color: $primary !important;
   }
 }
 
@@ -897,7 +897,7 @@ export default {
       list-style: none;
       padding: 0px;
       margin: 0px;
-      box-shadow: 0px 0px 3px rgba(0, 0, 0, 3);   
+      box-shadow: 0px 0px 3px #ddd;   
   
       > li {
         display: block;
@@ -915,7 +915,7 @@ export default {
           top: 0px;
           right: 0px;
           height: 100%;
-          border-right: 3px solid #dc143c;
+          border-right: 3px solid $primary;
         }
       }
     }
@@ -926,7 +926,7 @@ export default {
     }
 
     > ul > li:hover { 
-      background-color: #dc143c; 
+      background-color: $primary; 
     }
   }
 }
