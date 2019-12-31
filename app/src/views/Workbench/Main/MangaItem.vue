@@ -9,6 +9,7 @@
     }"
   >
     <a 
+      v-show="viewMode == 'grid'"
       class="cover"
       v-bind="$service.image.coverStyle(item)"
     >
