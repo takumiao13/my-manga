@@ -7,12 +7,12 @@ const MANGA_ICON_NAME = 'folder-items';
 const REPO_UNACCESSED = 10100;
 const MANGA_NO_DIR = 20100;
 
-exports.ERR_CODE = {
+const ERR_CODE = {
   REPO_UNACCESSED,
   MANGA_NO_DIR
 };
 
-exports.errorCodeMap = {
+const errorCodeMap = {
   [REPO_UNACCESSED]: {
     icon: REPO_ICON_NAME,
     name: REPO_ERROR,
@@ -24,4 +24,9 @@ exports.errorCodeMap = {
     name: MANGA_ERROR,
     message: 'No such manga directory'
   }
+}
+
+module.exports = {
+  ERR_CODE,
+  errorCodeMap
 }
