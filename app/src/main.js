@@ -6,7 +6,7 @@ import App from './App.vue';
 import config from '@/config';
 
 // Helpers
-import { byId } from '@/helpers/dom';
+import { byId, getScript } from '@/helpers/dom';
 import { delay } from '@/helpers/promise';
 import platform from '@/helpers/platform';
 import EventEmitter from '@/helpers/eventemitter';
@@ -39,8 +39,6 @@ import clickOutSideDirective from '@/directives/click-out-side';
 
 // Services
 import $Service from '@/services';
-
-
 
 Vue.component('spinner', Spinner);
 Vue.component('navbar', Navbar);
@@ -77,18 +75,17 @@ Vue.use($Service, {
   store
 });
 
-Vue.config.productionTip = false;
+Vue.config.productionTip = process.env.NODE_ENV === 'production';
 
 const $loading = byId('app-loading');
 const $message = byId('app-message');
 const REPO_KEY = '_REPO';
 
-
-
 bootstrapApp();
 
 function bootstrapApp() {
   let hideSplashScreen;
+
   // not show custom splash screen when lanuched form pwa
   if (platform.isLaunchedFromHS()) {
     $loading.style.display = 'none';
@@ -101,13 +98,13 @@ function bootstrapApp() {
     const ipc = window.require('electron').ipcRenderer;
     // get real ip from electron
     ipc.on('app-config', (event, { host }) => {
-      config.host = host;
+      config.api.HOST = host;
     });
   
     window.onload = () => ipc.send('win-load');
   }
 
-  // Add app to Home Screen
+  // Add To Home Screen
   window.addEventListener('beforeinstallprompt', (e) => {
     // Prevent Chrome 67 and earlier from automatically showing the prompt
     e.preventDefault();

@@ -1,14 +1,31 @@
-const { DefinePlugin } = require('webpack');
 const pathFn = require('path');
 const env = process.env;
+require('dotenv-flow').config({
+  node_env: env.APP_MODE,
+  path: pathFn.join('envs', env.APP_PLATFORM),
+  silent: true
+});
+
+console.log('NODE_ENV:', env.NODE_ENV);
+console.log('APP_MODE:', env.APP_MODE);
+console.log('APP_PLATFORM:', env.APP_PLATFORM);
+
+const { DefinePlugin } = require('webpack');
+const CustomHtmlWebpackPlugin = require('./vue-config/plugins/CustomHtmlWebpackPlugin');
 
 // Constants
 const ENV_KEYS = [
   'NODE_ENV', 'BASE_URL', 'IS_ELECTRON',
-  'API_PORT', 'API_BASE_URL', 'APP_MODE'
+  'API_PORT', 'API_HOST', 'APP_MODE', 'APP_PLATFORM'
 ];
 
 const PRIMARY_COLOR = '#dc143c';
+
+const Colors = {
+  prod: PRIMARY_COLOR,
+  dev: '#999',
+  rc: '#333'
+};
 
 // Define dirs
 const assetsDir = env.IS_ELECTRON ? 'assets' : '';
@@ -23,23 +40,21 @@ const publicPath = env.NODE_ENV === 'production' ?
 
 
 // Define icon dir & appName by `APP_MODE`
-let publicModeDir = 'prod';
-
-if (env.APP_MODE) {
-  publicModeDir = env.APP_MODE.toLowerCase();
-}
+const publicModeDir = env.APP_MODE.toLowerCase();
 
 let appName = 'My Manga';
 
-if (env.APP_MODE) {
-  appName += ` [${env.APP_MODE}]`;
+if (env.APP_MODE !== 'prod') {
+  appName += ` [${env.APP_MODE.toUpperCase()}]`;
 }
+
+const themeColor = Colors[env.APP_MODE];
 
 module.exports = {
   assetsDir,
   outputDir, 
   publicPath,
-  productionSourceMap: !!(env.NODE_ENV === 'production' && env.APP_MODE),
+  productionSourceMap: !!(env.NODE_ENV === 'production' && env.APP_MODE !== 'prod'),
   css: {
     loaderOptions: {
       sass: {
@@ -51,6 +66,7 @@ module.exports = {
     }
   },
   chainWebpack: config => {
+    // Define process env
     const processEnv = ENV_KEYS.reduce((agg, key) => {
       agg[key] = env[key];
       return agg;
@@ -58,9 +74,6 @@ module.exports = {
     const pkg = require('../package.json');
     processEnv.APP_NAME = appName; 
     processEnv.APP_VERSION = pkg.version;
-    processEnv.APP_PUBLIC_MODE_DIR = pathFn.posix.join(publicPath, publicModeDir);
-    
-
     processEnv.APP_LOGO = `${publicModeDir}/icons/apple-touch-icon.png`;
     processEnv.APP_PRIMARY_COLOR = PRIMARY_COLOR;
 
@@ -69,9 +82,16 @@ module.exports = {
       stringifiedENV[key] = JSON.stringify(processEnv[key]);
     });
 
-    // Evn vars
+    // Plugins
     config.plugin('define').use(DefinePlugin, [
       { 'process.env': stringifiedENV } 
+    ]);
+
+    config.plugin('custom-html').use(CustomHtmlWebpackPlugin, [
+      {
+        appName: appName,
+        publicModeDir: pathFn.posix.join(publicPath, publicModeDir)
+      }
     ]);
 
     // htmlWebpackPlugins options
@@ -80,6 +100,7 @@ module.exports = {
       return args
     });
 
+    // Configure rules
     const sharedPath = pathFn.resolve(__dirname, '../shared');
     config.resolve.alias
       .set('shared', sharedPath);
@@ -103,15 +124,13 @@ module.exports = {
       .use('file-loader')
       .loader('file-loader')
       .options();
-
-    const jsRule = config.module.rule('js');
   },
   pwa: {
     name: appName,
-    themeColor: '#fff',
-    msTileColor: '#000000',
+    themeColor: themeColor, // this will change safari pinned color.
+    msTileColor: themeColor,
     appleMobileWebAppCapable: 'yes',
-    appleMobileWebAppStatusBarStyle: 'black',
+    appleMobileWebAppStatusBarStyle: '#fff',
     manifestPath: `manifest.json?mode=${env.APP_MODE || 'prod'}`,
     manifestOptions: {
       description: "A Free Comics Management.",

@@ -6,13 +6,23 @@
 <title>My Manga</title>
 <meta name="description" content="A Free Comics Management">
 <link rel="icon" href="/favicon.ico">
-<!-- ms tile meta -->
-<meta name="application-name" content="<%= htmlWebpackPlugin.options.ENV.APP_NAME %>">
-<meta name="msapplication-square70x70logo" content="<%= htmlWebpackPlugin.options.ENV.APP_PUBLIC_MODE_DIR %>/icons/mstile-70x70.png" />
-<meta name="msapplication-square150x150logo" content="<%= htmlWebpackPlugin.options.ENV.APP_PUBLIC_MODE_DIR %>/icons/mstile-150x150.png" />
-<meta name="msapplication-wide310x150logo" content="<%= htmlWebpackPlugin.options.ENV.APP_PUBLIC_MODE_DIR %>/icons/mstile-310x150.png" />
-<meta name="msapplication-square310x310logo" content="<%= htmlWebpackPlugin.options.ENV.APP_PUBLIC_MODE_DIR %>/icons/mstile-310x310.png" />
-<meta name="msapplication-config" content="<%= htmlWebpackPlugin.options.ENV.APP_PUBLIC_MODE_DIR %>/icons/browserconfig.xml">
+<!-- enable mobile browser -->
+<script>
+  <% if (htmlWebpackPlugin.options.ENV.APP_MODE !== 'prod') { %>
+    ;(function () {
+      var appMode = '<%= htmlWebpackPlugin.options.ENV.APP_MODE %>';
+      var src = '//cdn.jsdelivr.net/npm/eruda';
+      if (!'ontouchstart' in document.documentElement) {
+        return;
+      }
+      
+      if (appMode === 'rc' || (appMode === 'dev' && /debug=1/.test(window.location))) {
+        document.write('<scr' + 'ipt src="' + src + '"></scr' + 'ipt>');
+        document.write('<scr' + 'ipt>eruda.init();</scr' + 'ipt>');
+      }     
+    })();
+  <% } %>
+</script>
 <style>
   body {
     margin: 0;

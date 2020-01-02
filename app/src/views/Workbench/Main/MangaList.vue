@@ -320,9 +320,9 @@ export default {
     },
     
     qrcodeValue() {
-      const { host, port } = config;
+      const { HOST, PORT } = config.api;
       const protocol = platform.isElectron() ? 'http:' : window.location.protocol;
-      return `${protocol}//${host}:${port}/s/${this.shortId}`
+      return `${protocol}//${HOST}:${PORT}/s/${this.shortId}`
     },
 
     filesShow() {
@@ -570,15 +570,15 @@ export default {
     },
 
     handleShareManga() {
-      const { host } = config;
+      const { HOST, PORT } = config.api;
       const { hash } = window.location;
       
       const port = process.env.NODE_ENV === 'development' ?
         window.location.port : // user client port
-        config.port; // user server port
+        PORT; // user server port
 
       const protocol = platform.isElectron() ? 'http:' : window.location.protocol;
-      const url = `${protocol}//${host}:${port}/${hash}`;
+      const url = `${protocol}//${HOST}:${port}/${hash}`;
       
       this.$store.dispatch(mangaTypes.SHARE, { url }).then(() => {
         this.sharing = true;

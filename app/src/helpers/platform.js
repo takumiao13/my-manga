@@ -1,4 +1,3 @@
-
 const isElectron = () => / (?:e|E)lectron\//.test(navigator.userAgent);
 
 /**
@@ -10,5 +9,5 @@ const isLaunchedFromHS = () => window.navigator.standalone === true
 
 export default {
   isElectron,
-  isLaunchedFromHS
+  isLaunchedFromHS,
 }
