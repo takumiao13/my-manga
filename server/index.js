@@ -8,7 +8,7 @@ const { CustomError } = require('./error');
 const EventEmitter = require('events');
 
 // Load Config
-const config = require('./configs');
+const config = require('./config');
 
 // Load Router
 const KoaRouter = require('koa-router');

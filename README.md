@@ -6,7 +6,7 @@ A Free Comics Management.
 ## Install
 
 ```bash
-npm install my-manga -g
+npm install my-manga -g --production
 ```
 
 ## Usage

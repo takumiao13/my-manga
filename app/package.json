@@ -6,9 +6,11 @@
     "serve": "node ./run-scripts/serve.js",
     "serve:prod": "node ./run-scripts/serve.js --mode=prod",
     "serve:rc": "node ./run-scripts/serve.js --mode=rc",
+    "serve:test": "node ./run-scripts/serve.js --mode=test",
     "build:prod": "node ./run-scripts/build.js --mode=prod",
     "build:dev": "node ./run-scripts/build.js --mode=dev",
     "build:rc": "node ./run-scripts/build.js --mode=rc",
+    "build:test": "node ./run-scripts/build.js --mode=test",
     "inspect": "node ./run-scripts/inspect.js",
     "lint": "vue-cli-service lint"
   },

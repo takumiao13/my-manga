@@ -3,6 +3,10 @@
 /electron_dist
 /electron_pack
 
+# local env files
+.env.local
+.env.*.local
+
 # Editor directories and files
 .idea
 .vscode
