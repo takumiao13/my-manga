@@ -42,7 +42,7 @@ const publicPath = env.NODE_ENV === 'production' ?
 // Define icon dir & appName by `APP_MODE`
 const publicModeDir = env.APP_MODE.toLowerCase();
 
-let appName = 'My Manga';
+let appName = 'MyManga';
 
 if (env.APP_MODE !== 'prod') {
   appName += ` [${env.APP_MODE.toUpperCase()}]`;

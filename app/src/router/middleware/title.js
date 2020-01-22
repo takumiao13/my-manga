@@ -6,14 +6,14 @@ export default async function title(ctx, next) {
 	let title;
 
   if (['explorer', 'viewer'].indexOf(ctx.to.name) > -1) {
-		title = 'My Manga';
+		title = 'MyManga';
 		const { path } = ctx.to.params;
 		const { name: repoName } = store.getters[`${APP_NAMESPACE}/repo`];
 		
 		if (path) title = last(path.split('/'));
 		if (repoName) title += ` - ${repoName}`
 	} else {
-		title = ctx.to.meta.title || 'My Manga';
+		title = ctx.to.meta.title || 'MyManga';
 	}
 
 	if (process.env.APP_MODE) {
