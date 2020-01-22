@@ -82,7 +82,7 @@ export default {
 
     .list-nested-toggle-icon {
       cursor: pointer;
-      padding: 0.35rem 0;
+      padding: 0.3rem 0;
       text-align: center;
       position: absolute;
     }

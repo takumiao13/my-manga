@@ -73,8 +73,7 @@
   .folder-area > .row {
     .area-item-inner {
       background: $app-light-bg;
-      box-shadow: 0 0 2px rgba($black, 0.2), 
-                  0 1px 0 rgba($black, 0.2);
+      box-shadow: 0 4px 6px -4px rgba($black, .6);
     }
 
     .area-item:hover {
@@ -141,14 +140,8 @@
   }
 
   .manga-area {
-    .cover-inner.loading {
-      box-shadow: 0 0 2px rgba($black, .2), 
-                  0 1.5px 0 rgba($black, .2);
-    }
-
-    .cover-inner.loaded {
-      box-shadow: 0 0 2px rgba($black, .6), 
-                  0 2px 0 rgba($black, .6);
+    .cover-inner {
+      box-shadow: 0 4px 6px -4px rgba($black, .6);
     }
   }
 
