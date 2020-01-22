@@ -169,15 +169,7 @@ export default {
       
       // should empty ch
       commit(GO, payload);
-    },
-
-    [SETTINGS]({ commit }, payload = {}) {
-      commit(SETTINGS, payload);
-    },
-
-    [TOGGLE_AUTO_SCROLLING]({ commit }, payload = {}) {
-      commit(TOGGLE_AUTO_SCROLLING, payload);
-    },
+    }
   },
 
   mutations: {

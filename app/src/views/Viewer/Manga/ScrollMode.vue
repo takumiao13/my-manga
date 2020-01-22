@@ -218,7 +218,7 @@ export default {
       if (this.autoScrolling) {
         console.log('stop');
         this._scroller.pause();
-        this.$store.dispatch(types.TOGGLE_AUTO_SCROLLING, { autoScrolling: false });
+        this.$store.commit(types.TOGGLE_AUTO_SCROLLING, { autoScrolling: false });
       }
     },
 

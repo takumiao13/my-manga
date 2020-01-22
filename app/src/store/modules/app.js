@@ -43,35 +43,9 @@ export default {
     }
   },
 
-  actions: {
-    [TOGGLE_ASIDE]({ commit }, payload = {}) {
-      commit(TOGGLE_ASIDE, payload);
-    },
-
-    [TOGGLE_SIDEBAR]({ commit }, payload = {}) {
-      commit(TOGGLE_SIDEBAR, payload);
-    },
-
-    [TOGGLE_REPO]({ commit }, payload = {}) {
-      commit(TOGGLE_REPO, payload);
-    },
-
-    [TOGGLE_ACTIVITY]({ commit }, payload = {}) {
-      commit(TOGGLE_ACTIVITY, payload);
-    },
-
-    [ERROR]({ commit }, payload) {
-      commit(ERROR, payload);
-    },
-
-    [PWA_INSTALL_PROMPT]({ commit }, payload) {
-      commit(PWA_INSTALL_PROMPT, payload);
-    }
-  },
-
   mutations: {
     // only in small device
-    [TOGGLE_ASIDE](state, payload) {
+    [TOGGLE_ASIDE](state, payload = {}) {
       const body = window.document.body;
       const { open } = payload;
 
@@ -85,7 +59,7 @@ export default {
       }
     },
 
-    [TOGGLE_SIDEBAR](state, payload) {
+    [TOGGLE_SIDEBAR](state, payload = {}) {
       const body = window.document.body;
       const { open } = payload;
 
@@ -99,11 +73,11 @@ export default {
       }
     },
 
-    [TOGGLE_REPO](state, payload) {
+    [TOGGLE_REPO](state, payload = {}) {
       state.repoId = payload.repo;
     },
 
-    [TOGGLE_ACTIVITY](state, payload) {
+    [TOGGLE_ACTIVITY](state, payload = {}) {
       state.activity = payload.activity || 'explorer'; // default
     },
 
@@ -112,8 +86,7 @@ export default {
     },
 
     [PWA_INSTALL_PROMPT](state, payload) {
-      console.log(payload);
-      state.pwaInstallPrompt = payload;
+      state.pwaInstallPrompt = payload.pwaInstallPrompt;
     }
   }
 };

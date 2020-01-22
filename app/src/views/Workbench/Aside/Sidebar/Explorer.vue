@@ -92,7 +92,7 @@ export default {
     },
 
     closeSidebar() {
-      this.$store.dispatch(appTypes.TOGGLE_ASIDE, { open: false });
+      this.$store.commit(appTypes.TOGGLE_ASIDE, { open: false });
     },
 
     // events
