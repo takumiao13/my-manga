@@ -66,9 +66,9 @@ export default {
     toggleSidebar() {
       // when is small screen
       if (this.asideOpen) {
-        this.$store.dispatch(types.TOGGLE_ASIDE, { open: false });
+        this.$store.commit(types.TOGGLE_ASIDE, { open: false });
       } else {
-        this.$store.dispatch(types.TOGGLE_SIDEBAR);
+        this.$store.commit(types.TOGGLE_SIDEBAR);
       }
     },
 
@@ -83,8 +83,8 @@ export default {
       to.query = { ...to.query, activity };
       this.$router.replace(to);
 
-      this.$store.dispatch(types.TOGGLE_SIDEBAR, { open: true });
-      this.$store.dispatch(types.TOGGLE_ACTIVITY, { activity });
+      this.$store.commit(types.TOGGLE_SIDEBAR, { open: true });
+      this.$store.commit(types.TOGGLE_ACTIVITY, { activity });
     },
 
     isActive(activity) {

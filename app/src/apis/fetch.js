@@ -10,7 +10,7 @@ function fetch$(input, options) {
       const { code } = res;
       if (code >= 10000 && code < 20000) {
         // replace error view but not change url
-        store.dispatch(appTypes.ERROR, res);
+        store.commit(appTypes.ERROR, res);
       }
 
       if (code) { 

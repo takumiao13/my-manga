@@ -501,9 +501,9 @@ export default {
 
     // events
     handleToggleSidebar(activity) {
-      this.$store.dispatch(appTypes.TOGGLE_ASIDE);
+      this.$store.commit(appTypes.TOGGLE_ASIDE);
       if (activity) {
-        this.$store.dispatch(appTypes.TOGGLE_ACTIVITY, { activity });
+        this.$store.commit(appTypes.TOGGLE_ACTIVITY, { activity });
       }
     },
 

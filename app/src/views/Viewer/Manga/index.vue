@@ -342,20 +342,20 @@ export default {
     },
 
     zoomToggle(zoom) {
-      this.$store.dispatch(types.SETTINGS, { zoom });
+      this.$store.commit(types.SETTINGS, { zoom });
     },
 
     gapsToggle() {
-      this.$store.dispatch(types.SETTINGS, { gaps: !this.settings.gaps })
+      this.$store.commit(types.SETTINGS, { gaps: !this.settings.gaps })
     },
 
     pagerInfoToggle() {
-      this.$store.dispatch(types.SETTINGS, { pagerInfo: !this.settings.pagerInfo })
+      this.$store.commit(types.SETTINGS, { pagerInfo: !this.settings.pagerInfo })
     },
 
     handModeToggle() { 
       const handMode = { left: 'right', right: 'left' }[this.settings.handMode];
-      this.$store.dispatch(types.SETTINGS, { handMode });
+      this.$store.commit(types.SETTINGS, { handMode });
       this.helpOpen = true;
     },
 
@@ -367,7 +367,7 @@ export default {
     autoScrollToggle(val) {
       this.locking = false;
       
-      this.$store.dispatch(types.TOGGLE_AUTO_SCROLLING, { 
+      this.$store.commit(types.TOGGLE_AUTO_SCROLLING, { 
         autoScrolling: val 
       });
     },
