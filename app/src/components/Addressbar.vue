@@ -45,7 +45,7 @@
           class="address-separator"
           v-if="!isLastNav(index)"
         >
-          <icon name="chevron-right" />
+          <icon name="chevron-right" size="14" />
         </span>
       </li>
     </ul>
@@ -53,6 +53,8 @@
 </template>
 
 <script>
+import { debounce } from '@/helpers/utils';
+
 const BASIS_WIDTH = 40 + 38 // back + ... width
 
 // TODO:
@@ -75,7 +77,10 @@ export default {
 
   computed: {
     mobileStyle() {
-      return { visibility: this.hasTouch ? 'visible': 'hidden' }
+      return { 
+        visibility: this.hasTouch ? 'visible': 'hidden', 
+        'overflow-x': 'auto'
+      }
     }
   },
 
@@ -89,9 +94,18 @@ export default {
     this.refresh();
   },
 
+  created() {
+    this._handleResize = debounce(this.refresh, 500);
+    window.addEventListener('resize', this._handleResize);
+  },
+
+  destroyed() {
+    window.removeEventListener('resize', this._handleResize);
+  },
+
   methods: {
     isLastNav(index) {
-      return index === this.navs.length - 1;
+      return index === this.navs_.length - 1;
     },
 
     refresh() {
@@ -154,7 +168,7 @@ export default {
   white-space: nowrap;
   margin: 0;
   padding: 0;
-  overflow-x: auto;
+  overflow: hidden;
   list-style: none;
   min-width: 100%;
 

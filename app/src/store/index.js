@@ -65,8 +65,8 @@ export const loadSettingsState = (scope) => {
   if (!isExists) {
     const code = ERR_CODE.REPO_UNACCESSED;
     const error = errorCodeMap[code];
-    return store.commit(appTypes.TOGGLE_REPO, { repo: '' })
-      .then(() => Promise.reject(Object.assign(error, { code })));
+    store.commit(appTypes.TOGGLE_REPO, { repo: '' })
+    return Promise.reject(Object.assign(error, { code }))
   }
 
   // register nested settings state

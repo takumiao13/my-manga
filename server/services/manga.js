@@ -287,6 +287,8 @@ async function traverse({
         const childpath = pathFn.posix.join(path, file);
         let chapterName, versionName;
 
+        fixChildOptions.filepath = pathFn.resolve(absPath, file);
+
         if (versionName = isVersion(file, fixChildOptions)) {
           _versionFiles.push({
             name, versionName,
@@ -460,10 +462,14 @@ async function readMeta(path) {
   return metadata;
 }
 
-const isChapter = (name, { parentName, metadata }) => {
+const isChapter = (name, { parentName, metadata, filepath }) => {
   const regstr = `${parentName}\\s-\\s(.+)`;
   const chapterRE = new RegExp(regstr);
   const matched = name.match(chapterRE);
+
+  if (fs.statSync(filepath).isFile()) {
+    return false;
+  }
 
   if (matched) return matched[1];
   
