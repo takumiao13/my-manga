@@ -74,6 +74,11 @@ function pick({ dirId, path }) {
   return fetch(url);
 }
 
+function latest({ dirId }) {
+  const url = `${_buildURL(dirId)}/latest`;
+  return fetch(url);
+}
+
 function share(longUrl) {
   const url = 'api/mangas/share';
   return fetch(url, {
@@ -90,5 +95,6 @@ export default {
   list,
   folder,
   pick,
+  latest,
   share
 }

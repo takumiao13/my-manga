@@ -50,6 +50,10 @@ input {
   border-radius: 0 !important;
 }
 
+.hidden {
+  visibility: hidden;
+}
+
 .app-toast {
   .vue-notification {
     padding: .5rem 1rem;

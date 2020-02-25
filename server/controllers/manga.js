@@ -82,8 +82,19 @@ class MangaController extends Controller {
     const url = this.service.share.expand(shortId);
     ctx.redirect(url || '/');
   }
+
+  async latest(ctx) {
+    const { service } = this;
+    const { dirId } = ctx.params;
+    const data = await service.manga.latest(dirId);
+    ctx.body = data;
+  }
 }
 
-MangaController.actions = [ 'folder', 'list', 'pick', 'search', 'version', 'share', 'expand' ];
+MangaController.actions = [ 
+  'folder', 'list', 'pick', 
+  'latest', 'search', 'version', 
+  'share', 'expand' 
+];
 
 module.exports = MangaController;

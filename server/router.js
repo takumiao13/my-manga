@@ -9,6 +9,7 @@ module.exports = app => {
   router.get('/api/mangas/:dirId/:path?/pick', controller.manga.pick);
   router.get('/api/mangas/:dirId/:path?/search', controller.manga.search);
   router.get('/api/mangas/:dirId/version', controller.manga.version);
+  router.get('/api/mangas/:dirId/latest', controller.manga.latest);
   router.post('/api/mangas/share', controller.manga.share);
 
   router.get('/api/settings', controller.settings.get);

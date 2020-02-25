@@ -25,6 +25,7 @@
 
   .topbar > .navbar {
     background: $app-sidebar-bg !important;
+    //box-shadow: none;
   }
 
   .a2hs-logo {
@@ -55,9 +56,18 @@
     color: $app-muted-color;
   }
 
-  .manga-area > .row,
-  .gallery-area > .row {
-    border-color: $app-border-color;
+  .area-header a {
+    color: $app-muted-color;
+    &:hover {
+      color: $app-primary;
+    }
+  }
+
+  .manga-area,
+  .gallery-area {
+    .row {
+      border-color: $app-border-color;
+    }
 
     .cover {
       //border: .5px solid $app-border-color;
@@ -70,7 +80,7 @@
     }
   }
 
-  .folder-area > .row {
+  .folder-area {
     .area-item-inner {
       background: $app-light-bg;
       box-shadow: 0 4px 8px -4px rgba($black, .4);         
@@ -99,7 +109,7 @@
     }
   }
 
-  .manga-area > .row {
+  .manga-area {
     .cover {
       border-bottom: 0;
     }
@@ -134,11 +144,11 @@
     }
   }
 
-  .gallery-area > .row {
+  .gallery-area .row {
     background: $app-main;
   }
 
-  .gallery-area > .row {
+  .gallery-area .row {
     .area-item.active {
       box-shadow: 0 0 0 4px $app-grid-active-bg;
     }
@@ -181,66 +191,48 @@
 }
 
 
-
-.list-nested  {
-  .list-group {
-    .list-group-item {
-      &.active {
-        background: $app-lighter-bg;
-        color: $app-color;
-      }
-
-      &:hover {
-        background: $app-bg;
-      }
-
-      &.active:hover {
-        background: darken($app-lighter-bg, 5%);
-      }
-    }
-  }
-}
-
-.list-nested .manga-group-item {
-  .list-group {
-    .list-group-item {
-      background: $white;
-      border-top: .5px solid $app-border-color;
-      border-bottom: .5px solid $app-border-color;
-
-      &:hover {
-        background: $app-item-hover-bg;
-      }
-    }
-
-  }
-
-  .manga-group-btn {
-    border: .5px solid $app-muted-color;
-  }
-}
-
-.list-nested .manga-group-item {
-  .list-group {
-    .list-group-item {
-      background: $white;
-      border-top: .5px solid $app-border-color;
-      border-bottom: .5px solid $app-border-color;
-
-      &:hover {
-        background: $app-item-hover-bg;
-      }
-    }
-
-  }
-
-  .manga-group-btn {
-    border: .5px solid $app-muted-color;
-  }
-}
-
+// Sidebar.Explorer
+//==
 .explorer-repo-name {
   background: $app-lighter-bg;
+  box-shadow: 0 1px 2px rgba($black, .1);
+
+  &:hover {
+    font-size: bold;
+    color: $app-primary;
+  }
+}
+
+.explorer-latest,
+.list-nested .list-group .list-group-item  {
+  &.active {
+    background: $app-lighter-bg;
+    color: $app-color;
+  }
+
+  &:hover {
+    background: $app-bg;
+  }
+
+  &.active:hover {
+    background: darken($app-lighter-bg, 5%);
+  }
+}
+
+.list-nested .manga-group-item {
+  .list-group .list-group-item {
+    background: $white;
+    border-top: .5px solid $app-border-color;
+    border-bottom: .5px solid $app-border-color;
+
+    &:hover {
+      background: $app-item-hover-bg;
+    }
+  }
+
+  .manga-group-btn {
+    border: .5px solid $app-muted-color;
+  }
 }
 
 // Global

@@ -31,8 +31,6 @@
 </template>
 
 <script>
-import config from '@/config';
-import platform from '@/helpers/platform';
 import { mapState } from 'vuex';
 
 export default {
@@ -43,7 +41,7 @@ export default {
         className: 'navbar-brand-xs'
       },
       appLogoPath: process.env.APP_LOGO,
-      installed: platform.isLaunchedFromHS()
+      installed: this.$platform.isLaunchedFromHS()
     }
   },
 
@@ -55,9 +53,9 @@ export default {
     },
 
     qrcodeValue() {
-      const { HOST, PORT } = config.api;
+      const { HOST, PORT } = this.$config.api;
       
-      const protocol = platform.isElectron() ? 
+      const protocol = this.$platform.isElectron() ? 
         'http:' : 
         window.location.protocol;
       

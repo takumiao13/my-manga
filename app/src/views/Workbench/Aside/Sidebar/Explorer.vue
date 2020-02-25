@@ -10,10 +10,19 @@
       :empty="empty"
     >
       <div class="explorer-repo-name" @click="handleBack">{{ repo.name }}</div>
+      <div 
+        class="explorer-latest"
+        :class="{ active: activeItem && activeItem.path === $consts.LATEST_PATH }"
+        @click="handleLatest"
+      >
+        <icon name="rocket-launch" size="15" />
+        Latest
+      </div>
       <nested-list 
         v-show="success"  
         :props="treeProps"
         :data="folders"
+        :active-item="activeItem"
         @expanded="handleItemExpanded"
         @selected="handleItemSelected" 
       />
@@ -34,6 +43,8 @@ export default {
         className: 'navbar-brand-xs',
         click: this.closeSidebar
       },
+
+      activeItem: null,
 
       treeProps: {
         key: 'path',
@@ -75,11 +86,13 @@ export default {
     }
 
     this.fetchFolders();
+    this.fetchLatest();
   },
 
   beforeRouteUpdate(to, from, next) {
     if (!this.appError && to.params.dirId !== from.params.dirId) {
       this.fetchFolders();
+      this.fetchLatest();
     }
 
     next();
@@ -89,6 +102,11 @@ export default {
     fetchFolders() {
       const { dirId } = this.repo;
       this.$store.dispatch(types.FETCH, { dirId });
+    },
+
+    fetchLatest() {
+      const { dirId } = this.repo;
+      this.$store.dispatch(types.LATEST, { dirId });
     },
 
     closeSidebar() {
@@ -115,6 +133,8 @@ export default {
     },
 
     handleItemSelected(item, ctx) {
+      this.activeItem = item;
+
       if (item._mangaGroup) {
         ctx.open = !ctx.open;
         return;
@@ -141,6 +161,17 @@ export default {
       }
       
       this.closeSidebar();
+    },
+
+    handleLatest() {
+      const { dirId } = this.repo;
+      const path = this.$consts.LATEST_PATH;
+
+      this.activeItem = { path };
+      this.$router.push({ 
+        name: 'explorer', 
+        params: { dirId, path }
+      }).then(() => this.closeSidebar());
     }
   }
 }
@@ -152,8 +183,19 @@ export default {
 }
 
 .explorer-repo-name {
-  padding: .25rem .8rem;
   cursor: pointer;
+  padding: .25rem .8rem;
+  position: relative;
+  z-index: 1030;
+}
+
+.explorer-latest {
+  cursor: pointer;
+  padding: .5rem 0rem .5rem .8rem;
+  
+  &.active {
+    font-weight: bold;
+  }
 }
 </style>
 

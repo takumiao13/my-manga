@@ -1,7 +1,7 @@
 <template>
   <div class="addressbar" ref="addressbar">
     <!-- pc addressbar -->
-    <ul v-if="finished && !hasTouch" class="addressbar-container">
+    <ul v-if="finished && !$feature.touch" class="addressbar-container">
       <li 
         class="address-item"
         @click="$emit('back', $event)"
@@ -70,7 +70,6 @@ export default {
   data() {
     return {
       finished: false,
-      hasTouch: 'ontouchstart' in window,
       navs_: []
     }
   },
@@ -78,7 +77,7 @@ export default {
   computed: {
     mobileStyle() {
       return { 
-        visibility: this.hasTouch ? 'visible': 'hidden', 
+        visibility: this.$feature.touch ? 'visible': 'hidden', 
         'overflow-x': 'auto'
       }
     }
@@ -114,7 +113,7 @@ export default {
       this.finished = true;
 
       // scroll to right
-      if (this.hasTouch) {
+      if (this.$feature.touch) {
         this.$nextTick(() => this.$refs.mobile.scrollLeft = 9999);
       }
     },
@@ -138,7 +137,7 @@ export default {
 
       const diff = this.navs.length - navs.length;
 
-      if (!this.hasTouch && diff) {
+      if (!this.$feature.touch && diff) {
         if (diff > 1) {
           navs.unshift({ 
             name: '...', 

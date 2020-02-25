@@ -27,6 +27,10 @@ export default {
       default: () => []
     },
 
+    activeItem: {
+      type: Object,
+    },
+
     props: {
       type: Object,
       default: () => ({
@@ -41,14 +45,12 @@ export default {
 
   data() {
     return {
-      depth: 1,
-      activeItem: null
+      depth: 1
     }
   },
 
   methods: {
     selectItem(item, ctx) {
-      this.activeItem = item;
       this.$emit('selected', item, ctx);
     },
 

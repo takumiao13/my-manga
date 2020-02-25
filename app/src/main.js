@@ -4,10 +4,12 @@ import './registerServiceWorker';
 import Vue from 'vue';
 import App from './App.vue';
 import config from '@/config';
+import consts from '@/consts';
 
 // Helpers
-import { byId, getScript } from '@/helpers/dom';
+import { byId } from '@/helpers/dom';
 import { delay } from '@/helpers/promise';
+import feature from '@/helpers/feature';
 import platform from '@/helpers/platform';
 import EventEmitter from '@/helpers/eventemitter';
 
@@ -70,10 +72,11 @@ Vue.use(VueLazyload, {
   }
 });
 
-Vue.use($Service, {
-  router,
-  store
-});
+Vue.use($Service, { router, store });
+Vue.prototype.$platform = platform;
+Vue.prototype.$feature = feature;
+Vue.prototype.$config = config;
+Vue.prototype.$consts = consts;
 
 Vue.config.productionTip = process.env.NODE_ENV === 'production';
 

@@ -6,10 +6,11 @@ export const NAMESPACE = 'explorer';
 
 // Types Enum
 const FETCH = 'FETCH';
+const LATEST = 'LATEST';
 
 const statusHelper = createRequestStatus('status');
 
-export const types = createTypesWithNamespace([ FETCH ], NAMESPACE);
+export const types = createTypesWithNamespace([ FETCH, LATEST ], NAMESPACE);
 
 export default {
   namespaced: true,
@@ -17,6 +18,7 @@ export default {
   state: {
     inited: false,
     folders: [],
+    latest: [],
     ...statusHelper.state()
   },
 
@@ -53,6 +55,14 @@ export default {
           global && statusHelper.error(commit, { error })
           throw error
         });
+    },
+
+    [LATEST]({ commit }, payload = {}) {
+      const { dirId } = payload;
+      return mangaAPI.latest({ dirId })
+        .then((latest) => {
+          commit(LATEST, { latest });
+        })
     }
   },
 
@@ -67,6 +77,11 @@ export default {
         const childState = findStateByPath(state.folders, path);
         if (childState) childState.children = folders;
       }
+    },
+
+    [LATEST](state, payload) {
+      const { latest } = payload;
+      state.latest = latest;
     },
 
     ...statusHelper.mutation()

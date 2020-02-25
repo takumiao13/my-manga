@@ -1,6 +1,7 @@
 import { safeAssign, last, find, pick } from '@/helpers/utils';
 import { createTypesWithNamespace, createRequestStatus } from '../helpers';
 import mangaAPI from '@/apis/manga';
+import consts from '@/consts';
 
 // Namespace
 export const NAMESPACE = 'manga';
@@ -86,18 +87,36 @@ export default {
     },
 
     empty(state) {
-      return state.inited && !state.list.length;
+      return state.inited && state.path !== consts.LATEST_PATH && !state.list.length;
     }
   },
 
   actions: {
-    [FETCH]({ commit }, payload = {}) { 
+    [FETCH]({ commit }, payload = {}) {
       let index = -1;
       const { dirId, path, isBack, search, keyword } = payload;
       if (isBack) index = cacheStack.find(dirId, path, keyword);
-      console.log(isBack, index, path);
+      // console.log(isBack, index, path);
+
       // hack no flashing when random manga
       statusHelper.pending(commit);
+
+      if (path === consts.LATEST_PATH) {
+        commit(FETCH, {
+          name: 'Latest',
+          path,
+          metadata: null,
+          activePath: '',
+          shortId: false,
+          list: [],
+          files: [], 
+          mangas: [],
+          chapters: [],
+          versions: [],
+          images: [],
+        });
+        return statusHelper.success(commit);
+      }
       
       // if cannot find cache
       if (index === -1) {

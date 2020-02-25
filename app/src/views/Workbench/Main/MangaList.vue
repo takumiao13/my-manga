@@ -85,6 +85,23 @@
 
         <div class="area-container mt-3 col-12" v-show="!sharing">
 
+          <!-- LATEST -->
+          <LatestGroup 
+            v-if="!path && latest.length"
+            :length="latest.length"
+            @more="readFile({ isDir: true, path: $consts.LATEST_PATH })"  
+          >
+            <MangaItem 
+              viewMode="grid"
+              v-for="item in latest"
+              :key="item.path"
+              :active-path="activePath"
+              :item="item"
+              @click.native="readFile(item, 'manga')"
+            />
+          </LatestGroup>
+          <!-- /LATEST -->
+
           <!-- FILE GROUP -->
           <FileGroup
             v-show="filesShow"
@@ -172,10 +189,8 @@
 </template>
 
 <script>
-import config from '@/config';
-import { isUndef, last, get, eq } from '@/helpers/utils';
+import { isUndef, get, eq } from '@/helpers/utils';
 import { getScrollTop } from '@/helpers/dom';
-import platform from '@/helpers/platform';
 import { types as appTypes } from '@/store/modules/app';
 import { types as mangaTypes } from '@/store/modules/manga';
 import { types as viewerTypes } from '@/store/modules/viewer';
@@ -183,6 +198,7 @@ import { mapState, mapGetters } from 'vuex';
 import animateScrollTo from 'animate-scroll-to.js';
 
 // Components
+import LatestGroup from './LatestGroup';
 import FileGroup from './FileGroup';
 import FileItem from './FileItem';
 
@@ -193,6 +209,7 @@ const PATH_SEP = '/';
 
 export default {
   components: {
+    LatestGroup,
     FileGroup,
     FileItem,
     MangaGroup,
@@ -217,11 +234,27 @@ export default {
   computed: {
     ...mapState('app', { appError: 'error' }),
 
+    ...mapState('explorer', {
+      latest(state) {
+        return state.latest.slice(0, 24);
+      }
+    }),
+
     ...mapState('manga', [
       'inited', 'name', 'path', 'list', 'type', 'cover', 'files', 
-      'mangas', 'chapters', 'versions', 'images', 'activePath', 
+      'chapters', 'versions', 'images', 'activePath', 
       'error', 'shortId', 'metadata'
     ]),
+
+    ...mapState('manga', {
+      mangas(state) {
+        if (this.path === this.$consts.LATEST_PATH) {
+          return this.latest;
+        } else {
+          return state.mangas;
+        }
+      }
+    }),
 
     ...mapState('viewer', {
       viewerPath: 'path',
@@ -238,9 +271,8 @@ export default {
       }
 
       const repoName = this.repo.name;
-      const path = this.$route.params.path;
-      const title = path ? 
-        get(this.metadata, 'title') || last(path.split(PATH_SEP)) : 
+      const title = this.path ? 
+        get(this.metadata, 'title') || this.name : 
         repoName;
       
       return title;
@@ -320,8 +352,8 @@ export default {
     },
     
     qrcodeValue() {
-      const { HOST, PORT } = config.api;
-      const protocol = platform.isElectron() ? 'http:' : window.location.protocol;
+      const { HOST, PORT } = this.$config.api;
+      const protocol = this.$platform.isElectron() ? 'http:' : window.location.protocol;
       return `${protocol}//${HOST}:${PORT}/s/${this.shortId}`
     },
 
@@ -570,14 +602,14 @@ export default {
     },
 
     handleShareManga() {
-      const { HOST, PORT } = config.api;
+      const { HOST, PORT } = this.$config.api;
       const { hash } = window.location;
       
       const port = process.env.NODE_ENV === 'development' ?
         window.location.port : // user client port
         PORT; // user server port
 
-      const protocol = platform.isElectron() ? 'http:' : window.location.protocol;
+      const protocol = this.$platform.isElectron() ? 'http:' : window.location.protocol;
       const url = `${protocol}//${HOST}:${port}/${hash}`;
       
       this.$store.dispatch(mangaTypes.SHARE, { url }).then(() => {
@@ -628,6 +660,13 @@ export default {
 .area-header {
   margin: .5rem 0;
   font-size: 80%;
+
+  a[href] {
+    cursor: pointer;
+    &:hover {
+      font-weight: bold;
+    }
+  }
 
   .actions {
     .svg-icon {
@@ -802,22 +841,21 @@ export default {
 
 .folder-area {
   .row {
-    padding: 0 .5rem;
-
-    @include media-breakpoint-up(md) {
-      margin-left: -.5rem;
-      margin-right: -.5rem;
-      padding: 0;
-    }
+    //padding: 0 .5rem;
+    margin-left: -.5rem;
+    margin-right: -.5rem;
+    // @include media-breakpoint-up(md) {
+      
+    // }
   }
-
-  .area-item {
-    // 1/8
-    @include media-breakpoint-up(xl) {
-      flex: 0 0 12.5%;
-      max-width: 12.5%;
-    }
-  }
+  
+  // 1/8
+  // .area-item {    
+  //   @include media-breakpoint-up(xl) {
+  //     flex: 0 0 12.5%;
+  //     max-width: 12.5%;
+  //   }
+  // }
 
   .area-item-inner {
     display: block;
@@ -838,15 +876,14 @@ export default {
 }
 
 .manga-area {
-  > .row {
-    padding: 0 .5rem;
+  .row {
+    margin-left: -.5rem;
+    margin-right: -.5rem;
     align-items: flex-end;
 
-    @include media-breakpoint-up(md) {
-      margin-left: -.5rem;
-      margin-right: -.5rem;
-      padding: 0;
-    }
+    // @include media-breakpoint-up(md) {
+      
+    // }
   }
 
   .area-item {
@@ -933,7 +970,7 @@ export default {
 
 .gallery-area {
 
-  > .row {
+  .row {
     padding: .5rem .5rem;
     border-width: .5px 0;
     border-style: solid;

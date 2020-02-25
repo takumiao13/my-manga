@@ -87,7 +87,7 @@ class MangaService extends Service {
           if (child.type === FileTypes.MANGA) {
             count++;
             callback(pick(child, [
-              'name', 'path', 'type', 'mtime', 
+              'name', 'path', 'type', 'ctime', 'mtime', 
               'cover', 'width', 'height', 'version'
             ]));
           } else if (child.isDir && child.type === FileTypes.FILE) {
@@ -132,6 +132,11 @@ class MangaService extends Service {
       return results;
   }
 
+  /**
+   * get all versions in the given repo
+   * 
+   * @param {string} dirId 
+   */
   async version(dirId) {
     const { db } = await this._indexedDB.get(dirId);
     const mangaColl = db.getCollection('mangas');
@@ -139,6 +144,23 @@ class MangaService extends Service {
       .chain()
       .find({ version: { $exists: true }})
       .extract('version') // ?? has problem ??
+      .data();
+
+    return results;
+  }
+
+  /**
+   * get latest manga in the given repo (limit 100)
+   * 
+   * @param {string} dirId 
+   */
+  async latest(dirId) {
+    const { db } = await this._indexedDB.get(dirId);
+    const mangaColl = db.getCollection('mangas');
+    const results = mangaColl
+      .chain()
+      .simplesort('ctime')
+      .limit(100)
       .data();
 
     return results;
@@ -160,7 +182,7 @@ class MangaService extends Service {
           if (mangasColl === null) {
             db.addCollection('mangas', {
               unique: ['path'],
-              indices: ['mtime', 'version']
+              indices: ['ctime', 'version']
             });
           }
 
@@ -244,7 +266,7 @@ async function traverse({
   if (!isDir && !fileType) return null;
   
   // Define Data info.
-  let metadata, type, cover, width, height, mtime, hasSubfolder, version,
+  let metadata, type, cover, width, height, ctime, mtime, hasSubfolder, version,
       children = _isFile ? [ { name, path, type: FileTypes.FILE, fileType } ] : undefined;
 
   let _isManga = false,
@@ -397,6 +419,7 @@ async function traverse({
   } else if (type === FileTypes.MANGA) {
     imgPath = cover;
     mtime = stat.mtime;
+    ctime = stat.ctime;
 
     // check self has contains version
     const versionName = isVersion(name);
@@ -418,7 +441,7 @@ async function traverse({
 
   // Merge base info and extra info
   return { 
-    isDir, path, name, mtime, type, version,
+    isDir, path, name, ctime, mtime, type, version,
     cover, metadata, width, height, fileType,
     children, hasSubfolder
   };
