@@ -49,6 +49,16 @@ export default {
     next();
   },
 
+  created() {
+    this._removeListener = this.$service.media.addListener(evt => {
+      this.$store.commit(types.TOGGLE_SIZE, { size: evt.$active });
+    });
+  },
+
+  destroyed() {
+    this._removeListener();
+  },
+
   methods: {
     closeAside() {
       this.$store.commit(types.TOGGLE_ASIDE, { open: false });

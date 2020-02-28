@@ -2,6 +2,7 @@
   <div class="explorer">
     <div class="topbar">
       <navbar :title="title" :right-btns="rightBtns" />
+      <div class="explorer-repo-name" @click="handleBack">{{ repo.name }}</div>
     </div>
     
     <data-view 
@@ -9,14 +10,12 @@
       :loading="pending" 
       :empty="empty"
     >
-      <div class="explorer-repo-name" @click="handleBack">{{ repo.name }}</div>
       <div 
         class="explorer-latest"
         :class="{ active: activeItem && activeItem.path === $consts.LATEST_PATH }"
         @click="handleLatest"
       >
-        <icon name="rocket-launch" size="15" />
-        Latest
+        <icon name="rocket-launch" size="14" />Latest
       </div>
       <nested-list 
         v-show="success"  
@@ -179,7 +178,7 @@ export default {
 
 <style lang="scss" scoped>
 .explorer-container {
-  min-height: calc(100vh - 3rem);
+  min-height: calc(100vh - 5rem);
 }
 
 .explorer-repo-name {
@@ -191,10 +190,11 @@ export default {
 
 .explorer-latest {
   cursor: pointer;
-  padding: .5rem 0rem .5rem .8rem;
-  
-  &.active {
-    font-weight: bold;
+  padding: .5rem 0rem;
+  font-size: 80%;
+
+  .svg-icon {
+    width: 2rem;
   }
 }
 </style>

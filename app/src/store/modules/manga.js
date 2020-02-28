@@ -88,6 +88,19 @@ export default {
 
     empty(state) {
       return state.inited && state.path !== consts.LATEST_PATH && !state.list.length;
+    },
+
+    mangas(state, getters, allState) {
+      let mangas = null;
+      if (state.path === consts.LATEST_PATH) {
+        mangas = allState.explorer.latest;
+      } else {
+        mangas = state.mangas;
+      }
+
+      // reflow mangas to fit gutter
+      reflowMangas(mangas, allState.app.size);
+      return mangas;
     }
   },
 
@@ -132,8 +145,9 @@ export default {
               _dirId: dirId,
               _kw: keyword
             }));
-   
+
             commit(FETCH, res);
+
             return statusHelper.success(commit);
           })
           .catch(error => {
@@ -143,7 +157,6 @@ export default {
       // get result from cache
       } else {
         const result = cacheStack.pop(index);
-        console.log(cacheStack)
         commit(FETCH, result);
         return statusHelper.success(commit);
       }
@@ -194,7 +207,7 @@ export default {
       const obj = pick(res, ['list', 'files', 'mangas', 'chapters', 'images']);
       safeAssign(version, { ...res, inited: true });
       safeAssign(state, obj);
-      console.log(version, state);
+      //console.log(version, state);
     },
 
     [SHARE](state, payload) {
@@ -205,3 +218,40 @@ export default {
     ...statusHelper.mutation()
   }
 };
+
+function reflowMangas(mangas, size) {
+  const lineCount = consts.MANGA_GRID_SIZE[size];
+
+  let i = 0, count = 0, l = mangas.length, j;
+  while (i < l) {
+    let p = mangas[i].placeholder;
+    if (lineCount == 3 && p == 2) p = 3;
+    count += p;
+
+    if (count === lineCount) {
+      count = 0;
+      i++;
+    } else if (count < lineCount) {
+      i++;
+    
+    // handle count exceed
+    } else if (count > lineCount) {
+      let need = lineCount - (count - p);
+      j = i+1;  
+      while (j < l && need > 0) {
+        let q = mangas[j].placeholder;
+        if (lineCount == 3 && q == 2) q = 3;
+        
+        if (q <= need) {
+          mangas.splice(i, 0, mangas[j]);
+          mangas.splice(j+1, 1);
+          need -= q;
+          i++;
+        }
+
+        j++;
+      }
+      count = 0;
+    }
+  }
+}

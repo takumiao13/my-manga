@@ -10,6 +10,7 @@ const TOGGLE_ASIDE    = 'TOGGLE_ASIDE';
 const TOGGLE_SIDEBAR  = 'TOGGLE_SIDEBAR';
 const TOGGLE_REPO     = 'TOGGLE_REPO';
 const TOGGLE_ACTIVITY = 'TOGGLE_ACTIVITY';
+const TOGGLE_SIZE     = 'TOGGLE_SIZE';
 const ERROR           = 'ERROR';
 const PWA_INSTALL_PROMPT = 'PWA_INSTALL_PROMPT';
 
@@ -19,7 +20,7 @@ const ClassNames = {
 };
 
 export const types = createTypesWithNamespace([
-  TOGGLE_ASIDE, TOGGLE_SIDEBAR, TOGGLE_REPO, TOGGLE_ACTIVITY, 
+  TOGGLE_ASIDE, TOGGLE_SIDEBAR, TOGGLE_REPO, TOGGLE_ACTIVITY, TOGGLE_SIZE,
   ERROR, PWA_INSTALL_PROMPT
 ], NAMESPACE);
 
@@ -30,6 +31,7 @@ export default {
     asideOpen: false, // TODO: use a more suitable name replace it
     sidebarOpen: true,
     repoId: '',
+    size: '',
     activity: '', // activity tab
     error: null,
     pwaInstallPrompt: null
@@ -79,6 +81,10 @@ export default {
 
     [TOGGLE_ACTIVITY](state, payload = {}) {
       state.activity = payload.activity || 'explorer'; // default
+    },
+
+    [TOGGLE_SIZE](state, payload = {}) {
+      state.size = payload.size || 'lg';
     },
 
     [ERROR](state, payload) {

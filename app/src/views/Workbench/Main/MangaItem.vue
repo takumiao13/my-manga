@@ -2,8 +2,9 @@
   <div 
     :class="{ 
       active: item.path === activePath, 
-      'col-4 col-sm-3 col-xl-2': viewMode == 'grid' && (!item.cover || !item.width || (item.height > item.width)),
-      'col-12 col-sm-6 col-xl-4': viewMode == 'grid' && (item.height <= item.width),
+      'col-4 col-sm-3 col-xl-2': viewMode == 'grid' && item.placeholder == 1,
+      'col-12 col-sm-6 col-xl-4': !latest && viewMode == 'grid' && item.placeholder == 2,
+      'col-8 col-sm-6 col-xl-4': latest && viewMode == 'grid' && item.placeholder == 2,
       'area-item': viewMode == 'grid',
       'list-group-item list-group-item-action': viewMode == 'list'
     }"
@@ -53,9 +54,10 @@
 
 export default {
   props: {
-    activePath: String,
     item: Object,
-    viewMode: String
+    viewMode: String,
+    activePath: String,
+    latest: Boolean
   }
 }
 </script>

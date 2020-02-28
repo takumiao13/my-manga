@@ -30,20 +30,25 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
 
 export default {
   props: {
-    length: Number
+    list: Array
   },
 
   data() {
     return {
-      step: 0,
-      maxStep: 0
+      step: 0
     }
   },
 
   computed: {
+
+    ...mapState('app', { 
+      appSize: 'size'
+    }),
+
     offsetX() {
       return -100*this.step;
     },
@@ -54,6 +59,16 @@ export default {
 
     nextBound() {
       return this.step == this.maxStep
+    },
+
+    length() {
+      return this.list.reduce((sum,item) => sum += item.placeholder, 0);
+    },
+
+    maxStep() {
+      const lineCount = this.$consts.MANGA_GRID_SIZE[this.appSize];
+      console.log('maxStep', this.appSize)
+      return Math.ceil(this.length / lineCount) - 1;
     }
   },
 
@@ -64,17 +79,6 @@ export default {
         this.step = val;
       }
     }
-  },
-
-  created() {
-    this._removeListener = this.$service.media.addListener(evt => {
-      const lineSize = { 'sm': 3,'md': 4,'lg': 6 }[evt.$active];
-      this.maxStep = Math.ceil(this.length / lineSize) - 1;
-    });
-  },
-
-  destroyed() {
-    this._removeListener();
   },
 
   methods: {
@@ -93,9 +97,9 @@ export default {
 
 <style lang="scss" scoped>
 .latest-container {
-  padding: 0 .5rem;
-  margin-left: -.5rem;
-  margin-right: -.5rem;
+  padding: 0 2px; 
+  margin-left: -2px; // don't hidden version border
+  margin-right: -2px;
 
   > .row {
     flex-wrap: nowrap;

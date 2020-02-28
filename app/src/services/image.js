@@ -73,12 +73,12 @@ class ImageService extends Service {
 
     return {
       class: { scale, fitW, fitH },
-      style: { padding:'0 0 ' + ratio + '%' } // height: '100%'
+      style: { padding: '0 0 ' + ratio + '%' } // height: '100%'
     }
   }
 
-  // when thumb should use maxRatio to prevent size to long
-  // when in viewer must no maxRation to show origin size
+  // when thumb should use maxRatio to prevent size too long
+  // when in viewer must no maxRation to show the origin size
   style({ width, height }, maxRatio) {
     let ratio = (height / width) * 100;
 
@@ -89,6 +89,12 @@ class ImageService extends Service {
     return { padding:'0 0 ' + ratio + '%' }
   }
 
+  shouldMultiWidth({ width, height }) {
+    if (!width || !height) return false;
+    const ratio = (height / width) * 100;
+    if (ratio < 72) return true;
+    return false;
+  }
 }
 
 export default ImageService;

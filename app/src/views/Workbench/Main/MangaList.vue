@@ -88,11 +88,12 @@
           <!-- LATEST -->
           <LatestGroup 
             v-if="!path && latest.length"
-            :length="latest.length"
+            :list="latest"
             @more="readFile({ isDir: true, path: $consts.LATEST_PATH })"  
           >
-            <MangaItem 
-              viewMode="grid"
+            <MangaItem
+              latest
+              view-mode="grid"
               v-for="item in latest"
               :key="item.path"
               :active-path="activePath"
@@ -241,20 +242,10 @@ export default {
     }),
 
     ...mapState('manga', [
-      'inited', 'name', 'path', 'list', 'type', 'cover', 'files', 
+      'inited', 'name', 'path', 'list', 'type', 'cover', 'files',
       'chapters', 'versions', 'images', 'activePath', 
       'error', 'shortId', 'metadata'
     ]),
-
-    ...mapState('manga', {
-      mangas(state) {
-        if (this.path === this.$consts.LATEST_PATH) {
-          return this.latest;
-        } else {
-          return state.mangas;
-        }
-      }
-    }),
 
     ...mapState('viewer', {
       viewerPath: 'path',
@@ -263,7 +254,7 @@ export default {
 
     ...mapGetters('app', [ 'repo' ]),
 
-    ...mapGetters('manga', [ 'pending', 'success', 'empty' ]),
+    ...mapGetters('manga', [ 'mangas', 'pending', 'success', 'empty' ]),
 
     title() {
       if (this.isSearch) {
@@ -663,9 +654,6 @@ export default {
 
   a[href] {
     cursor: pointer;
-    &:hover {
-      font-weight: bold;
-    }
   }
 
   .actions {

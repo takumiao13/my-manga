@@ -16,18 +16,33 @@ function _transformResponse(res) {
   
   // FIXED: simple extract cover, but we should do more check later.
   const images = group.IMAGE && group.IMAGE.length > 1 ? group.IMAGE : [];
+  
+  
 
   Object.assign(res, {
     list,
     cover,
     files: group.FILE || [],
-    mangas: group.MANGA || [],
     chapters: group.CHAPTER || [],
+    mangas: _attachPlaceholder(group.MANGA || []),
     images,
     versions
   });
 
   return res;
+}
+
+function _attachPlaceholder(mangas) {
+  // add placeholder for manga to fill gutter 
+  // when some manga cover is to long
+  return mangas.map(item => {
+    item.placeholder = 1;
+    const ratio = (item.height / item.width) * 100;
+    if (!isNaN(ratio) && ratio < 80) {
+      item.placeholder++;
+    }
+    return item;
+  });
 }
 
 function search({ dirId, path, keyword }) {
@@ -76,7 +91,7 @@ function pick({ dirId, path }) {
 
 function latest({ dirId }) {
   const url = `${_buildURL(dirId)}/latest`;
-  return fetch(url);
+  return fetch(url).then(res => _attachPlaceholder(res));
 }
 
 function share(longUrl) {

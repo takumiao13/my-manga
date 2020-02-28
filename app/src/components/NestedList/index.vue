@@ -76,10 +76,6 @@ export default {
       background: none;
       padding: 0 .75rem;
       border: .5px solid transparent;
-
-      &.active {
-        font-weight: bold;
-      }
     }
 
     .list-nested-toggle-icon {

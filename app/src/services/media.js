@@ -48,9 +48,12 @@ class MediaService extends Service {
 
   isActive(value) {
     const media = this._currentMq.media;
-    console.log(media, this.mqMap[media].$active);
-
     return this.mqMap[media].$active === value;
+  }
+
+  get active() {
+    const media = this._currentMq.media;
+    return this.mqMap[media].$active;
   }
 }
 
