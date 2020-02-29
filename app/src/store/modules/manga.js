@@ -8,12 +8,16 @@ export const NAMESPACE = 'manga';
 
 // Types Enum
 const FETCH = 'FETCH';
-const TOGGLE_VERSION = 'TOGGLE_VERSION';
 const SHARE = 'SHARE';
+const ADD_VERSION = 'ADD_VERSION';
+const TOGGLE_VERSION = 'TOGGLE_VERSION';
 
 const statusHelper = createRequestStatus('status');
 
-export const types = createTypesWithNamespace([ FETCH, SHARE, TOGGLE_VERSION ], NAMESPACE);
+export const types = createTypesWithNamespace([ 
+  FETCH, SHARE, 
+  ADD_VERSION, TOGGLE_VERSION 
+], NAMESPACE);
 
 export const cacheStack = {
   _value: [],
@@ -66,14 +70,18 @@ export default {
     name: '',
     path: '',
     metadata: null,
-    activePath: '',
-    shortId: false,
     list: [], // <-- all children
-    files: [], 
-    mangas: [],
-    chapters: [],
-    versions: [],
-    images: [],
+    files: [], // Manga[]
+    mangas: [], // Manga[]
+    chapters: [], // Manga[]
+    versions: [], // Manga[]
+    verNames: null, // String[]
+    images: [], // Manga[]
+
+    activePath: '', // acitve path of `state.list`
+    activeVer: '', // active ver of `state.versions`
+    shortId: false,
+
     ...statusHelper.state()
   },
 
@@ -120,6 +128,7 @@ export default {
           path,
           metadata: null,
           activePath: '',
+          activeVer: '',
           shortId: false,
           list: [],
           files: [], 
@@ -163,19 +172,23 @@ export default {
     },
 
     [TOGGLE_VERSION]({ commit, state }, payload = {}) {
+      const { activeVer, versions } = state;
       const { dirId, ver } = payload;
-      // FIXED: when not found path ??
-      const currentVersion = find(state.versions, { versionName: ver });
-      const { inited, path } = currentVersion;
+      
+      if (activeVer === ver) return;
 
+      const currVer = find(versions, { ver });
+      const { inited, path } = currVer;
 
-      // TODO: pretty code
+      // check version has loaded
       if (inited) {
-        commit(TOGGLE_VERSION, { ver, res: currentVersion });
+        commit(TOGGLE_VERSION, { ver, res: currVer });
       } else {
+        // get version data first
         mangaAPI.list({ dirId, path })
           .then(res => {
-            commit(TOGGLE_VERSION, { ver, res });
+            commit(ADD_VERSION, { ver, res });
+            commit(TOGGLE_VERSION, { ver, res }) 
           });
       }
     },
@@ -192,21 +205,26 @@ export default {
     [FETCH](state, payload) {
       state.inited || (state.inited = true);
       safeAssign(state, { 
-        ...payload, 
+        ...payload,
+        activeVer: '',
         error: null,
         shortId: false
       });
     },
 
+    [ADD_VERSION](state, payload) {
+      const { ver, res } = payload;
+      const version = find(state.versions, { ver });
+      safeAssign(version, { ...res, inited: true }); // add version data
+    },
+
     [TOGGLE_VERSION](state, payload) {
       const { ver, res } = payload;
-      const version = find(state.versions, {
-        versionName: ver
-      });
-
       const obj = pick(res, ['list', 'files', 'mangas', 'chapters', 'images']);
-      safeAssign(version, { ...res, inited: true });
-      safeAssign(state, obj);
+
+      // use version date replace current data
+      state.activeVer = ver;
+      safeAssign(state, obj); 
       //console.log(version, state);
     },
 

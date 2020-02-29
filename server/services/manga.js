@@ -267,7 +267,9 @@ async function traverse({
   
   // Define Data info.
   let metadata, type, cover, width, height, birthtime, mtime, hasSubfolder, version,
-      children = _isFile ? [ { name, path, type: FileTypes.FILE, fileType } ] : undefined;
+      children = _isFile ? 
+        [ { name, path, type: FileTypes.FILE, fileType } ] : // single file put self in children 
+        undefined;
 
   let _isManga = false,
       _hasFolder = false;
@@ -307,20 +309,20 @@ async function traverse({
       .forEach(file => {
         const { base: name, ext } = pathFn.parse(file);
         const childpath = pathFn.posix.join(path, file);
-        let chapterName, versionName;
+        let chapterName, ver;
 
         fixChildOptions.filepath = pathFn.resolve(absPath, file);
 
-        if (versionName = isVersion(file, fixChildOptions)) {
+        if (ver = isVersion(file, fixChildOptions)) {
           _versionFiles.push({
-            name, versionName,
+            name, ver,
             path: childpath,
             type: FileTypes.VERSION,
             fileType: getFileType(ext)
           });
 
           version || (version = []);
-          version.push(versionName);
+          version.push(ver);
           
         } else if (chapterName = isChapter(file, fixChildOptions)) {
           _chapterFiles.push({
@@ -422,10 +424,10 @@ async function traverse({
     birthtime = stat.birthtime;
 
     // check self has contains version
-    const versionName = isVersion(name);
-    if (versionName) {
+    const ver = isVersion(name);
+    if (ver) {
       version || (version = []);
-      version.unshift(versionName);
+      version.unshift(ver);
     }
   }
 
@@ -441,7 +443,7 @@ async function traverse({
 
   // Merge base info and extra info
   return { 
-    isDir, path, name, birthtime, mtime, type, version,
+    isDir, path, name, birthtime, mtime, type, verNames: version,
     cover, metadata, width, height, fileType,
     children, hasSubfolder
   };

@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { safeAssign, isDef } from '@/helpers/utils';
+import { safeAssign, isDef, find } from '@/helpers/utils';
 import { createTypesWithNamespace, createRequestStatus } from '../helpers';
 import { NAMESPACE as APP_NAMESPACE } from './app'
 import mangaAPI from '@/apis/manga';
@@ -11,6 +11,7 @@ export const NAMESPACE = 'viewer';
 const LOAD  = 'LOAD';
 const GO    = 'GO';
 const VIEW  = 'VIEW';
+const VIEW_VIDEO = 'VIEW_VIDEO';
 const SETTINGS = 'SETTINGS';
 const TOGGLE_AUTO_SCROLLING = 'TOGGLE_AUTO_SCROLLING';
 
@@ -18,7 +19,7 @@ const TOGGLE_AUTO_SCROLLING = 'TOGGLE_AUTO_SCROLLING';
 const statusHelper = createRequestStatus('status');
 
 export const types = createTypesWithNamespace([ 
-  LOAD, GO, VIEW, SETTINGS, TOGGLE_AUTO_SCROLLING
+  LOAD, GO, VIEW, VIEW_VIDEO, SETTINGS, TOGGLE_AUTO_SCROLLING
 ], NAMESPACE);
 
 export default {
@@ -33,6 +34,9 @@ export default {
     ch: '',
     chName: '',
     chIndex: 0,
+    cover: '',
+    verNames: [],
+    activeVer: '',
     images: [],
     chapters: [],
     settings: {
@@ -122,7 +126,9 @@ export default {
         let name = state.name, 
             path = state.path, 
             chapters, 
-            images;
+            images,
+            verNames,
+            cover;
   
         // handle no chapters
         if (res2 === void 0) {
@@ -131,6 +137,8 @@ export default {
             path = res1.path;
             images = res1.images;
             chapters = res1.chapters;
+            cover = res1.cover;
+            verNames = res1.verNames
           }
           
         // handle chapters
@@ -139,6 +147,8 @@ export default {
             name = res1.name;
             path = res1.path;
             chapters = res1.chapters;
+            cover = res1.cover;
+            verNames = res1.verNames;
           }
   
           if (res2 !== chResStub) {
@@ -152,12 +162,39 @@ export default {
         // TODO: replace `safeAssign`
         // sometimes images chapters will be undefined
         // so we should safeAssign it.
-        commit(LOAD, { name, path, images, chapters, chName });
+        commit(LOAD, { name, path, cover, images, chapters, chName, verNames });
         commit(GO, { page, ch });
         Vue.nextTick(() => statusHelper.success(commit));
       }).catch(error => {
         statusHelper.error(commit, { error });
       });
+    },
+
+    [VIEW_VIDEO]({ commit }, payload = {}) {
+      const { dirId, path, ver } = payload;
+
+      statusHelper.pending(commit);
+      return mangaAPI.list({ dirId, path }).then(res => {
+        const { name, cover, children, verNames } = res;
+        const findOptions = ver ? 
+          { ver } : 
+          { fileType: 'video' };
+        
+        const video = find(children, findOptions);
+
+        commit(LOAD, {
+          name, 
+          verNames,
+          path: video.path,
+          cover: cover || '', // overwrite cover
+          activeVer: ver
+        });
+
+        // should update status after state mutated 
+        Vue.nextTick(() => statusHelper.success(commit));
+      }).catch(error => {
+        statusHelper.error(commit, { error });
+      })
     },
 
     [GO]({ commit, getters }, payload = {}) {
