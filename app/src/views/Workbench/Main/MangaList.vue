@@ -850,21 +850,17 @@ export default {
 
 .folder-area {
   .row {
-    //padding: 0 .5rem;
     margin-left: -.5rem;
     margin-right: -.5rem;
-    // @include media-breakpoint-up(md) {
-      
-    // }
   }
   
   // 1/8
-  // .area-item {    
-  //   @include media-breakpoint-up(xl) {
-  //     flex: 0 0 12.5%;
-  //     max-width: 12.5%;
-  //   }
-  // }
+  .area-item {    
+    @include media-breakpoint-up(xl) {
+      flex: 0 0 12.5%;
+      max-width: 12.5%;
+    }
+  }
 
   .area-item-inner {
     display: block;

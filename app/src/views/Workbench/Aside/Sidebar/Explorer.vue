@@ -12,6 +12,7 @@
     >
       <div 
         class="explorer-latest"
+        title="Latest manga"
         :class="{ active: activeItem && activeItem.path === $consts.LATEST_PATH }"
         @click="handleLatest"
       >
@@ -20,7 +21,7 @@
       <nested-list 
         v-show="success"  
         :props="treeProps"
-        :data="folders"
+        :data="folderTree || []"
         :active-item="activeItem"
         @expanded="handleItemExpanded"
         @selected="handleItemSelected" 
@@ -51,16 +52,8 @@ export default {
         children: 'children',
         label: (item) => {
           const { _mangaGroup, name } = item;
-
-          if (!_mangaGroup) {
-            return name;
-          } else {
-            if (name) {
-              return `${name} / <small class="text-muted">MANGA</small>`;
-            } else {
-              return '@MANGA';
-            }
-          }
+          if (_mangaGroup && !name) return '@MANGA'
+          return name;
         },
         className: (item) => item._mangaGroup ? 'manga-group-item' : '',
         isBranch: (item) => item._mangaGroup || (item.type === 'FILE' && item.hasSubfolder)
@@ -71,11 +64,11 @@ export default {
   computed: {
     ...mapState('app', { appError: 'error' }),
 
-    ...mapState('explorer', [ 'inited', 'folders', 'empty' ]),
+    ...mapState('explorer', [ 'empty' ]),
     
     ...mapGetters('app', [ 'repo' ]),
 
-    ...mapGetters('explorer', [ 'pending', 'success', 'empty' ]),
+    ...mapGetters('explorer', [ 'folderTree', 'pending', 'success', 'empty' ]),
 
     rightBtns() {
       return null
@@ -85,7 +78,7 @@ export default {
   activated() {
     if (
       this.appError || 
-      (this.$route.meta.isBack && this.inited) || 
+      (this.$route.meta.isBack && this.folderTree) || 
       this.$router._reset
     ) {
       return;

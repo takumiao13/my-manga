@@ -63,25 +63,27 @@ function folder({ dirId, path }) {
   return fetch(url).then(res => {
     // group manga
     const mangaGroup = {
+      _parentPath: path,
       _mangaGroup: true,
       children: []
     };
-    const folders = [];
+    const list = [];
     res.children.forEach(child => {
+      child._parentPath = path;
       if (child.type === 'FILE') {
         child._mangaGroup = false;
-        folders.push(child);
+        list.push(child);
       } else {
         mangaGroup.children.push(child);
       }
     });
-
+    
     const count = mangaGroup.children.length;
     if (count) {
-      folders.unshift(mangaGroup);
+      list.unshift(mangaGroup);
     }
 
-    return { folders }
+    return { list }
   })
 }
 

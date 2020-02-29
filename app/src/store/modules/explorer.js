@@ -1,4 +1,5 @@
 import mangaAPI from '@/apis/manga';
+import { find } from '@/helpers/utils';
 import { createTypesWithNamespace, createRequestStatus } from '../helpers';
 
 // Namespace
@@ -16,13 +17,16 @@ export default {
   namespaced: true,
 
   state: {
-    inited: false,
-    folders: [],
+    folders: null,
     latest: [],
     ...statusHelper.state()
   },
 
   getters: {
+    folderTree(state) {
+      return state.folders ? treeify(state.folders) : null;
+    },
+
     pending(state) {
       return statusHelper.is.pending(state);
     },
@@ -32,7 +36,7 @@ export default {
     },
 
     empty(state) {
-      return state.inited && !state.folders.length;
+      return state.folders && !state.folders.length;
     }
   },
 
@@ -43,15 +47,14 @@ export default {
       if (global) statusHelper.pending(commit);
 
       return mangaAPI.folder({ path, dirId })
-        .then(({ folders }) => {
-          commit(FETCH, { path, folders });
+        .then(({ list }) => {
+          commit(FETCH, { path, list });
 
           if (global) {
             return statusHelper.success(commit)
           }
         })
         .catch(error => {
-          console.error(error);
           global && statusHelper.error(commit, { error })
           throw error
         });
@@ -68,26 +71,20 @@ export default {
 
   mutations: {
     [FETCH](state, payload) {
-      const { path, folders } = payload;
-      state.inited || (state.inited = true);
-
-      if (!path) {
-        state.folders = folders; // root folders
+      const { path, list } = payload;
+      
+      if (!state.folders) {
+        state.folders = list;
       } else {
-        const childState = findStateByPath(state.folders, path);
-        if (childState) {
-          // handle folder only contains magnas
-          if (
-            folders.length == 1 
-            && folders[0]._mangaGroup
-          ) {
-            childState._mangaGroup = true;
-            childState.children = folders[0].children;
-          } else {
-            childState.children = folders;
-
-          }
+        let folders;
+        if (list && list.length == 1 && list[0]._mangaGroup) {
+          const parent = find(state.folders, { path });
+          folders = list[0].children;
+          parent._mangaGroup = true;
+        } else {
+          folders = list;
         }
+        state.folders = [...state.folders, ...folders ];
       }
     },
 
@@ -100,22 +97,26 @@ export default {
   }
 };
 
-function findStateByPath(children, path) {
-  let i, l = children.length;
-  for (i = 0; i < l; i++) {
-    const node = children[i];
-    
-    // find the target node.
-    if (node.path === path) {
-      return node; 
+function treeify(list) {
+  const tree = [], seed = {};
 
-    // skip _mangaGroup for performance
-    } else if (!node._mangaGroup && node.children && node.children.length) {
-      // dfs walk
-      const state = findStateByPath(node.children, path);
-      if (state) return state;
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    const path = item.path;
+    if (path) {
+      seed[path] = item;
+      item.children = [];
     }
   }
 
-  return null;
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    if (seed[item._parentPath]) {
+      seed[item._parentPath].children.push(item)
+    } else {
+      tree.push(item);
+    }
+  }
+
+  return tree;
 }

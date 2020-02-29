@@ -6,7 +6,7 @@
         class="address-item"
         @click="$emit('back', $event)"
       >
-        <a class="address-link address-back" title="Back to parent">
+        <a class="address-link address-back" title="Back">
           <icon name="arrow-left" />
         </a>
       </li>
