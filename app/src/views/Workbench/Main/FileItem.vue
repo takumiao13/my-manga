@@ -8,7 +8,7 @@
   >
     <div v-show="viewMode == 'grid'" class="area-item-inner">
       <div>
-        <icon name="folder" size="64" style="color: #bbb;" />
+        <icon :name="icon" size="64" style="color: #bbb;" />
       </div>
     </div>
     
@@ -17,7 +17,7 @@
     </div>
 
     <div v-show="viewMode == 'list'" class="text-truncate">
-      <icon name="folder" size="18" />
+      <icon :name="icon" size="18" />
       &nbsp; {{ item.name }} 
     </div>
   </div>
@@ -29,6 +29,12 @@ export default {
     activePath: String,
     item: Object,
     viewMode: String
+  },
+
+  computed: {
+    icon() {
+      return this.item.fileType ? `file-${this.item.fileType}` : 'folder';
+    }
   }
 }
 </script>

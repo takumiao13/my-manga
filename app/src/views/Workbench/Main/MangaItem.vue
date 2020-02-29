@@ -13,10 +13,10 @@
       class="cover"
       v-bind="$service.image.coverStyle(item)"
     >
-      <div class="tags" v-if="item.version">
+      <div class="tags" v-if="item.verNames">
         <ul>
           <li 
-            v-for="ver in item.version
+            v-for="ver in item.verNames
               .filter(item => item !== 'default')
               .map(item => {
                 const parts = item.split('.');

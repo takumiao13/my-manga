@@ -69,13 +69,13 @@
             <div class="list-group">
               <a 
                 class="list-group-item list-group-item-action version-item text-truncate"
-                :class="{ 'version-active': item.versionName === $route.query.ver }"
+                :class="{ 'version-active': item.ver === activeVer }"
                 v-for="item in versions" 
                 :key="item.path"
                 @click="readVersion(item)"
               >
-                <!-- when no versionname ?? -->
-                {{ (item.versionName || item.name).toUpperCase() }} 
+                <!-- when no version name ?? -->
+                {{ (item.ver || item.name).toUpperCase() }} 
               </a>
             </div>
           </div>
@@ -242,7 +242,7 @@ export default {
 
     ...mapState('manga', [
       'inited', 'name', 'path', 'list', 'type', 'cover', 'files', 
-      'chapters', 'versions', 'images', 'activePath', 
+      'chapters', 'versions', 'images', 'activePath', 'activeVer',
       'error', 'shortId', 'metadata'
     ]),
 
@@ -421,16 +421,20 @@ export default {
       let promise = Promise.resolve();
 
       if (path !== this.path) {
-        promise = promise.then(() => this.$store.dispatch(mangaTypes.FETCH, { 
-          isBack, dirId, path, ver, search, keyword: kw,
-        }));
+        promise = promise.then(() => 
+          this.$store.dispatch(mangaTypes.FETCH, { 
+            isBack, dirId, path, ver, search, keyword: kw,
+          })
+        );
       }
 
-      // handle multi versions
+      // attach version handle multi versions
       if (ver) {
-        promise = promise.then(() => this.$store.dispatch(mangaTypes.TOGGLE_VERSION, {
-          dirId, ver
-        }));
+        promise = promise.then(() => 
+          this.$store.dispatch(mangaTypes.TOGGLE_VERSION, {
+            dirId, ver
+          })
+        );
       }
 
       return promise;
@@ -444,23 +448,36 @@ export default {
 
     readFile(item, type) {
       const { dirId } = this.repo;
-      const { fileType, path } = item;
+      const { isDir, fileType, path, verNames } = item;
 
       // handle manga or dir
-      if (item.isDir || item.type === 'MANGA') {
-        const query = type ? { type } : null;
+      if (isDir || item.type === 'MANGA') {
+        const ver = verNames && verNames.length > 1 ? 
+          verNames[0] : undefined;
+        let query = null;
+        
+        // use the first version if exists multi version
+        if (ver || type) {
+          query = Object.assign({}, { ver, type });
+        }
 
         this.$router.push({
           name: 'explorer', 
-          params:{ dirId, path },
+          params: { dirId, path },
           query
         });
 
       // handle pdf | mp4 | zip (support later)
       } else if (fileType === 'video') {
+        // use parent path as route path
+        const query = this.activeVer ? {
+          ver: this.activeVer
+        } : null;
+
         this.$router.push({
           name: 'viewer',
-          params: { type: 'video', dirId, path },
+          params: { type: 'video', dirId, path: this.path },
+          query
         });
       } else if (fileType === 'pdf') {
         // use browser as pdf reader
@@ -470,15 +487,14 @@ export default {
     },
 
     readVersion(item) {
+      const { ver } = item;
       const { dirId } = this.repo;
-
+      if (ver === this.activeVer) return;
+  
       this.$router.replace({
         name: 'explorer', 
         params: { dirId, path: this.path },
-        query: {
-          ver: item.versionName,
-          type: 'manga'
-        }
+        query: { ver, type: 'manga' }
       });
     },
 

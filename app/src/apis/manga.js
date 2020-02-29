@@ -13,7 +13,7 @@ function _transformResponse(res) {
   // FIXED: put this in store ??
   const group = groupBy(list, 'type');
   const versions = group.VERSION ? orderBy(group.VERSION, ['fileType', 'name'], ['desc', 'asc']) : [];
-  
+
   // FIXED: simple extract cover, but we should do more check later.
   const images = group.IMAGE && group.IMAGE.length > 1 ? group.IMAGE : [];
 
