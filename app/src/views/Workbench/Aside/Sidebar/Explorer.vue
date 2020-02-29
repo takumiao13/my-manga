@@ -47,15 +47,22 @@ export default {
 
       treeProps: {
         key: 'path',
-        label: (item) => item._mangaGroup ? 
-          `<span class="manga-group-btn">
-            ${item.children.length} MANGA${item.children.length > 1 ? 'S' : ''}
-          </span>` :
-          item.name
-        ,
-        className: (item) => item._mangaGroup ? 'manga-group-item' : '',
         title: 'name',
         children: 'children',
+        label: (item) => {
+          const { _mangaGroup, name } = item;
+
+          if (!_mangaGroup) {
+            return name;
+          } else {
+            if (name) {
+              return `${name} / <small class="text-muted">MANGA</small>`;
+            } else {
+              return '@MANGA';
+            }
+          }
+        },
+        className: (item) => item._mangaGroup ? 'manga-group-item' : '',
         isBranch: (item) => item._mangaGroup || (item.type === 'FILE' && item.hasSubfolder)
       }
     }
@@ -134,7 +141,7 @@ export default {
     handleItemSelected(item, ctx) {
       this.activeItem = item;
 
-      if (item._mangaGroup) {
+      if (item._mangaGroup && !item.name) {
         ctx.open = !ctx.open;
         return;
       }

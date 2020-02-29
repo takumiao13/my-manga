@@ -69,6 +69,7 @@ function folder({ dirId, path }) {
     const folders = [];
     res.children.forEach(child => {
       if (child.type === 'FILE') {
+        child._mangaGroup = false;
         folders.push(child);
       } else {
         mangaGroup.children.push(child);

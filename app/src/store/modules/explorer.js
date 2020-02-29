@@ -72,10 +72,22 @@ export default {
       state.inited || (state.inited = true);
 
       if (!path) {
-        state.folders = folders;
+        state.folders = folders; // root folders
       } else {
         const childState = findStateByPath(state.folders, path);
-        if (childState) childState.children = folders;
+        if (childState) {
+          // handle folder only contains magnas
+          if (
+            folders.length == 1 
+            && folders[0]._mangaGroup
+          ) {
+            childState._mangaGroup = true;
+            childState.children = folders[0].children;
+          } else {
+            childState.children = folders;
+
+          }
+        }
       }
     },
 

@@ -64,9 +64,9 @@
           </div>
 
           <!-- VERSION AREA -->
-          <div class="version-area mb-4" v-show="versions.length">
-            <p class="area-header">VERSIONS</p>
-            <div class="list-group">
+          <div class="version-area mb-2" :class="{ touch: $feature.touch}" v-show="versions.length">
+            <p class="area-header">VERSIONS - {{ versions.length }}</p>
+            <div class="list-group pb-2">
               <a 
                 class="list-group-item list-group-item-action version-item text-truncate"
                 :class="{ 'version-active': item.ver === activeVer }"
@@ -689,7 +689,7 @@ export default {
 .version-area .list-group {
   margin-left: -15px;
   margin-right: -15px;
-  
+
   .list-group-item {
     text-decoration: none;
     border-radius: 0;
@@ -727,9 +727,13 @@ export default {
   }
 }
 
+.version-area.touch .list-group {
+  overflow-x: scroll;
+  flex-wrap: nowrap;
+}
+
 .version-area .list-group {
   margin: 0 -.2rem;
-  
   flex-direction: row;
   flex-wrap: wrap;
   align-items: flex-start;
@@ -738,6 +742,7 @@ export default {
     margin: .2rem;
     border-width: .5px;
     width: calc(33.3% - .4rem);
+    flex-shrink: 0;
   }
 
   @include media-breakpoint-up(md) {
