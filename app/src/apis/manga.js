@@ -17,13 +17,11 @@ function _transformResponse(res) {
   // FIXED: simple extract cover, but we should do more check later.
   const images = group.IMAGE && group.IMAGE.length > 1 ? group.IMAGE : [];
   
-  
-
   Object.assign(res, {
     list,
     cover,
     files: group.FILE || [],
-    chapters: group.CHAPTER || [],
+    chapters: _attachPlaceholder(group.CHAPTER || []),
     mangas: _attachPlaceholder(group.MANGA || []),
     images,
     versions

@@ -88,7 +88,7 @@ class MangaService extends Service {
             count++;
             callback(pick(child, [
               'name', 'path', 'type', 'birthtime', 'mtime', 
-              'cover', 'width', 'height', 'verNames'
+              'cover', 'width', 'height', 'verNames', 'chapterSize'
             ]));
           } else if (child.isDir && child.type === FileTypes.FILE) {
             queue.push({ baseDir, path: child.path, settings });
@@ -268,7 +268,7 @@ async function traverse({
   if (!isDir && !fileType) return null;
   
   // Define Data info.
-  let metadata, type, cover, width, height, birthtime, mtime, hasSubfolder, version,
+  let metadata, type, cover, width, height, birthtime, mtime, hasSubfolder, version, chapterSize,
       children = _isFile ? 
         [ { name, path, type: FileTypes.FILE, fileType } ] : // single file put self in children 
         undefined;
@@ -286,12 +286,18 @@ async function traverse({
     const metadataPath = pathFn.join(absPath, METADATA_FILENAME);
     const hasMetadata = await fs.accessAsync(metadataPath);
 
+    let _showChapterCover = false;
+
     if (hasMetadata) {
       metadata = await readMeta(metadataPath);
 
       // get cover if metadata has `cover` key
       if (metadata && metadata.cover) {
         cover = pathFn.posix.join(path, metadata.cover);
+      }
+
+      if (metadata && typeof metadata.chapters === 'object' && metadata.chapters.cover) {
+        _showChapterCover = true;
       }
 
       fixChildOptions.metadata = metadata;
@@ -306,6 +312,7 @@ async function traverse({
     let _filterdFiles = [];
     const _versionFiles = [];
     const _chapterFiles = [];
+    const _chapterWithCoverFiles = [];
 
     files
       .filter(ignorePathFilter)
@@ -336,14 +343,22 @@ async function traverse({
             version.push(ver);
           }         
         } else if (chapterName = isChapter(file, fixChildOptions)) {
-          _chapterFiles.push({
+          const chapterNode = {
             name, chapterName,
             path: childpath,
             type: FileTypes.CHAPTER,
-          });
+          };
+
+          if (_showChapterCover) {
+            _chapterWithCoverFiles.push(chapterNode);
+          } else { 
+            _chapterFiles.push(chapterNode);
+          }
+          
+          chapterSize = (chapterSize || 0)+1;
 
         } else {
-          _filterdFiles.push(childpath);
+          _filterdFiles.push({ path: childpath });
         }
       });
 
@@ -355,23 +370,30 @@ async function traverse({
 
     _chapterFiles.sort((a, b) => fs.filenameComparator(a.name, b.name));
     _filterdFiles.sort((a, b) => fs.filenameComparator(
-      pathFn.basename(a), 
-      pathFn.basename(b)
+      pathFn.basename(a.path), 
+      pathFn.basename(b.path)
     ));
 
     const filesLength = _filterdFiles.length;
     if (maxDepth === 0) _filterdFiles = take(_filterdFiles, LAST_LOOP_COUNT);
     
     // build async traverse task
-    const createTask = (path) => async () => {
+    const createTask = (node) => async () => {
+      const { path } = node;
       const child = maxDepth > 0 ?
         await traverse({ baseDir, path, maxDepth: maxDepth-1, onlyFile, settings}) : 
         await traverseLast({ baseDir, path });
-      return child;
+
+      return child ? Object.assign(child, node) : child;
     }
 
     const tasks = _filterdFiles.map(createTask);
     const childNodes = await parallel$(tasks, 10);
+
+
+    const chapterTasks = _chapterWithCoverFiles.map(createTask);
+    const chapterNodes = await parallel$(chapterTasks, 10);
+
     const filteredChildNodes = childNodes.filter(child => {
       if (!child) return false;
 
@@ -397,6 +419,7 @@ async function traverse({
 
       children = _versionFiles
         .concat(_chapterFiles)
+        .concat(chapterNodes)
         .concat(filteredChildNodes);
     }
 
@@ -481,9 +504,11 @@ async function traverse({
 
   // Merge base info and extra info
   return { 
-    isDir, path, name, birthtime, mtime, type, verNames: version,
+    isDir, path, name, birthtime, mtime, type, 
     cover, metadata, width, height, fileType,
-    children, hasSubfolder
+    children, hasSubfolder,
+    verNames: version,
+    chapterSize
   };
 }
 

@@ -64,6 +64,7 @@
   }
 
   .manga-area,
+  .chapter-area,
   .gallery-area {
     .row {
       border-color: $app-border-color;
@@ -109,7 +110,8 @@
     }
   }
 
-  .manga-area {
+  .manga-area,
+  .chapter-area {
     .cover {
       border-bottom: 0;
     }

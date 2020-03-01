@@ -142,7 +142,18 @@
           <div class="chapter-area mb-4" v-show="chapters.length">
             <p class="area-header">CHAPTERS</p>
 
-            <div class="list-group">
+            <div class="row" v-if="metadata && typeof metadata.chapters === 'object' && metadata.chapters.cover">
+              <MangaItem 
+                v-for="item in chapters"
+                :key="item.path"
+                :active-path="activeChapter"
+                view-mode="grid"
+                :item="item"
+                @click.native="readManga(item, 0)"
+              />
+            </div>
+
+            <div class="list-group" v-else>
               <a class="list-group-item list-group-item-action chapter-item"
                 :class="{ active: item.name === activeChapter}"
                 v-for="(item, index) in chapters" 
@@ -665,7 +676,8 @@ export default {
 }
 
 .area-header {
-  margin: .5rem 0;
+  padding: .5rem 0;
+  margin: 0;
   font-size: 80%;
 
   a[href] {
@@ -768,6 +780,7 @@ export default {
 
 .folder-area,
 .manga-area,
+.chapter-area,
 .gallery-area {
   .area-item {
     cursor: pointer;
@@ -799,7 +812,7 @@ export default {
         opacity: 0;
         -webkit-animation: ant-progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
         animation: ant-progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
-        z-index: 2;
+        z-index: 1;
         content: '';
       }
     }
@@ -880,7 +893,8 @@ export default {
   }
 }
 
-.manga-area {
+.manga-area,
+.chapter-area {
   .row {
     margin-left: -.5rem;
     margin-right: -.5rem;
