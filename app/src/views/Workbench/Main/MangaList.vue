@@ -461,9 +461,9 @@ export default {
       // handle pdf | mp4 | zip (support later)
       } else if (fileType === 'video') {
         // use parent path as route path
-        const query = this.activeVer ? {
-          ver: this.activeVer
-        } : null;
+        const query = this.activeVer ? 
+          { ver: this.activeVer } : 
+          { name: item.name }
 
         this.$router.push({
           name: 'viewer',

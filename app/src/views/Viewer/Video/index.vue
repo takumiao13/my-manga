@@ -124,8 +124,8 @@ export default {
 
     this.$on('update', (route) => {
       const { dirId, path } = route.params;
-      const { ver } = route.query;
-      this.$store.dispatch(types.VIEW_VIDEO, { dirId, path, ver })
+      const { ver, name } = route.query;
+      this.$store.dispatch(types.VIEW_VIDEO, { dirId, path, ver, name })
         .then(() => {
           // TODO: tmp use inited to support async init videojs
           this.inited = true;

@@ -38,7 +38,7 @@ function _attachPlaceholder(mangas) {
   return mangas.map(item => {
     item.placeholder = 1;
     const ratio = (item.height / item.width) * 100;
-    if (!isNaN(ratio) && ratio < 80) {
+    if (!isNaN(ratio) && ratio < 85) {
       item.placeholder++;
     }
     return item;

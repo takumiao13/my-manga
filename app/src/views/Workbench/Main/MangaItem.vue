@@ -17,12 +17,7 @@
       <div class="tags" v-if="item.verNames">
         <ul>
           <li 
-            v-for="ver in item.verNames
-              .filter(item => item !== 'default')
-              .map(item => {
-                const parts = item.split('.');
-                return parts[1] || parts[0];
-              })" 
+            v-for="ver in filterVers(item.verNames)"
             :key="ver"
           >
             {{ ver.toUpperCase() }}
@@ -41,11 +36,16 @@
       </div>
     </a>
 
-    <div v-show="viewMode == 'grid'" class="caption">{{ item.name }}</div>
+    <div v-show="viewMode == 'grid'" class="caption">{{ item.name | stripVer }}</div>
 
     <div v-show="viewMode == 'list'" class="text-truncate">
-      <icon name="file-image" size="18" />
-      &nbsp; {{ item.name }} 
+      <icon :name="`file-${item.fileType || 'image'}`" size="18" />
+      &nbsp; {{ item.name | stripVer }} 
+      <span
+        class="badge"
+        v-for="ver in filterVers(item.verNames)"
+        :key="ver"
+      >{{ ver.toUpperCase() }}</span>
     </div>
   </div>
 </template>
@@ -58,10 +58,33 @@ export default {
     viewMode: String,
     activePath: String,
     latest: Boolean
+  },
+
+  methods: {
+    filterVers(vers) {
+      return vers && vers
+        .filter(item => item !== 'default')
+        .map(item => {
+          const parts = item.split('.');
+          return parts[1] || parts[0];
+        });
+    }
+  },
+
+  filters: {
+    stripVer(value) {
+      const striped = value.replace(/(?:\s\[[^\]]*?\]){0,}/g, '');
+      return striped
+    }
   }
 }
 </script>
 
-<style>
-
+<style lang="scss" scoped>
+.badge {
+  font-size: 70%;
+  margin-left: 3px;
+  padding: .3em .4em;
+  font-weight: 400;
+}
 </style>

@@ -118,6 +118,26 @@
       box-shadow: 0 4px 8px -4px rgba($black, .4);        
     }
 
+    .badge {   
+      border: 1px solid $app-muted-color;
+      color: $app-muted-color;
+    }
+
+    .list-group-item:hover {
+      .badge {
+        color: $app-primary;
+        border-color: $app-primary;
+      }
+    }
+
+    .list-group-item.active {
+      .badge {
+        background-color: $app-primary;
+        color: $white;
+        border-color: $app-primary;
+      }
+    }
+
     .area-item:hover {  
       img {
         top: 55%;

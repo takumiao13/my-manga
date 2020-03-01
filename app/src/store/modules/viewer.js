@@ -176,10 +176,10 @@ export default {
       statusHelper.pending(commit);
       return mangaAPI.list({ dirId, path }).then(res => {
         const { name, cover, children, verNames } = res;
-        const findOptions = ver ? 
-          { ver } : 
-          { fileType: 'video' };
-        
+        // find video from list
+        // - version
+        // - name (parts of video)
+        const findOptions = ver ? { ver } : { name: payload.name };
         const video = find(children, findOptions);
 
         commit(LOAD, {

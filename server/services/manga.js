@@ -88,7 +88,7 @@ class MangaService extends Service {
             count++;
             callback(pick(child, [
               'name', 'path', 'type', 'birthtime', 'mtime', 
-              'cover', 'width', 'height', 'version'
+              'cover', 'width', 'height', 'verNames'
             ]));
           } else if (child.isDir && child.type === FileTypes.FILE) {
             queue.push({ baseDir, path: child.path, settings });
@@ -240,6 +240,8 @@ class MangaService extends Service {
 }
 
 // Private Methods
+// - fileType: 'video|image|pdf' 
+// - verNames: String[] names of version on for display
 async function traverse({ 
   path = '',
   baseDir,
@@ -258,7 +260,7 @@ async function traverse({
   if (err) return null;
 
   const isDir = stat.isDirectory();
-  const fileType = getFileType(extname);
+  let fileType = getFileType(extname);
   const _isImage = fileType === 'image';
   const _isFile = fileType && !isDir && !_isImage;
 
@@ -272,7 +274,8 @@ async function traverse({
         undefined;
 
   let _isManga = false,
-      _hasFolder = false;
+      _hasFolder = false,
+      _childExtnames = false;
 
   const ignorePathFilter = createIgnorePathFilter(settings.ignorePath);
   const fixChildOptions = { parentName: escapeRegExp(name) };
@@ -309,21 +312,29 @@ async function traverse({
       .forEach(file => {
         const { base: name, ext } = pathFn.parse(file);
         const childpath = pathFn.posix.join(path, file);
-        let chapterName, ver;
+        const subfileType = getFileType(ext);
 
+        let chapterName, ver;
         fixChildOptions.filepath = pathFn.resolve(absPath, file);
 
+        // extname as one of versions (only display)
+        if (!_childExtnames && subfileType == 'video' || subfileType == 'pdf') {
+          _childExtnames = ext.slice(1);
+        }
+
         if (ver = isVersion(file, fixChildOptions)) {
+          // simple versions as children
           _versionFiles.push({
             name, ver,
             path: childpath,
             type: FileTypes.VERSION,
-            fileType: getFileType(ext)
+            fileType: subfileType
           });
 
           version || (version = []);
-          version.push(ver);
-          
+          if (version.indexOf(ver) === -1) {
+            version.push(ver);
+          }         
         } else if (chapterName = isChapter(file, fixChildOptions)) {
           _chapterFiles.push({
             name, chapterName,
@@ -403,10 +414,26 @@ async function traverse({
   // ---
   // Determine the file type
   if (isDir) {
+
+    // - metadata -> MANGA
+    // - no subfolder -> MANGA
+    // - has subfolder -> FILE
+
     hasSubfolder = _hasFolder && !_isManga;
     type = metadata ? 
       FileTypes.MANGA :
       FileTypes[hasSubfolder ? 'FILE' : 'MANGA'];
+
+
+    // fix manga contains sub mangas
+    if (type === FileTypes.MANGA && children) {
+      children.forEach(child => {
+        if (child.type === FileTypes.MANGA) {
+          child.type = FileTypes.FILE
+        }
+      })
+    }
+
   } else if (_isImage) {
     type = FileTypes.IMAGE;
   } else {
@@ -423,11 +450,22 @@ async function traverse({
     mtime = stat.mtime;
     birthtime = stat.birthtime;
 
+    if (_childExtnames && !version) {
+      version = [_childExtnames];
+    }
+
     // check self has contains version
+    // use it's version
     const ver = isVersion(name);
     if (ver) {
-      version || (version = []);
-      version.unshift(ver);
+      version = [ver];
+    }
+
+    // try to fix fileType by first child extnames
+    if (_childExtnames && !fileType) {
+      fileType = (version && version.length > 1) ?
+        'mix':  
+        getFileType('.' + _childExtnames);
     }
   }
 
@@ -523,6 +561,8 @@ const isVersion = (name, { parentName } = {}) => {
   const matched = name.match(versionRE);
   if (matched) {
     let [ _, a, b ] = matched;
+    // handle combined versions
+    // [ver1] [ver2] -> [ver1+ver2];
     a = a.trim().replace(/\]\s\[/g, '+').replace(/\[|\]/g, '');
 
     if (a && b) {
