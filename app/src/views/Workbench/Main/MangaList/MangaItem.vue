@@ -6,7 +6,6 @@
       'col-12 col-sm-6 col-xl-4': !latest && viewMode == 'grid' && item.placeholder == 2,
       'col-8 col-sm-6 col-xl-4': latest && viewMode == 'grid' && item.placeholder == 2,
       'area-item': viewMode == 'grid',
-      'area-chapter-item': item.chapterSize,
       'list-group-item list-group-item-action': viewMode == 'list'
     }"
   >
@@ -26,17 +25,7 @@
         </ul>
       </div>
 
-      <div class="chapter-effects" v-if="item.chapterSize">
-        <div></div>
-        <div></div>
-        <div></div>
-      </div>
-
-      <div class="cover-inner" 
-        :class="{
-          loading: item.cover
-        }"
-      >
+      <div class="cover-inner" :class="{ loading: item.cover }">
         <img v-if="item.cover" class="cover-image" v-lazy="$service.image.makeSrc(item.cover)" />
         <div v-else class="cover-placeholder">
           <icon :name="`file-${item.fileType || 'image'}`" size="64" />
@@ -63,16 +52,15 @@
 export default {
   props: {
     item: Object,
-    viewMode: String,
+    viewMode: {
+      type: String,
+      default: 'grid'
+    },
     activePath: String,
     latest: Boolean
   },
 
   methods: {
-    chapters(size) {
-      return new Array(Math.min(size, 5));
-    },
-
     filterVers(vers) {
       return vers && vers
         .filter(item => item !== 'default')
@@ -93,51 +81,121 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '../../../../assets/style/base';
+.area-item {
+  flex-grow: 1;
+}
+
+.cover-inner {
+  cursor: pointer;
+  overflow: hidden;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  border-radius: .25rem;
+
+  // scale img to fill cover
+  &.scale img[lazy="loaded"] {
+    height: 100%;
+  }
+
+  &.fitW,
+  &.fitH {
+    img[lazy="loaded"] {
+      top: 50%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-50%);
+    }
+  }
+
+  &.fitW img[lazy="loaded"] {
+    width: 100%;
+    height: auto;
+  }
+
+  &.fitH img[lazy="loaded"] {
+    height: 100%;
+    width: auto;
+  }
+
+  &.loading::before {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: #999;
+    opacity: 0;
+    -webkit-animation: ant-progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
+    animation: ant-progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
+    z-index: 1;
+    content: '';
+  }
+}
+
+.cover-placeholder {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  z-index: 1; // covered box-shadow
+  justify-content: center;
+  align-items: center;
+}
+
+.caption {
+  font-weight: 600;
+  text-align: left;
+}
+
+.tags {
+  position: absolute;
+  bottom: .5rem;
+  right: -3px;
+  z-index: 2;
+
+  > ul {
+    list-style: none;
+    padding: 0px;
+    margin: 0px;
+    box-shadow: 0px 0px 3px #ddd;   
+
+    > li {
+      display: block;
+      right: 0px;
+      color: #fff;
+      padding: 3px 16px 5px 13px;
+      background-color: #333;
+      border-bottom: .5px solid #666;
+      font-size: 12px;
+      overflow: hidden;
+
+      &::after {
+        content:"";
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        height: 100%;
+        border-right: 3px solid $primary;
+      }
+    }
+  }
+
+  // > ul:hover > li,
+  > ul > li:last-child {
+    border-bottom: 0;
+  }
+
+  > ul > li:hover { 
+    background-color: $primary; 
+  }
+}
+
 .badge {
   font-size: 70%;
   margin-left: 3px;
   padding: .3em .4em;
   font-weight: 400;
-}
-
-.area-chapter-item {
-  perspective: 1200px;
-
-  .cover-inner {
-    transform-origin: 0% 100%;
-    transform: rotateY(-22deg);
-  }
-}
-
-.chapter-effects {
-  div {
-    overflow: hidden;
-    position: absolute;
-    width: 100%;
-    top: 0;
-    bottom: 0;
-    background: #fff;
-    border: .5px solid #ccc;
-    border-radius: .25rem;
-    transform-origin: left center;
-
-    &:nth-child(3) {
-      top: 5px;
-      bottom: 5px;
-      transform: rotateY(-18deg);
-    }
-
-    &:nth-child(2) {
-      top: 6px;
-      bottom: 6px;
-      transform: rotateY(-14deg);
-    }
-
-    &:nth-child(1) {
-      background: #666;
-      border-right-color: #999;
-      right: -2px;
-    }
-  }
 }
 </style>
