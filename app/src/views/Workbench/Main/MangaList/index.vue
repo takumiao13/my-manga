@@ -4,6 +4,7 @@
       :title="topbarTitle"
       :show-address="showAddress"
       :view-type="viewType"
+      @refresh="handleRefresh"
     />
     
     <data-view 
@@ -188,7 +189,7 @@ export default {
 
     const { isBack } = to.meta;
     this.refreshData(to);
-    to.meta.resolver = this.fetchMangas(to, isBack);
+    to.meta.resolver = this.fetchMangas(to, { isBack });
     next();
   },
 
@@ -219,7 +220,8 @@ export default {
       }
     },
 
-    fetchMangas(route, isBack) {
+    // TODO: put code in store
+    fetchMangas(route, { isBack = false, clear = false } = {}) {
       const { 
         params: { path }, 
         query: { kw, search, ver } 
@@ -228,10 +230,11 @@ export default {
 
       let promise = Promise.resolve();
 
-      if (path !== this.path) {
+      if (path !== this.path || clear) {
         promise = promise.then(() => 
           this.$store.dispatch(mangaTypes.FETCH, { 
-            isBack, dirId, path, ver, search, keyword: kw,
+            isBack, dirId, path, ver, search, clear,
+            keyword: kw, 
           })
         );
       }
@@ -376,6 +379,14 @@ export default {
       }
 
       this._prevScrollTop = scrollTop;
+    },
+
+    handleRefresh() {
+      const scrollTop = getScrollTop();
+      this.fetchMangas(this.$route, { clear: true })
+        .then(() => {
+          window.setTimeout(() => window.scrollTo(0, scrollTop));
+        });
     },
 
     handleShareManga() {

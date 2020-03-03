@@ -90,10 +90,18 @@ export default {
         click: () => this.handleToggleSidebar('search')
       }];
 
+      // support later
+      // when refresh latest mangas will cause problem
+      const fileBtns = [{
+        icon: 'refresh',
+        tip: 'Refresh',
+        click: () => this.$emit('refresh')
+      }];
+
       const buttonMap = {
         manga: mangaBtns,
         search: searchBtns,
-        file: null
+        file: null, // fileBtns
       };
 
       return buttonMap[this.viewType];

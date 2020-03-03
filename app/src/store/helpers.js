@@ -42,7 +42,7 @@ export function createRequestStatus(name, type = 'STATUS') {
     },
 
     success(commit) {
-      // has received response from server
+      // has received response from server more than 200 ms
       if (timer === null) {
         // loading has shown
         return new Promise((resolve) => {
@@ -87,7 +87,8 @@ export function createRequestStatus(name, type = 'STATUS') {
       },
 
       success(state) {
-        return state[name] === SUCCESS_DEBOUNCED;
+        // debounce success
+        return state[name] === SUCCESS_DEBOUNCED || state[name] === PENDING;
       },
 
       error(state) {

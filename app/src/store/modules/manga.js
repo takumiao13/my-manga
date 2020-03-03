@@ -24,7 +24,16 @@ export const cacheStack = {
 
   push(item) {
     this._value.push(item);
-    console.log('--->', item, this._value);
+    //console.log('--->', item, this._value);
+  },
+
+  replace(item) {
+    const index = this.find(item._dirId, item.path, item._kw);
+    if (~index) {
+      this._value[index] = item;
+    } else {
+      this.push(item);
+    }
   },
 
   pop(index) {
@@ -39,16 +48,20 @@ export const cacheStack = {
     this._value.length = 0;
   },
 
+  /**
+   * 
+   * @param {*} dirId current repo id
+   * @param {*} path current path
+   * @param {*} kw keyword
+   */
   find(dirId, path = '', kw) {
     const index = this._value
       .map(item => item.path)
       .lastIndexOf(path);
 
-    console.log('--->', index, dirId, kw);
+    //console.log('--->', index, dirId, kw);
     if (~index) {
       const target = this._value[index];
-      console.log(target);
-
       if (target._dirId === dirId && target._kw === kw) {
         return index;
       } else {
@@ -115,7 +128,7 @@ export default {
   actions: {
     [FETCH]({ commit }, payload = {}) {
       let index = -1;
-      const { dirId, path, isBack, search, keyword } = payload;
+      const { dirId, path, isBack, search, keyword, clear } = payload;
       if (isBack) index = cacheStack.find(dirId, path, keyword);
       // console.log(isBack, index, path);
 
@@ -140,17 +153,23 @@ export default {
         return statusHelper.success(commit);
       }
       
-      // if cannot find cache
-      if (index === -1) {
+      // if cannot find cache or clear cache
+      if (index === -1 || clear) {
         const method = search ? 'search' : 'list';
         const params = { dirId, path };
+        
         if (search) {
           params.keyword = keyword;
         }
+
+        if (clear) {
+          params._t = +new Date;
+        }
+
         return mangaAPI[method](params)
           .then(res => {
-            cacheStack.push(Object.assign(res, {
-              _prevPath: path,
+            cacheStack[!clear ? 'push' : 'replace'](Object.assign(res, {
+              _prevPath: path, // store the prev path
               _dirId: dirId,
               _kw: keyword
             }));

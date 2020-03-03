@@ -51,7 +51,7 @@
           v-on="btn.dropdown ? null: { 
             click: ($event) => {
               $event.stopPropagation();
-              btn.click();
+              btn.click($event);
             } 
           }"
         >

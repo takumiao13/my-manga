@@ -51,8 +51,9 @@ function search({ dirId, path, keyword }) {
   });
 }
 
-function list({ dirId, path }) {
-  const url = `${_buildURL(dirId, path)}/list`;
+function list({ dirId, path, _t }) {
+  let url = `${_buildURL(dirId, path)}/list`;
+  if (_t) url += `?_t=` + _t;
   return fetch(url).then(_transformResponse)
 }
 

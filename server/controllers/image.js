@@ -10,7 +10,7 @@ class ImageController extends Controller {
     const repo = this.app.service.repo.get(dirId);
     const root = repo.baseDir; // get real path;
     
-    // path should re-encode when if contains `%` will throw 400 error.
+    // path should re-encode when it contains `%` will throw 400 error.
     const [ err, result ] = await to(app.send(ctx, encodeURIComponent(path), { 
       root,
       hidden: true,
