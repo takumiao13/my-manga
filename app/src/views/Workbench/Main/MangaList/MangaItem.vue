@@ -35,19 +35,30 @@
 
     <div v-show="viewMode == 'grid'" class="caption">{{ item.name | stripVer }}</div>
 
-    <div v-show="viewMode == 'list'" class="text-truncate">
-      <icon :name="`file-${item.fileType || 'image'}`" size="18" />
-      &nbsp; {{ item.name | stripVer }} 
-      <span
-        class="badge"
-        v-for="ver in filterVers(item.verNames)"
-        :key="ver"
-      >{{ ver.toUpperCase() }}</span>
+    <div v-show="viewMode == 'list'" class="manga-list-item">
+      <icon :name="`file-${item.fileType || 'image'}`" />
+      <div>
+        <div class="manga-name">
+          {{ item.name | stripVer }} 
+        </div>
+        <div class="manga-time text-muted">
+          {{ item.birthtime | dateFormat }}
+        </div>
+        <div class="manga-versons">
+          <span
+            class="badge"
+            v-for="ver in filterVers(item.verNames)"
+            :key="ver"
+          >{{ ver.toUpperCase() }}</span>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+
+import date from '@/helpers/date';
 
 export default {
   props: {
@@ -75,6 +86,10 @@ export default {
     stripVer(value) {
       const striped = value.replace(/(?:\s\[[^\]]*?\]){0,}/g, '');
       return striped
+    },
+
+    dateFormat(value) {
+      return date.format(new Date(value));
     }
   }
 }
@@ -159,16 +174,16 @@ export default {
     list-style: none;
     padding: 0px;
     margin: 0px;
-    box-shadow: 0px 0px 3px #ddd;   
+    box-shadow: 0px 0px 2px #ddd;   
 
     > li {
       display: block;
       right: 0px;
       color: #fff;
-      padding: 3px 16px 5px 13px;
+      padding: 1px 8px 3px 6px;
+      font-size: 60%;
       background-color: #333;
       border-bottom: .5px solid #666;
-      font-size: 12px;
       overflow: hidden;
 
       &::after {
@@ -177,12 +192,20 @@ export default {
         top: 0px;
         right: 0px;
         height: 100%;
-        border-right: 3px solid $primary;
+        border-right: 2px solid $primary;
+      }
+
+      @include media-breakpoint-up(sm) {
+        padding: 3px 13px 5px 10px;
+        font-size: 70%;
+
+        &::after {
+          border-right-width: 3px;
+        }
       }
     }
   }
 
-  // > ul:hover > li,
   > ul > li:last-child {
     border-bottom: 0;
   }
@@ -193,9 +216,76 @@ export default {
 }
 
 .badge {
-  font-size: 70%;
-  margin-left: 3px;
+  font-size: 60%;
+  margin-right: 3px;
   padding: .3em .4em;
   font-weight: 400;
+}
+
+.manga-list-item {
+  display: flex;
+
+  > .svg-icon {
+    margin-left: -.25rem;
+    margin-top: .5rem;
+    width: 24px;
+    height: 24px;
+  }
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    flex: 0 1 100%;
+    max-width: 100%;
+    padding-left: 1rem;
+  }
+
+  .manga-name,
+  .manga-versons,
+  .manga-time {
+    display: block;
+  }
+
+  .manga-name {
+    @include text-truncate;
+  }
+
+  .manga-time {
+    font-size: 80%;
+  }
+
+  @include media-breakpoint-up(lg) {
+    > .svg-icon {
+      margin-top: .25rem;
+      width: 18px;
+      height: 18px;
+      padding-right: 0;
+    }
+
+    > div {
+      flex-wrap: nowrap;
+      flex-direction: row;
+      flex: 1;
+    }
+
+    .manga-name {
+      flex: 0 1 70%;
+      max-width: 70%;
+      order: 1;
+    }
+
+    // when too many need ...
+    .manga-versons {
+      flex: 0 1 30%;
+      max-width: 30%;
+      order: 2;
+      @include text-truncate;
+    }
+
+    .manga-time {
+      flex: 0 1 140px;
+      order: 3;
+    }
+  }
 }
 </style>

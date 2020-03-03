@@ -113,14 +113,15 @@ export default {
 
 <style lang="scss" scoped>
 .latest-container {
-  padding: 0 2px; 
-  margin-left: -2px; // don't hidden version border
-  margin-right: -2px;
+  padding: 0 12px;
+  margin: 0 -12px;
 }
 
 .row {
   flex-wrap: nowrap;
-  transition: transform .8s linear;
+  margin-left: -.5rem;
+  margin-right: -.5rem;
   align-items: flex-end;
+  transition: transform .8s linear;
 }
 </style>

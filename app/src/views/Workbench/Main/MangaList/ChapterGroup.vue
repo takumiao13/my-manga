@@ -4,7 +4,7 @@
       CHAPTERS - {{ list.length }} items
       <div class="actions float-right">
         <a @click="sort">
-          <icon :name="`sort-by-name-${desc ? 'desc' : 'asc'}`" size="18" />
+          <icon :name="`sort-by-no-${desc ? 'desc' : 'asc'}`" size="18" />
         </a>
       </div>
     </div>
@@ -81,29 +81,30 @@ export default {
 
 <style lang="scss" scoped>
 @import '../../../../assets/style/base';
-
-.row {
-  margin-left: -.5rem;
-  margin-right: -.5rem;
-  align-items: flex-end;
-}
-
-.list-group {
-  @include media-breakpoint-up(md) {
-    margin: 0 -.2rem;
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: flex-start;
-
-    .list-group-item {
-      margin: .2rem;
-      width: calc(50% - .4rem);
-    }
+.chapter-area {
+  .row {
+    margin-left: -.5rem;
+    margin-right: -.5rem;
+    align-items: flex-end;
   }
 
-  @include media-breakpoint-up(lg) {
-    .list-group-item {
-      width: calc(33.3% - .4rem);
+  .list-group {
+    @include media-breakpoint-up(sm) {
+      margin: 0 -.2rem;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: flex-start;
+
+      .list-group-item {
+        margin: .2rem;
+        width: calc(50% - .4rem);
+      }
+    }
+
+    @include media-breakpoint-up(lg) {
+      .list-group-item {
+        width: calc(33.3% - .4rem);
+      }
     }
   }
 }

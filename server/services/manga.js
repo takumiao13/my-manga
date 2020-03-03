@@ -470,8 +470,8 @@ async function traverse({
     imgPath = path;
   } else if (type === FileTypes.MANGA) {
     imgPath = cover;
-    mtime = stat.mtime;
-    birthtime = stat.birthtime;
+    mtime = stat.mtimeMs;
+    birthtime = stat.birthtimeMs;
 
     if (_childExtnames && !version) {
       version = [_childExtnames];
