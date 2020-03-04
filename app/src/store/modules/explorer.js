@@ -13,14 +13,16 @@ const statusHelper = createRequestStatus('status');
 
 export const types = createTypesWithNamespace([ FETCH, LATEST ], NAMESPACE);
 
-export default {
+const initialState = {
+  folders: null,
+  latest: [],
+  ...statusHelper.state()
+};
+
+const createModule = (state = { ...initialState }) => ({
   namespaced: true,
 
-  state: {
-    folders: null,
-    latest: [],
-    ...statusHelper.state()
-  },
+  state,
 
   getters: {
     folderTree(state) {
@@ -95,7 +97,9 @@ export default {
 
     ...statusHelper.mutation()
   }
-};
+});
+
+export default createModule;
 
 function treeify(list) {
   const tree = [], seed = {};

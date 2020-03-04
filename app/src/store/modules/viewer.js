@@ -22,31 +22,33 @@ export const types = createTypesWithNamespace([
   LOAD, GO, VIEW, VIEW_VIDEO, SETTINGS, TOGGLE_AUTO_SCROLLING
 ], NAMESPACE);
 
-export default {
+const initialState = {
+  mode: 'scroll',  
+  autoScrolling: false,
+  name: '',
+  path: '',
+  page: 1,
+  ch: '',
+  chName: '',
+  chIndex: 0,
+  cover: '',
+  verNames: [],
+  activeVer: '',
+  images: [],
+  chapters: [],
+  settings: {
+    zoom: 'width',
+    gaps: true,
+    pagerInfo: true,
+    handMode: 'right',
+  },
+  ...statusHelper.state()
+};
+
+const createModule = (state = { ...initialState }) => ({
   namespaced: true,
 
-  state: {
-    mode: 'scroll',  
-    autoScrolling: false,
-    name: '',
-    path: '',
-    page: 1,
-    ch: '',
-    chName: '',
-    chIndex: 0,
-    cover: '',
-    verNames: [],
-    activeVer: '',
-    images: [],
-    chapters: [],
-    settings: {
-      zoom: 'width',
-      gaps: true,
-      pagerInfo: true,
-      handMode: 'right',
-    },
-    ...statusHelper.state()
-  },
+  state,
 
   getters: {
     pending(state) {
@@ -231,4 +233,6 @@ export default {
 
     ...statusHelper.mutation()
   }
-};
+});
+
+export default createModule;

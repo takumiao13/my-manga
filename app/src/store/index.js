@@ -5,15 +5,16 @@ import { errorCodeMap, ERR_CODE } from '@/helpers/error';
 
 // Load Modules
 import appModule, { types as appTypes } from './modules/app';
-import explorerModule from './modules/explorer';
-import mangaModule, { cacheStack as mangaCacheStack } from './modules/manga';
-import viewerModule from './modules/viewer';
 import settingsModule, { 
   types as settingTypes, 
   NAMESPACE as SETTINGS_NAMESPACE,
   createTypes, 
   createSettings 
 } from './modules/settings';
+
+import explorerModule from './modules/explorer';
+import mangaModule, { cacheStack as mangaCacheStack } from './modules/manga';
+import viewerModule from './modules/viewer';
 
 Vue.use(Vuex);
 
@@ -35,12 +36,16 @@ const store = new Vuex.Store({
 registerModules();
 
 function unregisterModules() {
-  Object.keys(dynamicModules).forEach(key => store.unregisterModule(key));
+  Object.keys(dynamicModules).forEach(key => {
+    store.unregisterModule(key);
+  });
 }
 
 function registerModules() {
   Object.keys(dynamicModules).forEach(key => {
-    store.registerModule(key, dynamicModules[key]);
+    // re-create module
+    const mod = dynamicModules[key]();
+    store.registerModule(key, mod);
   });
 }
 
@@ -51,8 +56,8 @@ export function resetStore() {
   store.commit(appTypes.TOGGLE_SIDEBAR, { open: true });
   store.commit(appTypes.TOGGLE_ACTIVITY, { activity: '' });
   mangaCacheStack.clear();
-  unregisterModules()
-  registerModules()
+  unregisterModules();
+  registerModules();
 }
 
 export const loadSettingsState = (scope) => {

@@ -14,7 +14,11 @@
       class="cover"
       v-bind="$service.image.coverStyle(item)"
     >
-      <div class="tags" v-if="item.verNames">
+      <div 
+        class="tags" 
+        :class="{ 'tags-lg': !latest && item.placeholder == 2 }"
+        v-if="item.verNames"
+      >
         <ul>
           <li 
             v-for="ver in filterVers(item.verNames)"
@@ -33,13 +37,17 @@
       </div>
     </a>
 
-    <div v-show="viewMode == 'grid'" class="caption">{{ item.name | stripVer }}</div>
+    <div v-show="viewMode == 'grid'" class="caption">
+      {{ item.name | stripVer }}
+    </div>
 
-    <div v-show="viewMode == 'list'" class="manga-list-item">
-      <icon :name="`file-${item.fileType || 'image'}`" />
-      <div>
+    <div v-show="viewMode == 'list'" class="manga-row">
+      <div class="manga-row-left">
+        <icon :name="`file-${item.fileType || 'image'}`" />
+      </div>
+      <div class="manga-row-main">
         <div class="manga-name">
-          {{ item.name | stripVer }} 
+          {{ item.name | stripVer }}
         </div>
         <div class="manga-time text-muted">
           {{ item.birthtime | dateFormat }}
@@ -170,38 +178,40 @@ export default {
   right: -3px;
   z-index: 2;
 
-  > ul {
+  ul {
     list-style: none;
     padding: 0px;
     margin: 0px;
     box-shadow: 0px 0px 2px #ddd;   
+  }
 
-    > li {
-      display: block;
+  li {
+    display: block;
+    right: 0px;
+    color: #fff;
+    padding: 2px 8px 2px 6px;
+    font-size: 60%;
+    background-color: #333;
+    border-bottom: .5px solid #666;
+    overflow: hidden;
+
+    &::after {
+      content:"";
+      position: absolute;
+      top: 0px;
       right: 0px;
-      color: #fff;
-      padding: 1px 8px 3px 6px;
-      font-size: 60%;
-      background-color: #333;
-      border-bottom: .5px solid #666;
-      overflow: hidden;
+      height: 100%;
+      border-right: 2px solid $primary;
+    }
+  }
+
+  @include media-breakpoint-up(sm) {
+    li {
+      padding: 3px 13px 5px 10px;
+      font-size: 70%;
 
       &::after {
-        content:"";
-        position: absolute;
-        top: 0px;
-        right: 0px;
-        height: 100%;
-        border-right: 2px solid $primary;
-      }
-
-      @include media-breakpoint-up(sm) {
-        padding: 3px 13px 5px 10px;
-        font-size: 70%;
-
-        &::after {
-          border-right-width: 3px;
-        }
+        border-right-width: 3px;
       }
     }
   }
@@ -215,6 +225,17 @@ export default {
   }
 }
 
+.tags.tags-lg {
+  li {
+    padding: 3px 13px 5px 10px;
+    font-size: 70%;
+
+    &::after {
+      border-right-width: 3px;
+    }
+  } 
+}
+
 .badge {
   font-size: 60%;
   margin-right: 3px;
@@ -222,22 +243,25 @@ export default {
   font-weight: 400;
 }
 
-.manga-list-item {
+.manga-row {
   display: flex;
 
-  > .svg-icon {
-    margin-left: -.25rem;
-    margin-top: .5rem;
-    width: 24px;
-    height: 24px;
+  > .manga-row-left{
+    .svg-icon {
+      margin-left: -.25rem;
+      margin-top: .5rem;
+      width: 24px;
+      height: 24px;
+    }
   }
 
-  > div {
+  > .manga-row-main {
     display: flex;
     flex-direction: column;
     flex: 0 1 100%;
     max-width: 100%;
-    padding-left: 1rem;
+    min-width: 0; // !! fix text-truncate expand outer width
+    padding-left: .5rem;
   }
 
   .manga-name,
@@ -255,17 +279,24 @@ export default {
   }
 
   @include media-breakpoint-up(lg) {
-    > .svg-icon {
-      margin-top: .25rem;
-      width: 18px;
-      height: 18px;
-      padding-right: 0;
+    > .manga-row-left {
+      .svg-icon {
+        margin-top: .25rem;
+        padding-right: 0;
+        width: 18px;
+        height: 18px;
+      }
     }
 
-    > div {
-      flex-wrap: nowrap;
+    > .manga-row-main {
       flex-direction: row;
-      flex: 1;
+    }
+
+    .manga-name,
+    .manga-versons,
+    .manga-time {
+      display: block;
+      padding: 0 .25rem;
     }
 
     .manga-name {
@@ -283,7 +314,8 @@ export default {
     }
 
     .manga-time {
-      flex: 0 1 140px;
+      min-width: 140px;
+      font-size: 90%;
       order: 3;
     }
   }

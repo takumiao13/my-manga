@@ -73,30 +73,32 @@ export const cacheStack = {
   }
 };
 
-export default {
+const initialState = {
+  inited: false,
+  cover: '',
+  type: '',
+  name: '',
+  path: '',
+  metadata: null,
+  list: [], // <-- all children
+  files: [], // Manga[]
+  mangas: [], // Manga[]
+  chapters: [], // Manga[]
+  versions: [], // Manga[]
+  verNames: null, // String[]
+  images: [], // Manga[]
+
+  activePath: '', // acitve path of `state.list`
+  activeVer: '', // active ver of `state.versions`
+  shortId: false,
+
+  ...statusHelper.state()
+};
+
+const createModule = (state = { ...initialState }) => ({
   namespaced: true,
 
-  state: {
-    inited: false,
-    cover: '',
-    type: '',
-    name: '',
-    path: '',
-    metadata: null,
-    list: [], // <-- all children
-    files: [], // Manga[]
-    mangas: [], // Manga[]
-    chapters: [], // Manga[]
-    versions: [], // Manga[]
-    verNames: null, // String[]
-    images: [], // Manga[]
-
-    activePath: '', // acitve path of `state.list`
-    activeVer: '', // active ver of `state.versions`
-    shortId: false,
-
-    ...statusHelper.state()
-  },
+  state,
 
   getters: {
     pending(state) {
@@ -254,7 +256,9 @@ export default {
 
     ...statusHelper.mutation()
   }
-};
+});
+
+export default createModule;
 
 function reflowMangas(mangas, size) {
   const lineCount = consts.MANGA_GRID_SIZE[size];

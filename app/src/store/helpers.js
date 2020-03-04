@@ -88,7 +88,10 @@ export function createRequestStatus(name, type = 'STATUS') {
 
       success(state) {
         // debounce success
-        return state[name] === SUCCESS_DEBOUNCED || state[name] === PENDING;
+        // state[name] === SUCCESS_DEBOUNCED  || state[name] === PENDING;
+        // will cause flash
+        // use transition later
+        return state[name] === SUCCESS_DEBOUNCED;
       },
 
       error(state) {

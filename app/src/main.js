@@ -130,8 +130,11 @@ function bootstrapApp() {
     window.localStorage.setItem(REPO_KEY, dirId);
 
     // reset store
+    resetStore();
+
+    // reset history
     resetHistory(() => {
-      resetStore();
+      // goto new repo explorer
       router.push({ name: 'explorer', params: { dirId }});
       // delay 1000 ms wait fetch data to render view 
       delay(1000).then(() => {

@@ -77,9 +77,8 @@ export default {
 
   activated() {
     if (
-      this.appError || 
-      (this.$route.meta.isBack && this.folderTree) || 
-      this.$router._reset
+      this.appError || // error
+      (this.$route.meta.isBack && this.folderTree) // has loaded 
     ) {
       return;
     }
@@ -89,10 +88,15 @@ export default {
   },
 
   beforeRouteUpdate(to, from, next) {
-    if (!this.appError && to.params.dirId !== from.params.dirId) {
-      this.fetchFolders();
-      this.fetchLatest();
+    if (
+      this.appError || 
+      to.params.dirId == from.params.dirId // the same route
+    ) {
+      return;
     }
+
+    this.fetchFolders();
+    this.fetchLatest();
 
     next();
   },
