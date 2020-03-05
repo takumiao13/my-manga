@@ -4,6 +4,17 @@ import { types as appTypes } from '@/store/modules/app';
 
 function fetch$(input, options) {
   input  = config.api.BASE_URL + input;
+  options || (options = {});
+  options.headers || (options.headers = {});
+
+  const { data } = store.state.settings.user;
+  if (input.indexOf('api/settings') == -1) {
+    options.headers['X-APP-VERSION'] = data.version;
+    if (process.env.APP_MODE == 'dev') {
+      options.headers['X-APP-STARTAT'] = data.startAt;
+    }
+  }
+  
   return fetch(input, options)
     .then(res => res.json())
     .then(res => {

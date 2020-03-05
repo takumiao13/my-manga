@@ -15,6 +15,8 @@ pkg = JSON.parse(pkg);
 const config = {
   appinfo: {
     pkg,
+    version: pkg.version,
+    startAt: +new Date,
     name: pkg.name,
     HOME: env.HOMEPATH,
     context: pathFn.resolve(__dirname, '..')

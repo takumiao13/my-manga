@@ -30,13 +30,16 @@ class SettingsService extends Service {
 
   initialize() {
     const { options } = this.app;
-    const { settings, baseDir } = options;
-    
+    const { settings, baseDir, appinfo: { version, startAt } } = options;
+
     this._settings = {};
 
     // get repos from settings
     if (settings) {
-      this._setPath('user', settings); 
+      this._setPath('user', settings, {
+        version,
+        startAt
+      }); 
       const repos = this.get('user', 'repos', false);
 
       this.service.repo.multiple = true;
@@ -111,7 +114,7 @@ class SettingsService extends Service {
     return value ? this.get(scope, key) : true;
   }
 
-  _setPath(scope, path) {
+  _setPath(scope, path, addonData = {}) {
     let data;
     const settings = this._settings[scope] = {};
     
@@ -121,7 +124,7 @@ class SettingsService extends Service {
     }
 
     settings.path = path;
-    settings.data = new Data(data);
+    settings.data = new Data(Object.assign(data || {}, addonData));
     return settings;
   }
 
