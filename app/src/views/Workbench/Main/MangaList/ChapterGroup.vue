@@ -1,7 +1,9 @@
 <template>
   <div class="chapter-area  mb-4" v-show="list.length">
     <div class="area-header">
-      CHAPTERS - {{ list.length }} items
+      CHAPTERS 
+      <span v-if="isEnd" class="manga-status badge">End</span>
+
       <div class="actions float-right">
         <a @click="sort">
           <icon :name="`sort-by-no-${desc ? 'desc' : 'asc'}`" size="18" />
@@ -9,10 +11,7 @@
       </div>
     </div>
 
-    <div 
-      v-if="metadata && typeof metadata.chapters === 'object' && metadata.chapters.cover"
-      class="row"
-    >
+    <div v-if="showCover" class="row">
       <manga-item 
         v-for="item in sortedList"
         :key="item.path"
@@ -64,6 +63,18 @@ export default {
   },
 
   computed: {
+    showCover() {
+      const m = this.metadata;
+      return m && 
+             typeof m.chapters === 'object' && 
+             m.chapters.cover
+    },
+
+    isEnd() {
+      const m = this.metadata;
+      return m && m.status === 'completed'
+    },
+    
     sortedList() {
       return this.desc ? 
         this.list.slice().reverse() :
@@ -82,6 +93,14 @@ export default {
 <style lang="scss" scoped>
 @import '../../../../assets/style/base';
 .chapter-area {
+
+  // TODO: need extract color later
+  .manga-status {
+    background: #28a745;
+    color: #fff;
+    font-weight: 400;
+  }
+
   .row {
     margin-left: -.5rem;
     margin-right: -.5rem;

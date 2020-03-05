@@ -26,6 +26,8 @@ const COVER_FILENAME = 'cover.jpg';
 const METADATA_FILENAME = 'metadata.json';
 const imgRE = /\.(jpe?g|png|webp|gif|bmp)$/i;
 const fileRE = /\.(mp4|pdf|zip)$/i;
+const coverRE = /^cover\./;
+const bannerRE = /^banner\./;
 
 
 // Helpers
@@ -268,7 +270,9 @@ async function traverse({
   if (!isDir && !fileType) return null;
   
   // Define Data info.
-  let metadata, type, cover, width, height, birthtime, mtime, hasSubfolder, version, chapterSize,
+  let metadata, type, birthtime, mtime,
+      hasSubfolder, version, chapterSize,
+      cover, banner, width, height,
       children = _isFile ? 
         [ { name, path, type: FileTypes.FILE, fileType } ] : // single file put self in children 
         undefined;
@@ -291,12 +295,7 @@ async function traverse({
     if (hasMetadata) {
       metadata = await readMeta(metadataPath);
 
-      // get cover if metadata has `cover` key
-      if (metadata && metadata.cover) {
-        cover = pathFn.posix.join(path, metadata.cover);
-      }
-
-      if (metadata && typeof metadata.chapters === 'object' && metadata.chapters.cover) {
+      if (typeof metadata.chapters === 'object' && metadata.chapters.cover) {
         _showChapterCover = true;
       }
 
@@ -368,10 +367,12 @@ async function traverse({
     // - else directory consider it as `FILE`
     _isManga = _versionFiles.length || _chapterFiles.length;
 
-    _chapterFiles.sort((a, b) => fs.filenameComparator(a.name, b.name));
+    const fixedTopNames = ['banner', 'cover']
+    _chapterFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames));
     _filterdFiles.sort((a, b) => fs.filenameComparator(
       pathFn.basename(a.path), 
-      pathFn.basename(b.path)
+      pathFn.basename(b.path),
+      fixedTopNames
     ));
 
     const filesLength = _filterdFiles.length;
@@ -394,15 +395,27 @@ async function traverse({
     const chapterTasks = _chapterWithCoverFiles.map(createTask);
     const chapterNodes = await parallel$(chapterTasks, 10);
 
-    const filteredChildNodes = childNodes.filter(child => {
+    const filteredChildNodes = childNodes.filter((child, index) => {
       if (!child) return false;
+    
+      if (!banner && bannerRE.test(child.name)) {
+        banner = child.path;
+        return false; // exclude `banner.xxx` from children
+      }
 
-      if (child.isDir && !_hasFolder) {
-        _hasFolder = true;
-      } else if (!cover && imgRE.test(child.path)) {
+      if (!cover && coverRE.test(child.name)) {
+        cover = child.path;
+        return false; // exluce `cover.xxx` from children
+      }
+
+      if (!cover && imgRE.test(child.name)) {
         // if directory has not specify cover
         // use first image child as cover
         cover = child.path;
+      }
+
+      if (child.isDir && !_hasFolder) {
+        _hasFolder = true;
       }
       
       return !onlyFile || (onlyFile && child.type !== FileTypes.IMAGE);
@@ -423,14 +436,15 @@ async function traverse({
         .concat(filteredChildNodes);
     }
 
+    // not need this ?? 'cover.jpg|png' will be sorted to the top.
     // if not find cover try to find `cover.jpg` as cover
-    if (maxDepth === 0 && !cover && filesLength > LAST_LOOP_COUNT) {
-      const hasCover = await fs.accessAsync(pathFn.join(absPath, COVER_FILENAME));
+    // if (maxDepth === 0 && !cover && filesLength > LAST_LOOP_COUNT) {
+    //   const hasCover = await fs.accessAsync(pathFn.join(absPath, COVER_FILENAME));
       
-      if (hasCover) {
-        cover = pathFn.posix.join(path, COVER_FILENAME);
-      }
-    }
+    //   if (hasCover) {
+    //     cover = pathFn.posix.join(path, COVER_FILENAME);
+    //   }
+    // }
   }
 
   // Last loop will not run after.
@@ -505,7 +519,7 @@ async function traverse({
   // Merge base info and extra info
   return { 
     isDir, path, name, birthtime, mtime, type, 
-    cover, metadata, width, height, fileType,
+    cover, banner, metadata, width, height, fileType,
     children, hasSubfolder,
     verNames: version,
     chapterSize

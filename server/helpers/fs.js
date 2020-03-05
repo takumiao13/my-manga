@@ -19,10 +19,23 @@ const chineseNumberMap = {
 
 const lastChars = ['最終', '最终'];
 
-const filenameComparator = (a, b) => {
+const filenameComparator = (a, b, fixedTop) => {
   // first check a or b whether contains other.
   if (a.indexOf(b) === 0 && b.indexOf(a) === -1) return 1;
   if (b.indexOf(a) === 0 && a.indexOf(b) === -1) return -1;
+
+  // handle some fixedTop ['banner', 'cover']
+  const fixedAIndex = fixedTop.indexOf(a);
+  const fixedBIndex = fixedTop.indexOf(b);
+  
+  if (fixedAIndex == -1 && fixedBIndex == -1) {
+    // skip
+  } else if (fixedAIndex > -1 && fixedBIndex > -1) {
+    return fixedAIndex - fixedBIndex;
+  } else {
+    if (fixedAIndex === -1) return 1;
+    if (fixedBIndex === -1) return 1;
+  }
 
   let m = 0, n = 0;
   const j = a.length, k = b.length;

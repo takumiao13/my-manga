@@ -14,6 +14,10 @@
       class="cover"
       v-bind="$service.image.coverStyle(item)"
     >
+      <div v-if="status" class="manga-status">
+        End
+      </div>
+
       <div 
         class="tags" 
         :class="{ 'tags-lg': !latest && item.placeholder == 2 }"
@@ -42,6 +46,7 @@
     </div>
 
     <div v-show="viewMode == 'list'" class="manga-row">
+      <div v-if="status" class="manga-status"></div>
       <div class="manga-row-left">
         <icon :name="`file-${item.fileType || 'image'}`" />
       </div>
@@ -79,6 +84,13 @@ export default {
     latest: Boolean
   },
 
+  computed: {
+    status() {
+      if (!this.item.metadata) return false;
+      return this.item.metadata.status === 'completed';  
+    }
+  },
+
   methods: {
     filterVers(vers) {
       return vers && vers
@@ -105,6 +117,9 @@ export default {
 
 <style lang="scss" scoped>
 @import '../../../../assets/style/base';
+
+$status-color: #28a745;
+
 .area-item {
   flex-grow: 1;
 }
@@ -172,6 +187,24 @@ export default {
   text-align: left;
 }
 
+// TODO: need extract color later
+.manga-status {
+  position: absolute;
+  top: 4px;
+  left: -2px;
+  z-index: 2;
+  background: $status-color;
+  padding: 2px 8px 2px 6px;
+  color: #fff;
+  font-size: 60%;
+  border-radius: .2rem;
+
+  @include media-breakpoint-up(sm) {
+    font-size: 80%;
+  }
+}
+
+// TODO: should rename `.tags` -> `version-labels` ??
 .tags {
   position: absolute;
   bottom: .5rem;
@@ -245,6 +278,14 @@ export default {
 
 .manga-row {
   display: flex;
+
+  .manga-status {
+    padding: 0;
+    width: 3px;
+    left: 0;
+    height: 100%;
+    top: 0;
+  }
 
   > .manga-row-left{
     .svg-icon {
