@@ -46,12 +46,11 @@ class MangaController extends Controller {
     try {
       const { request, response } = ctx;
       const { path = '', dirId } = ctx.params;
-      const { type } = ctx.query;
-
       const { baseDir } = this.app.service.repo.get(dirId);
       const settings = this.app.service.settings.get(dirId);
       const dirPath = pathFn.resolve(baseDir, path);
       const dirStat = await fs.stat(dirPath);
+
       let ifModifiedSince = request.headers['if-modified-since'];
       if (ifModifiedSince) {
         ifModifiedSince = new Date(ifModifiedSince);
@@ -59,21 +58,19 @@ class MangaController extends Controller {
       let lastModified = dirStat.mtime;
 
       // if cached check sub folder mtime is gt `ifModifiedSince`
-      if (ctx.fresh) {
-        const files = await fs.readdir(dirPath);
-        for (let i = 0; i < files.length; i++) {
-          const fileStat = await fs.stat(pathFn.resolve(dirPath, files[i]));
-          if (
-            fileStat.isDirectory()
-            && fileStat.mtime - ifModifiedSince >= 1000 // gt 1second then last modified
-          ) {
-            // update lastModified
-            lastModified = fileStat.mtime;
-            break;
-          }
+      const files = await fs.readdir(dirPath);
+      for (let i = 0; i < files.length; i++) {
+        const fileStat = await fs.stat(pathFn.resolve(dirPath, files[i]));
+        if (
+          fileStat.isDirectory()
+          && fileStat.mtime - ifModifiedSince >= 1000 // gt 1second then last modified
+        ) {
+          // update lastModified
+          lastModified = fileStat.mtime;
+          break;
         }
       }
-      
+
       // handle no `ifModifiedSince` header
       if (!ifModifiedSince || lastModified - ifModifiedSince >= 1000) {
         response.lastModified = lastModified;

@@ -46,6 +46,7 @@ export default {
     },
 
     handleChange($event) {
+      this.tipShown = false;
       this.$emit('end', $event.target.value);
     }
   }
