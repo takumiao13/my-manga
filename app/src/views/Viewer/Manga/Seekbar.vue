@@ -57,23 +57,15 @@ export default {
 @import '../../../assets/style/base';
 
 .viewer-seekbar-tip {
-  margin: 1rem auto;
   max-width: 100px;
-  text-align: center;
   padding: .5rem 0;
+  margin: 1rem auto;
+  text-align: center;
 }
 
 .viewer-seekbar-container {
   max-width: 100%;
   padding: .5rem .5rem 1rem .5rem;
   margin: 0 auto;
-
-  @include media-breakpoint-up(md) {
-    max-width: 600px;
-  }
-
-  @include media-breakpoint-up(lg) {
-    max-width: 800px;
-  }
 }
 </style>

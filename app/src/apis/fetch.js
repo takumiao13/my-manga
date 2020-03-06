@@ -7,7 +7,10 @@ function fetch$(input, options) {
   options || (options = {});
   options.headers || (options.headers = {});
 
-  const { data } = store.state.settings.user;
+  const { data: userData } = store.state.settings.user;
+  const { data: repoData } = store.state.settings.repo;
+  const data = userData || repoData;
+  
   if (input.indexOf('api/settings') == -1) {
     options.headers['X-APP-VERSION'] = data.version;
     if (process.env.APP_MODE == 'dev') {

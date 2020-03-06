@@ -17,15 +17,14 @@ function _transformResponse(res) {
       ['fileType', 'name'], 
       ['desc', 'asc']
     ) : [];
-  const images = group.IMAGE;
-  
+
   Object.assign(res, {
     list,
     cover,
     files: group.FILE || [],
     chapters: _attachPlaceholder(group.CHAPTER || []),
     mangas: _attachPlaceholder(group.MANGA || []),
-    images,
+    images: group.IMAGE || [],
     versions
   });
 

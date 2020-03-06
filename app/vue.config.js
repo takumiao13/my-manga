@@ -5,8 +5,11 @@ require('dotenv-flow').config({
   path: pathFn.join('envs', env.APP_PLATFORM),
   silent: true
 });
+const pkg = require('../package.json');
+
 
 console.log('NODE_ENV:', env.NODE_ENV);
+console.log('APP_VERSION:', pkg.version);
 console.log('APP_MODE:', env.APP_MODE);
 console.log('APP_PLATFORM:', env.APP_PLATFORM);
 
@@ -71,7 +74,6 @@ module.exports = {
       agg[key] = env[key];
       return agg;
     }, {});
-    const pkg = require('../package.json');
     processEnv.APP_NAME = appName; 
     processEnv.APP_VERSION = pkg.version;
     processEnv.APP_LOGO = `${publicModeDir}/icons/apple-touch-icon.png`;
@@ -127,14 +129,14 @@ module.exports = {
   },
   pwa: {
     name: appName,
-    themeColor: themeColor, // this will change safari pinned color.
+    themeColor: '#fff', // this will change safari pinned color.
     msTileColor: themeColor,
     appleMobileWebAppCapable: 'yes',
     appleMobileWebAppStatusBarStyle: '#fff',
-    manifestPath: `manifest.json?mode=${env.APP_MODE || 'prod'}`,
+    manifestPath: `manifest.json?mode=${env.APP_MODE || 'prod'}&ver=${pkg.version}`,
     manifestOptions: {
-      description: "A Free Comics Management.",
-      start_url: "/index.html",
+      description: "A Free Comics Management",
+      start_url: ".",
       display: "standalone",
       background_color: "#ffffff",
       icons: [

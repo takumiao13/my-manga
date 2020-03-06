@@ -24,14 +24,10 @@
     <div class="list-group" v-else>
       <a class="list-group-item list-group-item-action chapter-item"
         :class="{ active: item.name === activeName}"
-        v-for="(item, index) in sortedList" 
+        v-for="item in sortedList" 
         :key="item.path"
         @click="$emit('item-click', item, 0)"
       >
-
-        <small class="text-muted float-right">
-          #{{ index + 1 }}
-        </small>
 
         <div class="text-truncate pr-2">
           {{ item.chapterName || item.name }}
@@ -96,7 +92,8 @@ export default {
 
   // TODO: need extract color later
   .manga-status {
-    background: #28a745;
+    background: #ffc107;
+    border-color: #ffc107;
     color: #fff;
     font-weight: 400;
   }

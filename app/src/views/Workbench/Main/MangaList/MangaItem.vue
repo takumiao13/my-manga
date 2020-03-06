@@ -118,7 +118,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../../../assets/style/base';
 
-$status-color: #28a745;
+$status-color: #ffc107;
 
 .area-item {
   flex-grow: 1;
@@ -190,14 +190,16 @@ $status-color: #28a745;
 // TODO: need extract color later
 .manga-status {
   position: absolute;
-  top: 4px;
-  left: -2px;
+  top: 6px;
+  left: 0;
   z-index: 2;
   background: $status-color;
-  padding: 2px 8px 2px 6px;
+  padding: 0 6px 0 6px;
   color: #fff;
   font-size: 60%;
-  border-radius: .2rem;
+  border-radius: 0 .25rem .25rem 0;
+  border: 1px solid #fff;
+  border-left: 0;
 
   @include media-breakpoint-up(sm) {
     font-size: 80%;
@@ -282,7 +284,6 @@ $status-color: #28a745;
   .manga-status {
     padding: 0;
     width: 3px;
-    left: 0;
     height: 100%;
     top: 0;
   }

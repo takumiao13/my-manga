@@ -166,6 +166,7 @@ export default {
     text-align: center;
     font-weight: 200;
     text-decoration: none;
+    word-break: break-all;
 
     span {
       display: none;
@@ -173,6 +174,7 @@ export default {
 
     @include media-breakpoint-up(md) {
       font-size: 1.6rem;
+      text-align: left;
     }
   }
 
