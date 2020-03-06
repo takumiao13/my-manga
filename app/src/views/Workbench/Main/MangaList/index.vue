@@ -21,8 +21,6 @@
           ref="metadata"
           :title="title"
           :sharing="sharing"
-          :versions="versions"
-          @version-click="toggleVersion"
         />
 
         <div class="area-container mt-3 col-12" v-show="!sharing">
@@ -126,7 +124,8 @@ export default {
 
     ...mapState('manga', [
       'inited', 'name', 'path', 'list', 'type', 'cover', 'files', 
-      'chapters', 'versions', 'images', 'activePath', 'activeVer',
+      'chapters', 'versions', 'images', 
+      'activePath', 'activeVer', 'activeVerPath',
       'error', 'metadata'
     ]),
 
@@ -251,18 +250,6 @@ export default {
       return promise;
     },
 
-    toggleVersion(item) {
-      const { ver } = item;
-      const { dirId } = this.repo;
-      if (ver === this.activeVer) return;
-  
-      this.$router.replace({
-        name: 'explorer', 
-        params: { dirId, path: this.path },
-        query: { ver, type: 'manga' }
-      });
-    },
-
     // when file clicked.
     readFile(item, type) {
       const { dirId } = this.repo;
@@ -298,7 +285,8 @@ export default {
           query
         });
       } else if (fileType === 'pdf') {
-        // use browser as pdf reader
+        // use browser as pdf reader 
+        // `item.path` as source
         const href = this.$service.pdf.makeSrc(path);
         href && window.open(href, 'target', '');
       }
@@ -306,10 +294,11 @@ export default {
 
     // when chapter and gallery clicked.
     readManga(item, index = 0) {
-      const { path } = this.$route.params;
       const { dirId } = this.repo;
       const ch = item.type === 'CHAPTER' ? item.name : undefined;
       
+      // TODO: when in multi versions could not sync state
+      // because of `this.path` is changed to active version path.
       // sync state to viewer store.
       const shouldSyncState = () => {
         if (item.type === 'IMAGE') {
@@ -330,7 +319,7 @@ export default {
 
       // sync state to viewer store
       if (shouldSyncState()) {
-        this.$store.dispatch(viewerTypes.LOAD, {
+        this.$store.commit(viewerTypes.LOAD, {
           name: this.name,
           path: this.path,
           images: this.images,
@@ -340,10 +329,16 @@ export default {
 
       this.$router.push({
         name: 'viewer',
-        params: { type: 'manga', dirId, path, ch },
+        params: { 
+          type: 'manga', 
+          dirId, 
+          path: this.activeVer ? this.activeVerPath : this.path, 
+          ch 
+        },
         query: {
           // use a query from start page, prepare for history feature
-          start: index + 1
+          start: index + 1,
+          ver: this.activeVer
         }
       });
     },

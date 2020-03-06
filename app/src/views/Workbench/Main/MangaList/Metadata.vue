@@ -51,7 +51,7 @@
           :class="{ 'version-active': item.ver === activeVer }"
           v-for="item in versions" 
           :key="item.path"
-          @click="$emit('version-click', item)"
+          @click="toggleVersion(item)"
         >
           {{ (item.ver || item.name).toUpperCase() }} 
         </a>
@@ -62,23 +62,39 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState, mapGetters } from 'vuex';
 
 export default {
   props: {
     title: String,
-    sharing: Boolean,
-    versions: Array
+    sharing: Boolean
   },
 
   computed: {
-    ...mapState('mangas', [ 'metadata', 'shortId' ]),
+    ...mapGetters('app', [ 'repo' ]),
+
+    ...mapState('manga', [ 'path', 'versions', 'metadata', 'shortId', 'activeVer' ]),
 
     qrcodeValue() {
       const { HOST, PORT } = this.$config.api;
       const protocol = this.$platform.isElectron() ? 'http:' : window.location.protocol;
       return `${protocol}//${HOST}:${PORT}/s/${this.shortId}`
     }
+  },
+
+  methods: {
+    toggleVersion(item) {
+      const { ver } = item;
+      const { dirId } = this.repo;
+      
+      if (ver === this.activeVer) return;
+  
+      this.$router.replace({
+        name: 'explorer', 
+        params: { dirId, path: this.path },
+        query: { ver, type: 'manga' }
+      });
+    },
   }
 }
 </script>
@@ -233,6 +249,7 @@ export default {
 
   .list-group-item {
     margin: .2rem;
+    padding: .5rem 1rem;
     border-width: .5px;
     width: calc(33.3% - .4rem);
     flex-shrink: 0;
@@ -252,8 +269,12 @@ export default {
 }
 
 .version-area .list-group-item {
-  border-left: 4px solid #ddd !important;
+  border-left: 4px solid #eee !important;
 
+  &:not(.version-active) {
+    cursor: pointer;
+  }
+  
   &.version-active {
     border-left-color: $primary !important;
   }

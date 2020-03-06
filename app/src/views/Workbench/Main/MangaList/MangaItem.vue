@@ -109,7 +109,7 @@ export default {
     },
 
     dateFormat(value) {
-      return date.format(new Date(value));
+      return date.format(new Date(value), 'yyyy-mm-dd HH:MM');
     }
   }
 }
@@ -283,9 +283,9 @@ $status-color: #ffc107;
 
   .manga-status {
     padding: 0;
-    width: 3px;
-    height: 100%;
-    top: 0;
+    width: .25rem;
+    top: .5rem;
+    bottom: .5rem;
   }
 
   > .manga-row-left{

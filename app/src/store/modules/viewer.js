@@ -95,10 +95,6 @@ const createModule = (state = { ...initialState }) => ({
   },
 
   actions: {
-    [LOAD]({ commit }, payload = {}) {
-      commit(LOAD, payload);
-    },
-
     [VIEW]({ commit, state }, payload = {}) {
       const { dirId, path, ch, page } = payload;
       const promiseArray = [];

@@ -88,8 +88,10 @@ const initialState = {
   verNames: null, // String[]
   images: [], // Manga[]
 
+  // TODO: need optimize and pretty
   activePath: '', // acitve path of `state.list`
   activeVer: '', // active ver of `state.versions`
+  activeVerPath: '', // active path of `state.versions`
   shortId: false,
 
   ...statusHelper.state()
@@ -144,6 +146,7 @@ const createModule = (state = { ...initialState }) => ({
           metadata: null,
           activePath: '',
           activeVer: '',
+          activeVerPath: '',
           shortId: false,
           list: [],
           files: [], 
@@ -199,12 +202,12 @@ const createModule = (state = { ...initialState }) => ({
       if (activeVer === ver) return;
 
       const currVer = find(versions, { ver });
-      const { inited, path } = currVer;
 
       // check version has loaded
-      if (inited) {
+      if (currVer && currVer.inited) {
         commit(TOGGLE_VERSION, { ver, res: currVer });
       } else {
+        const { path } = currVer;
         // get version data first
         mangaAPI.list({ dirId, path })
           .then(res => {
@@ -241,10 +244,13 @@ const createModule = (state = { ...initialState }) => ({
 
     [TOGGLE_VERSION](state, payload) {
       const { ver, res } = payload;
+      // also change parent path
       const obj = pick(res, ['list', 'files', 'mangas', 'chapters', 'images']);
 
+      
       // use version date replace current data
       state.activeVer = ver;
+      state.activeVerPath = res.path;
       safeAssign(state, obj); 
       //console.log(version, state);
     },
