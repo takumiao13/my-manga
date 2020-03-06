@@ -58,7 +58,8 @@ class Application extends EventEmitter {
    * @param {*} options 
    */
   _setOptions(options) {
-    const { settings: settingsPath } = options;
+    
+    const settingsPath = options.settings || config.settings;
     let serverSettings;
     if (settingsPath && fs.accessSync(settingsPath)) {
       const settings = JSON.parse(fs.readFileSync(settingsPath, { encoding: 'utf8' }));
@@ -69,7 +70,8 @@ class Application extends EventEmitter {
       protocol: 'http',
       baseDir: process.cwd(),
       ssl: false, // http default
-      clientCert: false, // client auth
+      clientCert: false, // client auth,
+      cors: true,
     }, config, serverSettings, options);
 
     

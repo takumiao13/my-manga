@@ -19,22 +19,24 @@ const chineseNumberMap = {
 
 const lastChars = ['最終', '最终'];
 
-const filenameComparator = (a, b, fixedTop) => {
+const filenameComparator = (a, b, fixedTop = []) => {
   // first check a or b whether contains other.
   if (a.indexOf(b) === 0 && b.indexOf(a) === -1) return 1;
   if (b.indexOf(a) === 0 && a.indexOf(b) === -1) return -1;
 
-  // handle some fixedTop ['banner', 'cover']
-  const fixedAIndex = fixedTop.indexOf(a);
-  const fixedBIndex = fixedTop.indexOf(b);
-  
-  if (fixedAIndex == -1 && fixedBIndex == -1) {
-    // skip
-  } else if (fixedAIndex > -1 && fixedBIndex > -1) {
-    return fixedAIndex - fixedBIndex;
-  } else {
-    if (fixedAIndex === -1) return 1;
-    if (fixedBIndex === -1) return 1;
+  if (fixedTop) {
+    // handle some fixedTop ['banner', 'cover']
+    const fixedAIndex = fixedTop.indexOf(a);
+    const fixedBIndex = fixedTop.indexOf(b);
+    
+    if (fixedAIndex == -1 && fixedBIndex == -1) {
+      // skip
+    } else if (fixedAIndex > -1 && fixedBIndex > -1) {
+      return fixedAIndex - fixedBIndex;
+    } else {
+      if (fixedAIndex === -1) return 1;
+      if (fixedBIndex === -1) return 1;
+    }
   }
 
   let m = 0, n = 0;
@@ -52,8 +54,8 @@ const filenameComparator = (a, b, fixedTop) => {
 
     // case for `xx-1` > `xx-2` 
     // will check negative number `-1` and `-2`
-    ca = (!isNaN(na) && na >= 0) ? na : ca[0];
-    cb = (!isNaN(nb) && nb >= 0) ? nb : cb[0]; 
+    ca = !isNaN(na) ? Math.abs(na) : ca[0];
+    cb = !isNaN(nb) ? Math.abs(nb) : cb[0]; 
     
     const aIsNum = typeof ca === 'number';
     const bIsNum = typeof cb === 'number';

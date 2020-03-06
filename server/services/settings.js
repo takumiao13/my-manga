@@ -47,7 +47,10 @@ class SettingsService extends Service {
 
     // get repo from single dir
     } else if (baseDir) {
-      this._setPath('repo', pathFn.resolve(baseDir, FILE_NAME));
+      this._setPath('repo', pathFn.resolve(baseDir, FILE_NAME), {
+        version,
+        startAt
+      });
 
       this.service.repo.multiple = false;
       this.service.repo.add(baseDir);

@@ -1,6 +1,7 @@
 const Controller = require('./_base');
 const to = require('await-to-js').default;
 
+const ONE_MONTH = 30*24*60;
 class ImageController extends Controller {
 
   async show(ctx) {
@@ -15,7 +16,7 @@ class ImageController extends Controller {
       root,
       hidden: true,
       setHeaders: (res) => {
-        res.setHeader('Cache-Control', 'max-age=31536000')
+        res.setHeader('Cache-Control', `max-age=${ONE_MONTH}`)
       }
     }));
   

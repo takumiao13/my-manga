@@ -90,7 +90,7 @@ class MangaService extends Service {
             count++;
             callback(pick(child, [
               'name', 'path', 'type', 'birthtime', 'mtime', 
-              'cover', 'width', 'height', 'verNames', 'chapterSize'
+              'cover', 'width', 'height', 'verNames', 'chapterSize', 'metadata'
             ]));
           } else if (child.isDir && child.type === FileTypes.FILE) {
             queue.push({ baseDir, path: child.path, settings });
@@ -369,6 +369,7 @@ async function traverse({
 
     const fixedTopNames = ['banner', 'cover']
     _chapterFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames));
+    _chapterWithCoverFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames));
     _filterdFiles.sort((a, b) => fs.filenameComparator(
       pathFn.basename(a.path), 
       pathFn.basename(b.path),
