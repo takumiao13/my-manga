@@ -74,18 +74,27 @@ const createModule = (state = { ...initialState }) => ({
   mutations: {
     [FETCH](state, payload) {
       const { path, list } = payload;
-      
-      if (!state.folders) {
-        state.folders = list;
-      } else {
-        let folders;
-        if (list && list.length == 1 && list[0]._mangaGroup) {
-          const parent = find(state.folders, { path });
-          folders = list[0].children;
+      let folders;
+
+      // handle folders only contains `_mangaGroup`
+      if (list && list.length == 1 && list[0]._mangaGroup) {
+        const parent = find(state.folders, { path });
+        folders = list[0].children;
+
+        // care for root has not parent
+        if (parent) {
           parent._mangaGroup = true;
-        } else {
-          folders = list;
         }
+      } else {
+        folders = list;
+      }
+
+      // TODO: 
+      // - optimize
+      // - duplicate when hot-reload
+      if (!state.folders) {
+        state.folders = folders;
+      } else {
         state.folders = [...state.folders, ...folders ];
       }
     },

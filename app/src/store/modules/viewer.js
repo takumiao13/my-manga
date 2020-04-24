@@ -95,28 +95,25 @@ const createModule = (state = { ...initialState }) => ({
   },
 
   actions: {
-    [LOAD]({ commit }, payload = {}) {
-      commit(LOAD, payload);
-    },
-
     [VIEW]({ commit, state }, payload = {}) {
       const { dirId, path, ch, page } = payload;
       const promiseArray = [];
       const pathResStub = () => {};
-      const chResStub = () => {};
 
       const pathPromise = state.path !== path ? 
         mangaAPI.list({ dirId, path }) : 
         pathResStub;
   
       promiseArray.push(pathPromise);
-      
-      // should fetch chapters
-      if (ch) {
-        const chPromise = state.ch !== ch ? 
-          mangaAPI.list({ dirId, path: `${path}/${ch}` }) : 
-          chResStub;
 
+ 
+      // fetch chapters images every time
+      // TODO: should check is not need fetch again
+      if (ch) {
+        const chPromise = mangaAPI.list({ 
+          dirId, 
+          path: `${path}/${ch}` 
+        }); 
         promiseArray.push(chPromise);
       }
   
@@ -153,14 +150,13 @@ const createModule = (state = { ...initialState }) => ({
             verNames = res1.verNames;
           }
   
-          if (res2 !== chResStub) {
-            images = res2.images;
-          }
+ 
+          images = res2.images;
         }
   
         // try to remove name prefix
         const chName = ch.replace(`${name} - `, '');
-
+        
         // TODO: replace `safeAssign`
         // sometimes images chapters will be undefined
         // so we should safeAssign it.

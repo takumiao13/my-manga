@@ -12,6 +12,7 @@ module.exports = ({ options }) => {
       credentials: true,
       allowMethods: ['GET', 'POST', 'PUT', 'DELETE'],
       allowHeaders: [
+        'Range',
         'X-APP-VERSION',
         'X-APP-STARTAT'
       ],

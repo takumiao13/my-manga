@@ -52,7 +52,7 @@ export default {
         children: 'children',
         label: (item) => {
           const { _mangaGroup, name } = item;
-          if (_mangaGroup && !name) return '@MANGA'
+          if (_mangaGroup && !name) return '@MANGAS'
           return name;
         },
         className: (item) => item._mangaGroup ? 'manga-group-item' : '',
