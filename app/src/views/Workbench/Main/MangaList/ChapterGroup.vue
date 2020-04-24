@@ -1,9 +1,7 @@
 <template>
   <div class="chapter-area  mb-4" v-show="list.length">
     <div class="area-header">
-      CHAPTERS 
-      <span v-if="isEnd" class="manga-status badge">End</span>
-
+      CHAPTERS
       <div class="actions float-right">
         <a @click="sort">
           <icon :name="`sort-by-no-${desc ? 'desc' : 'asc'}`" size="18" />
@@ -66,11 +64,6 @@ export default {
              m.chapters.cover
     },
 
-    isEnd() {
-      const m = this.metadata;
-      return m && m.status === 'completed'
-    },
-    
     sortedList() {
       return this.desc ? 
         this.list.slice().reverse() :
@@ -89,14 +82,6 @@ export default {
 <style lang="scss" scoped>
 @import '../../../../assets/style/base';
 .chapter-area {
-
-  // TODO: need extract color later
-  .manga-status {
-    background: #ffc107;
-    border-color: #ffc107;
-    color: #fff;
-    font-weight: 400;
-  }
 
   .row {
     margin-left: -.5rem;

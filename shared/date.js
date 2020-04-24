@@ -1,5 +1,4 @@
-
-const pattern = /yy(?:yy)?|m{2}|d{2}|H{2}|M{2}|s{2}/g; // (1)
+const pattern = /yy(?:yy)?|m{2}|d{2}|H{2}|M{2}|s{2}/g;
 const defaultPattern = 'yyyy-mm-dd HH:MM:ss';
 const pad = function(val) {
   return ('0' + val).slice(-2);

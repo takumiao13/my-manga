@@ -228,12 +228,12 @@ const createModule = (state = { ...initialState }) => ({
   mutations: {
     [FETCH](state, payload) {
       state.inited || (state.inited = true);
-      safeAssign(state, { 
-        ...payload,
+      safeAssign(state, {
         activeVer: '',
         error: null,
-        shortId: false
-      });
+        shortId: false,
+        metadata: null // fixed when list no-metadata cannot overwrite prev metadata
+      }, payload);
     },
 
     [ADD_VERSION](state, payload) {
@@ -247,12 +247,10 @@ const createModule = (state = { ...initialState }) => ({
       // also change parent path
       const obj = pick(res, ['list', 'files', 'mangas', 'chapters', 'images']);
 
-      
       // use version date replace current data
       state.activeVer = ver;
       state.activeVerPath = res.path;
-      safeAssign(state, obj); 
-      //console.log(version, state);
+      safeAssign(state, obj);
     },
 
     [SHARE](state, payload) {
@@ -275,9 +273,13 @@ function reflowMangas(mangas, size) {
     if (lineCount == 3 && p == 2) p = 3;
     count += p;
 
+    // handle filled line
     if (count === lineCount) {
+      // reset count
       count = 0;
       i++;
+    
+    // handle not fill
     } else if (count < lineCount) {
       i++;
     
@@ -285,6 +287,8 @@ function reflowMangas(mangas, size) {
     } else if (count > lineCount) {
       let need = lineCount - (count - p);
       j = i+1;  
+
+      // find first suitable manga size
       while (j < l && need > 0) {
         let q = mangas[j].placeholder;
         if (lineCount == 3 && q == 2) q = 3;

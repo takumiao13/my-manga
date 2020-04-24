@@ -14,10 +14,6 @@
       class="cover"
       v-bind="$service.image.coverStyle(item)"
     >
-      <div v-if="status" class="manga-status">
-        End
-      </div>
-
       <div 
         class="tags" 
         :class="{ 'tags-lg': !latest && item.placeholder == 2 }"
@@ -42,6 +38,9 @@
     </a>
 
     <div v-show="viewMode == 'grid'" class="caption">
+      <span v-if="status" class="manga-status">
+        [End]
+      </span>
       {{ item.name | stripVer }}
     </div>
 
@@ -52,6 +51,9 @@
       </div>
       <div class="manga-row-main">
         <div class="manga-name">
+          <span v-if="status" class="manga-status">
+            [End]
+          </span>
           {{ item.name | stripVer }}
         </div>
         <div class="manga-time text-muted">
@@ -118,7 +120,7 @@ export default {
 <style lang="scss" scoped>
 @import '../../../../assets/style/base';
 
-$status-color: #ffc107;
+$status-color: red;
 
 .area-item {
   flex-grow: 1;
@@ -187,23 +189,9 @@ $status-color: #ffc107;
   text-align: left;
 }
 
-// TODO: need extract color later
 .manga-status {
-  position: absolute;
-  top: 6px;
-  left: 0;
-  z-index: 2;
-  background: $status-color;
-  padding: 0 6px 0 6px;
-  color: #fff;
-  font-size: 60%;
-  border-radius: 0 .25rem .25rem 0;
-  border: 1px solid #fff;
-  border-left: 0;
-
-  @include media-breakpoint-up(sm) {
-    font-size: 80%;
-  }
+  color: $status-color;
+  font-weight: normal;
 }
 
 // TODO: should rename `.tags` -> `version-labels` ??
@@ -281,13 +269,6 @@ $status-color: #ffc107;
 .manga-row {
   display: flex;
 
-  .manga-status {
-    padding: 0;
-    width: .25rem;
-    top: .5rem;
-    bottom: .5rem;
-  }
-
   > .manga-row-left{
     .svg-icon {
       margin-left: -.25rem;
@@ -356,7 +337,7 @@ $status-color: #ffc107;
     }
 
     .manga-time {
-      min-width: 140px;
+      min-width: 160px;
       font-size: 90%;
       order: 3;
     }

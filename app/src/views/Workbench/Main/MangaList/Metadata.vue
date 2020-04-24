@@ -33,6 +33,7 @@
     <div class="metadata-main metadata-inner" v-show="!sharing">
 
       <p class="metadata-title" href="javascript:void 0;">
+        <span v-if="isEnd" class="manga-status">[End]</span>
         {{ title }}
       </p>
 
@@ -79,6 +80,12 @@ export default {
       const { HOST, PORT } = this.$config.api;
       const protocol = this.$platform.isElectron() ? 'http:' : window.location.protocol;
       return `${protocol}//${HOST}:${PORT}/s/${this.shortId}`
+    },
+
+    isEnd() {
+      const m = this.metadata;
+      console.log(this);
+      return m && m.status === 'completed'
     }
   },
 
@@ -173,7 +180,6 @@ export default {
     border-radius: .255rem;
     max-width: 80%;
     max-height: 240px;
-    //max-height: 60%;
   }
 
   .metadata-title {
@@ -183,10 +189,6 @@ export default {
     font-weight: 200;
     text-decoration: none;
     word-break: break-all;
-
-    span {
-      display: none;
-    }
 
     @include media-breakpoint-up(md) {
       font-size: 1.6rem;
@@ -278,5 +280,10 @@ export default {
   &.version-active {
     border-left-color: $primary !important;
   }
+}
+
+// TODO: need extract color later
+.manga-status {
+  color: red;
 }
 </style>
