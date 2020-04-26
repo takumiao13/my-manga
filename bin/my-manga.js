@@ -17,6 +17,7 @@ program
   .option('--datadir', '<datadir>', 'specify data dir')
   .option('--cachedir', '<cachedir>', 'specify cache dir')
   .option('--index', 'rebuild index')
+  .option('--watch', 'watch manga change')
   .action(cmd => require('../lib/start')(cmd));
 
 program

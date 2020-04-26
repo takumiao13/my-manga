@@ -168,6 +168,58 @@ class MangaService extends Service {
     return results;
   }
 
+  /**
+   * Insert manga to db
+   * @param {*} dirId 
+   * @param {*} path 
+   */
+  async create(dirId, path) {
+
+    const options = this._indexedDB.get(dirId);
+    const { db, filepath, baseDir } = options;
+    const mangasColl = db.getCollection('mangas');
+
+    if (!fs.accessSync(filepath)) {
+      options.indexing = true;
+      const settings = this.service.settings.get(dirId);
+      const manga = await traverse({ baseDir, path, settings });
+
+      if (manga.type === FileTypes.MANGA) {
+        mangasColl.insert(manga);
+        db.saveDatabase();
+      }
+    }
+  }
+
+  /**
+   * Delete manga from db
+   * @param {*} dirId 
+   * @param {*} path 
+   */
+  async delete(dirId, path) {
+    const options = this._indexedDB.get(dirId);
+    const { db, filepath } = options;
+    const mangasColl = db.getCollection('mangas');
+
+    if (!fs.accessSync(filepath)) {
+      mangasColl.findAndRemove({ path });
+      db.saveDatabase();
+    }
+  }
+
+  async rename(dirId, newPath, oldPath) {
+    const options = this._indexedDB.get(dirId);
+    const { db, filepath } = options;
+    const mangasColl = db.getCollection('mangas');
+
+    if (!fs.accessSync(filepath)) {
+      const manga = db.findOne({ path: oldPath });
+      manga.path = newPath;
+      mangasColl.update(manga);
+      db.saveDatabase();
+    }
+  }
+
   _loadIndex(repo) {
     const { dirId } = repo;
     const { baseDir } = this.service.repo.get(dirId);
@@ -219,8 +271,8 @@ class MangaService extends Service {
     const mangasColl = db.getCollection('mangas');
     const startTime = +new Date;
     const collection = [];
-
-    if (!fs.accessSync(filepath)) {
+    const useCache = fs.accessSync(filepath);
+    if (!useCache) {
       options.indexing = true;
       const settings = this.service.settings.get(dirId);
       await this.service.manga.walk(baseDir, '', settings, (child) => {
@@ -232,13 +284,13 @@ class MangaService extends Service {
       options.indexing = false;
       mangasColl.insert(collection);
       
-      // TODO: saveDatabase later
       db.saveDatabase();
     }
     
     // invoke callback by some info.
     const elapsed = +new Date - startTime;
     callback(null, {
+      useCache,
       elapsed,
       dirId,
       count: mangasColl.count()
