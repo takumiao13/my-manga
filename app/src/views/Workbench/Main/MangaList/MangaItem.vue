@@ -337,7 +337,8 @@ $status-color: red;
     }
 
     .manga-time {
-      min-width: 160px;
+      text-align: right;
+      min-width: 150px;
       font-size: 90%;
       order: 3;
     }

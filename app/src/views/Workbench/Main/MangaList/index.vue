@@ -27,7 +27,7 @@
 
           <!-- LATEST -->
           <latest-group 
-            v-if="!path && latest.length"
+            v-if="!path && !isSearch && latest.length"
             :list="latest"
             :active-path="activePath"
             @more="readFile"  
@@ -100,10 +100,10 @@ export default {
   data() {
     return {
       activeChapter: '',
-
       showTitle: false,
       showAddress: true,
       isManga: false,
+      isSearch: false,
       sharing: false,
       viewType: 'file',
       viewMode: {

@@ -66,7 +66,7 @@ class MangaController extends Controller {
           const fileStat = await fs.stat(pathFn.resolve(dirPath, files[i]));
           if (
             fileStat.isDirectory()
-            && fileStat.mtime - ifModifiedSince >= 1000 // gt 1second then last modified
+            && fileStat.mtime - ifModifiedSince >= 1000 // gt 1 second then last modified
           ) {
             // update lastModified
             lastModified = fileStat.mtime;
@@ -80,11 +80,12 @@ class MangaController extends Controller {
       const lastModifiedChanged = !ifModifiedSince || lastModified - ifModifiedSince >= 1000;
       
       if (xAppStartChanged || xAppVersionChanged || lastModifiedChanged) {
-        const TEN_MINUTES = 30*60;
+        // remove force cache for fetch list
+        // const TEN_MINUTES = 30*60;
         response.lastModified = lastModified;
-        response.set({
-          'Cache-Control': `max-age=${TEN_MINUTES}`
-        });
+        // response.set({
+        //   'Cache-Control': `max-age=${TEN_MINUTES}`
+        // });
         await process({ baseDir, path, settings });
       } else {
         response.status = 304;
