@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <notifications class="app-toast" />
     <server-error v-if="error" :error="error" />
     <keep-alive include="Workbench">
       <router-view v-show="!error" />

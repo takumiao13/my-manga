@@ -92,7 +92,7 @@ const createModule = (state = { ...initialState }) => ({
       // TODO: 
       // - optimize
       // - duplicate when hot-reload
-      if (!state.folders) {
+      if (!path) { // as global
         state.folders = folders;
       } else {
         state.folders = [...state.folders, ...folders ];

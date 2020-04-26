@@ -16,7 +16,7 @@
           'margin-left': - indent + 'rem',
           'padding-left': indent + 'rem'
         }"
-        @click="toggle"
+        @click="toggleItem()"
       >
         <icon v-if="isBranch" :name="toggleIcon" />
       </span>
@@ -42,8 +42,9 @@
         :item="item"
         :depth="depth+1"
         :active-item="activeItem"
-        @expand-item="handleExpandItem"
         @select-item="handleSelectItem"
+        @expand-item="handleExpandItem"
+        @collapse-item="handleCollapseItem"
       ></list-item>
     </div>
   </div>
@@ -57,6 +58,7 @@ export default {
     item: Object,
     depth: Number,
     activeItem: Object,
+    collapsed: Boolean,
     props: {
       type: Object,
       default: () => ({
@@ -68,6 +70,8 @@ export default {
       })
     }
   },
+
+  inject: ['eventHub'],
 
   data() {
     return {
@@ -103,7 +107,7 @@ export default {
     },
 
     toggleIcon() {
-      return 'chevron-' + (['right', 'down'][+this.open]);
+      return 'chevron-' + (['right', 'down'][+!!this.open]);
     },
 
     loading() {
@@ -115,26 +119,35 @@ export default {
     }
   },
 
+  created() {
+    this._collapse = () => this.toggleItem(false);
+    this._reset = () => {
+      this.status = '';
+      this.open = false;
+    };
+    this.eventHub.$on('collapsed:all', this._collapse);
+    this.eventHub.$on('reset:all', this._reset);
+  },
+
+  destroyed() {
+    this.eventHub.$off('collapsed:all', this._collapse);
+    this.eventHub.$off('reset:all', this._reset);
+  },
+
   methods: {
-    toggle() {
+    toggleItem(_open) {
       if (this.isBranch) {
-        this.open = !this.open
+        this.open = _open !== void 0 ? _open : !this.open;
         if (this.open) {
           this.$emit('expand-item', this.item, this);
+        } else {
+          this.$emit('collapse-item', this.item, this);
         }
       }
     },
 
     selectItem() {
       this.$emit('select-item', this.item, this);
-    },
-
-    handleSelectItem(item, ctx) {
-      this.$emit('select-item', item, ctx);
-    },
-
-    handleExpandItem(item, ctx) {
-      this.$emit('expand-item', item, ctx);
     },
 
     setStatus(status) {
@@ -151,7 +164,20 @@ export default {
 
     getStatus() {
       return this.status;
-    }
+    },
+
+    // just forward emit events
+    handleSelectItem(item, ctx) {
+      this.$emit('select-item', item, ctx);
+    },
+
+    handleExpandItem(item, ctx) {
+      this.$emit('expand-item', item, ctx);
+    },
+
+    handleCollapseItem(item, ctx) {
+      this.$emit('collapse-item', item, ctx);
+    },
   }
 }
 </script>

@@ -2,7 +2,17 @@
   <div class="explorer">
     <div class="topbar">
       <navbar :title="title" :right-btns="rightBtns" />
-      <div class="explorer-repo-name" @click="handleBack">{{ repo.name }}</div>
+      <div class="explorer-repo-name">
+        <div class="float-right">
+          <a class="mr-2" @click="handleCollapse" title="Collapse all">
+            <icon name="minus-square" size="14"/>
+          </a>
+          <a @click="handleRefresh" title="Refresh">
+            <icon name="refresh" size="14" />
+          </a>    
+        </div>   
+        <span @click="handleBack">{{ repo.name }}</span>
+      </div>
     </div>
     
     <data-view 
@@ -18,7 +28,8 @@
       >
         <icon name="rocket-launch" size="14" />Latest
       </div>
-      <nested-list 
+      <nested-list
+        ref="nestedList"
         v-show="success"  
         :props="treeProps"
         :data="folderTree || []"
@@ -104,12 +115,12 @@ export default {
   methods: {
     fetchFolders() {
       const { dirId } = this.repo;
-      this.$store.dispatch(types.FETCH, { dirId });
+      return this.$store.dispatch(types.FETCH, { dirId });
     },
 
     fetchLatest() {
       const { dirId } = this.repo;
-      this.$store.dispatch(types.LATEST, { dirId });
+      return this.$store.dispatch(types.LATEST, { dirId });
     },
 
     closeSidebar() {
@@ -175,6 +186,23 @@ export default {
         name: 'explorer', 
         params: { dirId, path }
       }).then(() => this.closeSidebar());
+    },
+
+    handleRefresh() {
+      this.$refs.nestedList.reset();
+
+      Promise.all([
+        this.fetchFolders(),
+        this.fetchLatest()
+      ]).then(() => {
+        this.$notify({
+          title: 'Refresh Success',
+        });
+      });
+    },
+
+    handleCollapse() {
+      this.$refs.nestedList.collapseAll();
     }
   }
 }

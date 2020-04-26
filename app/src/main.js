@@ -30,10 +30,12 @@ import DataView from '@/components/DataView';
 import Addressbar from '@/components/Addressbar';
 import Dropdown from '@/components/Dropdown';
 import VideoPlayer from '@/components/VideoPlayer';
+import Modal from '@/components/Modal';
 
 // Third part components
 import VueLazyload from 'vue-lazyload';
 import VueQriously from 'vue-qriously';
+import VueNotifications from 'vue-notification'
 
 // Directives
 import loadingDirective from '@/directives/loading';
@@ -52,6 +54,7 @@ Vue.component('data-view', DataView);
 Vue.component('addressbar', Addressbar);
 Vue.component('dropdown', Dropdown);
 Vue.component('video-player', VideoPlayer);
+Vue.component('modal', Modal);
 
 Vue.directive('loading', loadingDirective);
 Vue.directive('click-out-side', clickOutSideDirective);
@@ -71,6 +74,7 @@ Vue.use(VueLazyload, {
     }
   }
 });
+Vue.use(VueNotifications);
 
 Vue.use($Service, { router, store });
 Vue.prototype.$platform = platform;
