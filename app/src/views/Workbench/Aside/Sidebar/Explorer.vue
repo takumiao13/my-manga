@@ -196,7 +196,7 @@ export default {
         this.fetchLatest()
       ]).then(() => {
         this.$notify({
-          title: 'Refresh Success',
+          title: 'Refresh Success'
         });
       });
     },
