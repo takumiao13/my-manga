@@ -31,19 +31,20 @@ const Colors = {
 };
 
 // Define dirs
-const assetsDir = env.IS_ELECTRON ? 'assets' : '';
+const assetsDir = 'assets'
 
 const outputDir = env.NODE_ENV === 'production' ? 
   env.IS_ELECTRON ? '../electron_dist/' : '../dist' :
   'dist';
 
-const publicPath = env.NODE_ENV === 'production' ? 
-  env.IS_ELECTRON ? './' : '/assets' : 
-  '/';
+// const publicPath = env.NODE_ENV === 'production' ? 
+//   env.IS_ELECTRON ? './' : '/' : 
+//   '/';
 
+const publicPath = './';
 
 // Define icon dir & appName by `APP_MODE`
-const publicModeDir = env.APP_MODE.toLowerCase();
+const publicModeDir = `mode/${env.APP_MODE.toLowerCase()}`;
 
 let appName = 'MyManga';
 
@@ -92,7 +93,7 @@ module.exports = {
     config.plugin('custom-html').use(CustomHtmlWebpackPlugin, [
       {
         appName: appName,
-        publicModeDir: pathFn.posix.join(publicPath, publicModeDir)
+        publicModeDir
       }
     ]);
 
@@ -136,9 +137,9 @@ module.exports = {
     manifestPath: `manifest.json?mode=${env.APP_MODE || 'prod'}&ver=${pkg.version}`,
     manifestOptions: {
       description: "A Free Comics Management",
-      start_url: ".",
-      display: "standalone",
-      background_color: "#ffffff",
+      start_url: '.', // since publicDir is `assets` so define parent as root url
+      display: 'standalone',
+      background_color: '#ffffff',
       icons: [
         {
           'src': `./${publicModeDir}/icons/android-chrome-192x192.png`,
@@ -158,6 +159,16 @@ module.exports = {
       appleTouchIcon: `${publicModeDir}/icons/apple-touch-icon.png`,
       maskIcon: `${publicModeDir}/icons/safari-pinned-tab.svg`,
       msTileImage: `${publicModeDir}/icons/mstile-144x144.png`
+    },
+    // configure the workbox plugin (GenerateSW or InjectManifest)
+    workboxPluginMode: 'InjectManifest',
+    workboxOptions: {
+      // swSrc is required in InjectManifest mode.
+      swSrc: 'src/service-worker.js',
+      importWorkboxFrom: 'disabled',
+      importScripts: 'https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js',
+      exclude: [ /\.svg/, /\.map$/ ],
+			dontCacheBustUrlsMatching: /\.([0-9A-Za-z]{8})\./,
     }
   }
 }
