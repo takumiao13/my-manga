@@ -1,5 +1,5 @@
 workbox.core.setCacheNameDetails({
-  prefix: 'my-manga-app',
+  prefix: 'my-manga-app'
 });
 
 self.addEventListener('message', (event) => {
@@ -11,31 +11,30 @@ self.addEventListener('message', (event) => {
 workbox.precaching.precacheAndRoute(self.__precacheManifest || []);
 
 
+// for static assets
 workbox.routing.registerRoute(
-  /.*\.html/,
-  new workbox.strategies.NetworkFirst()
-)
-
-workbox.routing.registerRoute(
-  // Cache CSS files
-  /.*\.css/,
+  /assets\/css\/.*\.css/,
   new workbox.strategies.CacheFirst()
 );
 
 workbox.routing.registerRoute(
-  /.*\.js/,
+  /assets\/js\/.*\.js/,
   new workbox.strategies.CacheFirst()
 );
 
 workbox.routing.registerRoute(
   /\.(?:png|gif|jpg|jpeg|svg|cur)$/,
-  new workbox.strategies.StaleWhileRevalidate({
-    cacheName: 'images',
-    plugins: [
-      new workbox.expiration.Plugin({
-        maxEntries: 60,
-        maxAgeSeconds: 30 * 24 * 60 * 60
-      })
-    ]
-  })
+  new workbox.strategies.StaleWhileRevalidate()
+);
+
+// for SW
+workbox.routing.registerRoute(
+  /service-worker\.js/,
+  new workbox.strategies.NetworkFirst()
+);
+
+// for API
+workbox.routing.registerRoute(
+  /\/api\/.*/,
+  new workbox.strategies.NetworkFirst()
 );

@@ -15,6 +15,7 @@ console.log('APP_PLATFORM:', env.APP_PLATFORM);
 
 const { DefinePlugin } = require('webpack');
 const CustomHtmlWebpackPlugin = require('./vue-config/plugins/CustomHtmlWebpackPlugin');
+const CompressionPlugin = require('compression-webpack-plugin');
 
 // Constants
 const ENV_KEYS = [
@@ -103,6 +104,18 @@ module.exports = {
       return args
     });
 
+    // enable gzip compress
+    if (env.NODE_ENV === 'production') {
+      config.plugin('gzip').use(CompressionPlugin, [{
+        filename: '[path].gz[query]',
+        algorithm: 'gzip',
+        test: /\.(js|css|html|svg)$/,
+        threshold: 10240,
+        minRatio: 0.8,
+        deleteOriginalAssets: true
+      }])
+    }
+ 
     // Configure rules
     const sharedPath = pathFn.resolve(__dirname, '../shared');
     config.resolve.alias
@@ -166,9 +179,8 @@ module.exports = {
       // swSrc is required in InjectManifest mode.
       swSrc: 'src/service-worker.js',
       importWorkboxFrom: 'disabled',
-      importScripts: 'https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js',
-      exclude: [ /\.svg/, /\.map$/ ],
-			dontCacheBustUrlsMatching: /\.([0-9A-Za-z]{8})\./,
+      importScripts: 'https://storage.googleapis.com/workbox-cdn/releases/5.1.2/workbox-sw.js',
+      exclude: [ /\.map$/ ]
     }
   }
 }

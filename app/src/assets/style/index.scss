@@ -61,13 +61,21 @@ input {
 .app-toast {
   .vue-notification {
     padding: .75rem 1rem;
-    margin: .5rem;
-    font-size: 1rem;
+    font-size: .9rem;
     border-radius: .25rem;
+    max-width: 280px;
     border-left: 0;
+    text-align: center;
     color: #fff;
-    background: rgba(0,0,0,.7);
+    background: rgba(0,0,0,.9);
     box-shadow: 2px 2px 3px rgba(0,0,0,.3);
+
+    @include media-breakpoint-up(sm) {
+      max-width: none;
+      margin: .5rem;
+      font-size: 1rem;
+      text-align: left;
+    }
     
     &.warn {
       background: #ffb648;
