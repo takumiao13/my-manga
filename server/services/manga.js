@@ -74,6 +74,8 @@ class MangaService extends Service {
 
   // use parallel bfs for performance
   async walk(baseDir, path = '', settings, callback) {
+    let fileTree;
+    const stack = [];
     const queue = [{ baseDir, path, settings }];
     let count = 0;
 
@@ -83,6 +85,9 @@ class MangaService extends Service {
       const tasks = queue.map(createTask);
       queue.length = 0;
       const nodes = await parallel$(tasks, 10);
+
+      // get root node
+      if (!fileTree) fileTree = nodes[0];
       
       for (let node of nodes) {
         for (let child of node.children) {
@@ -98,6 +103,8 @@ class MangaService extends Service {
         }
       }  
     }
+
+    return fileTree;
   }
 
   async pick(dirId, path = '') {
@@ -174,19 +181,18 @@ class MangaService extends Service {
    * @param {*} path 
    */
   async create(dirId, path) {
-
     const options = this._indexedDB.get(dirId);
-    const { db, filepath, baseDir } = options;
-    const mangasColl = db.getCollection('mangas');
 
-    if (!fs.accessSync(filepath)) {
-      options.indexing = true;
+    if (options) {
+      const { db, baseDir } = options;
+      const mangasColl = db.getCollection('mangas');
       const settings = this.service.settings.get(dirId);
       const manga = await traverse({ baseDir, path, settings });
 
       if (manga.type === FileTypes.MANGA) {
         mangasColl.insert(manga);
         db.saveDatabase();
+        return true;
       }
     }
   }
@@ -198,25 +204,52 @@ class MangaService extends Service {
    */
   async delete(dirId, path) {
     const options = this._indexedDB.get(dirId);
-    const { db, filepath } = options;
-    const mangasColl = db.getCollection('mangas');
 
-    if (!fs.accessSync(filepath)) {
+    if (options) {
+      const { db } = options;
+      const mangasColl = db.getCollection('mangas');
       mangasColl.findAndRemove({ path });
       db.saveDatabase();
+      return true;
     }
   }
 
   async rename(dirId, newPath, oldPath) {
     const options = this._indexedDB.get(dirId);
-    const { db, filepath } = options;
-    const mangasColl = db.getCollection('mangas');
 
-    if (!fs.accessSync(filepath)) {
-      const manga = db.findOne({ path: oldPath });
-      manga.path = newPath;
-      mangasColl.update(manga);
-      db.saveDatabase();
+    if (options) {
+      const { db } = options;
+      const mangasColl = db.getCollection('mangas');
+      const manga = mangasColl.findOne({ path: oldPath });
+
+      if (manga) {
+        manga.path = newPath;
+        mangasColl.update(manga);
+        db.saveDatabase();
+        return true;
+      }
+    }
+  }
+
+  async update(dirId, path, props) {
+    const options = this._indexedDB.get(dirId);
+
+    if (options) {
+      const { db, baseDir } = options;
+      const mangasColl = db.getCollection('mangas');
+      const manga = mangasColl.findOne({ path });
+
+      // when not found create curr dir as manga
+      if (!manga) {
+        return await this.create(dirId, path);
+        
+      // should update metadata
+      } else {
+        manga.metadata = await tryReadMetadata({baseDir, path });
+        mangasColl.update(manga);
+        db.saveDatabase();
+        return true;
+      }
     }
   }
 
@@ -275,7 +308,7 @@ class MangaService extends Service {
     if (!useCache) {
       options.indexing = true;
       const settings = this.service.settings.get(dirId);
-      await this.service.manga.walk(baseDir, '', settings, (child) => {
+      const fileTree = await this.service.manga.walk(baseDir, '', settings, (child) => {
         // only pick need key
         collection.push(child);
       });
@@ -284,7 +317,8 @@ class MangaService extends Service {
       options.indexing = false;
       mangasColl.insert(collection);
       
-      db.saveDatabase();
+      // debug
+      // db.saveDatabase();
     }
     
     // invoke callback by some info.
@@ -344,14 +378,10 @@ async function traverse({
   // Traverse sub directory
   if (isDir) {
     // try to get metadata
-    const metadataPath = pathFn.join(absPath, METADATA_FILENAME);
-    const hasMetadata = await fs.accessAsync(metadataPath);
-
     let _showChapterCover = false;
+    metadata = await tryReadMetadata({ baseDir, path });
 
-    if (hasMetadata) {
-      metadata = await readMeta(metadataPath);
-
+    if (metadata) {
       if (typeof metadata.chapters === 'object' && metadata.chapters.cover) {
         _showChapterCover = true;
       }
@@ -605,6 +635,18 @@ async function traverseLast({ baseDir, path }) {
   
   // Ignore if file is not one of image, file, directory type.
   return isDir ? Object.assign(child, { isDir }) : null;
+}
+
+async function tryReadMetadata({ baseDir, path }) {
+  // try to get metadata
+  const metadataPath = pathFn.join(baseDir, path, METADATA_FILENAME);
+  const hasMetadata = await fs.accessAsync(metadataPath);
+
+  if (hasMetadata) {
+    return await readMeta(metadataPath);
+  } else {
+    return null;
+  }
 }
 
 async function readMeta(path) {
