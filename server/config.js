@@ -1,5 +1,6 @@
 const pathFn = require('path');
 const fs = require('./helpers/fs');
+const os = require('os');
 const env = process.env;
 
 require('dotenv-flow').config({
@@ -18,7 +19,8 @@ const config = {
     version: pkg.version,
     startAt: +new Date,
     name: pkg.name,
-    HOME: env.HOMEPATH,
+    HOME: env.HOME || env.USERPROFILE || env.HOMEPATH,
+    TEMP: os.tmpdir(),
     context: pathFn.resolve(__dirname, '..')
   }
 };

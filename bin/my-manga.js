@@ -14,6 +14,8 @@ program
   .option('-p, --port <port>', 'port to use (default: 3033)')
   .option('-d, --dir <dir>', 'specify dir')
   .option('-s, --settings <settings>', 'settings file')
+  .option('--datadir', '<datadir>', 'specify data dir')
+  .option('--cachedir', '<cachedir>', 'specify cache dir')
   .option('--index', 'rebuild index')
   .action(cmd => require('../lib/start')(cmd));
 

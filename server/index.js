@@ -3,6 +3,7 @@ const koaSend = require('koa-send');
 const http = require('http');
 const https = require('https');
 const fs = require('./helpers/fs');
+const pathFn = require('./helpers/path');
 const { pick, get } = require('./helpers/utils');
 const { CustomError } = require('./error');
 const EventEmitter = require('events');
@@ -43,6 +44,7 @@ class Application extends EventEmitter {
     this.router = new KoaRouter();
     this.config = config;
     this._setOptions(options);
+    this._prepare();
   }
 
   async setup() {
@@ -58,9 +60,9 @@ class Application extends EventEmitter {
    * @param {*} options 
    */
   _setOptions(options) {
-    
     const settingsPath = options.settings || config.settings;
     let serverSettings;
+
     if (settingsPath && fs.accessSync(settingsPath)) {
       const settings = JSON.parse(fs.readFileSync(settingsPath, { encoding: 'utf8' }));
       serverSettings = get(settings, 'server') || {};
@@ -74,7 +76,6 @@ class Application extends EventEmitter {
       cors: true,
     }, config, serverSettings, options);
 
-    
     // always use http for development
     if (process.env.NODE_ENV === 'development') {
       this.options.ssl = false;
@@ -92,6 +93,23 @@ class Application extends EventEmitter {
         this.options.rejectUnauthorized = false;
       }
     }
+
+    const { datadir, cachedir, appinfo } = this.options;
+
+    if (!datadir) {
+      this.options.datadir = pathFn.join(appinfo.HOME, appinfo.name);
+    }
+
+    if (!cachedir) {
+      this.options.cachedir = pathFn.join(appinfo.TEMP, appinfo.name);
+    }
+  }
+
+  _prepare() {
+    // if not find datadir and cachedir try to make it
+    fs.ensureDirSync(pathFn.join(this.options.datadir, 'repos'));
+    fs.ensureDirSync(pathFn.join(this.options.datadir, 'users'));
+    fs.ensureDirSync(this.options.cachedir);
   }
 
   _loadMiddlewares() {

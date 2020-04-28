@@ -171,8 +171,13 @@ class MangaService extends Service {
   _loadIndex(repo) {
     const { dirId } = repo;
     const { baseDir } = this.service.repo.get(dirId);
-    const filepath = pathFn.resolve(baseDir, 'db.json');
+    const { datadir } = this.app.options;
+
+    // database path
+    const filepath = pathFn.resolve(datadir, 'repos', `repo.${dirId}.db`);
+    console.log(filepath);
     const dbOptions = { dirId, baseDir, filepath, indexing: false };
+
     this._indexedDB.set(dirId, dbOptions);
     
     return new Promise((resolve, reject) => {
@@ -228,7 +233,7 @@ class MangaService extends Service {
       mangasColl.insert(collection);
       
       // TODO: saveDatabase later
-      //db.saveDatabase();
+      db.saveDatabase();
     }
     
     // invoke callback by some info.
