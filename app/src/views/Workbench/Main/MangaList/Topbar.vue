@@ -9,8 +9,7 @@
     />
     
     <addressbar
-      v-if="needAddress" 
-      :class="{ collapsed: !showAddress }"
+      v-if="needAddress"
       :navs="navs"
       @back="handleNavigateBack"
       @navigate="handleNavigate"
@@ -28,7 +27,8 @@ const PATH_SEP = '/';
 export default {
   props: {
     title: String,
-    showAddress: Boolean,
+    navs: Array,
+    needAddress: Boolean,
     viewType: {
       type: String,
       default: 'file' // file | manga | search
@@ -39,30 +39,6 @@ export default {
     ...mapState('manga', [ 'path' ]),
 
     ...mapGetters('app', [ 'repo' ]),
-
-    needAddress() {
-      return this.viewType !== 'manga' && this.navs.length;
-    },
-
-    navs() {
-      const { path } = this.$route.params;
-      const items = [];
-
-      if (path) {
-        const fragments = path.split('/');
-        const { name } = this.repo;
-        items.push({ name });
-        
-        fragments.pop(); // remove curr path
-        fragments.length && fragments.forEach((item, idx) => {
-          const path = fragments.slice(0, idx + 1).join(PATH_SEP);
-          const data = { name: item, path };
-          items.push(data);
-        });
-      }
-      
-      return items;
-    },
 
     leftBtns() {
       return (this.viewType === 'file') ? [{
@@ -172,6 +148,8 @@ export default {
 // Topbar
 // ==
 .topbar {
+  height: 3rem;
+
   .manga-title-shown {
     color: '';
 
@@ -196,8 +174,10 @@ export default {
 .addressbar {
   transition-duration: .3s;
   height: 2rem;
+}
 
-  &.collapsed {
+.addressbar-collapsed {
+  .addressbar {
     transform: translateY(-100%);
   }
 }

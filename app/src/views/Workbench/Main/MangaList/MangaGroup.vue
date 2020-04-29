@@ -1,22 +1,24 @@
 <template>
-  <div class="manga-area mb-4" v-show="list.length">
+  <div class="manga-area mb-4" v-show="list.length" :data-view-mode="viewMode">
     <div class="area-header">
-      <div class="actions float-right">
-        <icon 
-          v-if="viewMode == 'grid'"
-          name="th"
-          size="18"
-          @click.native="$emit('viewModeChange', 'list')"
-        />
-        <icon 
-          v-else-if="viewMode == 'list'"
-          name="th-list"
-          size="18" 
-          @click.native="$emit('viewModeChange', 'grid')"
-        />
-      </div>
+      <div class="area-header-inner">
+        <div class="actions float-right">
+          <icon 
+            v-if="viewMode == 'grid'"
+            name="th"
+            size="18"
+            @click.native="$emit('viewModeChange', 'list')"
+          />
+          <icon 
+            v-else-if="viewMode == 'list'"
+            name="th-list"
+            size="18" 
+            @click.native="$emit('viewModeChange', 'grid')"
+          />
+        </div>
 
-      MANGA - {{ list.length }} items
+        MANGA - {{ list.length }} items
+      </div>
     </div>
     <div :class="{ 
       'row': viewMode == 'grid',

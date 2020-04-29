@@ -1,14 +1,21 @@
 <template>
-  <div class="main-explorer">
+  <div 
+    class="main-explorer" 
+    :class="{ 
+      'addressbar-collapsed': !showAddress || !needAddress
+    }"
+  >
     <topbar
       :title="topbarTitle"
-      :show-address="showAddress"
       :view-type="viewType"
+      :navs="navs"
+      :need-address="needAddress"
       @refresh="handleRefresh"
     />
     
     <data-view 
-      class="main-explorer-container" 
+      class="main-explorer-container"
+      :class="{ 'has-addressbar' : needAddress }"
       :loading="pending"
       :empty="empty"
       :error="error"
@@ -154,7 +161,31 @@ export default {
     topbarTitle() {
       return (!this.isManga || (this.isManga && this.showTitle)) ? 
         this.title : ''
-    }
+    },
+
+    navs() {
+      const { path } = this.$route.params;
+      const items = [];
+
+      if (path) {
+        const fragments = path.split('/');
+        const { name } = this.repo;
+        items.push({ name });
+        
+        fragments.pop(); // remove curr path
+        fragments.length && fragments.forEach((item, idx) => {
+          const path = fragments.slice(0, idx + 1).join('/');
+          const data = { name: item, path };
+          items.push(data);
+        });
+      }
+      
+      return items;
+    },
+
+    needAddress() {
+      return Boolean(this.viewType !== 'manga' && this.navs.length);
+    },
   },
 
   watch: {
@@ -416,25 +447,62 @@ export default {
     margin-right: auto;
     margin-left: auto;
   }
+
+  &.has-addressbar {
+    margin-top: 2rem;
+  }
 }
 
 // Area
 // ==
+
+.addressbar-collapsed .area-container .area-header {
+  top: 48px;
+}
+
 .area-container {
 
-  .area-header {
-    padding: .5rem 0;
-    margin: 0;
-    font-size: 80%;
+  // over the below list-group-item
+  [data-view-mode="list"] {
+    .area-header-inner {
+      border-bottom: 1px solid;  
+    }
+  }
 
-    a[href] {
-      cursor: pointer;
+  .area-header {
+    margin-left: -15px;
+    margin-right: -15px;
+    
+    @include media-breakpoint-up(sm) {
+      padding-left: 15px;
+      padding-right: 15px;
     }
 
-    .actions {
-      .svg-icon {
-        margin-left: .5rem;
+    position: sticky;
+    top: 78px;
+    z-index: 3;
+    transition-duration: .3s;
+
+    .area-header-inner {
+
+      padding: .5rem 15px;
+
+      @include media-breakpoint-up(sm) {
+        padding: .5rem 0;
+      }
+      
+      margin: 0;
+      font-size: 80%;
+      
+      a[href] {
         cursor: pointer;
+      }
+
+      .actions {
+        .svg-icon {
+          margin-left: .5rem;
+          cursor: pointer;
+        }
       }
     }
   }
@@ -448,6 +516,7 @@ export default {
   .list-group {
     margin-left: -15px;
     margin-right: -15px;
+    margin-top: -1px;
 
     .list-group-item {
       text-decoration: none;
@@ -458,6 +527,10 @@ export default {
       @include media-breakpoint-up(sm) {
         border-width: .5px;
       }
+    }
+
+    .list-group-item + .list-group-item {
+      border-top-width: 0px;
     }
 
     @include media-breakpoint-up(sm) {

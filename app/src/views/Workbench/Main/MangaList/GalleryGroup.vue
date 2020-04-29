@@ -1,6 +1,10 @@
 <template>
-  <div class="gallery-area mb-4" v-show="list.length">
-    <p class="area-header">GALLERY - {{ list.length }} pages</p>
+  <div class="gallery-area mb-4" v-show="list.length" data-view-mode="list">
+    <div class="area-header">
+      <div class="area-header-inner">
+        GALLERY - {{ list.length }} pages
+      </div>
+    </div>
     <div class="row">
       <div 
         class="col-4 col-sm-3 col-xl-2 area-item" 
@@ -32,6 +36,7 @@ export default {
 
 .gallery-area {
   .row {
+    margin-top: -1px;
     padding: .5rem .5rem;
     border-width: .5px 0;
     border-style: solid;

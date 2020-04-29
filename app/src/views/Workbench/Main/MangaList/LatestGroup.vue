@@ -1,22 +1,24 @@
 <template>
   <div class="manga-area mb-4">
     <div class="area-header">
-      <div class="actions float-right" v-if="!$feature.touch">
-        <a @click="prev" :class="{ 'hidden': prevBound }">
-          <icon name="chevron-left" size="18" />
-        </a>
-        <a @click="next" :class="{ 'hidden': nextBound }">
-          <icon name="chevron-right" size="18"/>
+      <div class="area-header-inner">
+        <div class="actions float-right" v-if="!$feature.touch">
+          <a @click="prev" :class="{ 'hidden': prevBound }">
+            <icon name="chevron-left" size="18" />
+          </a>
+          <a @click="next" :class="{ 'hidden': nextBound }">
+            <icon name="chevron-right" size="18"/>
+          </a>
+        </div>
+
+        <a  
+          title="View more" 
+          href="javascript:void 0;"
+          @click="$emit('more', { isDir: true, path: $consts.LATEST_PATH })" 
+        >
+          LATEST MANGA &rarr;
         </a>
       </div>
-
-      <a  
-        title="View more" 
-        href="javascript:void 0;"
-        @click="$emit('more', { isDir: true, path: $consts.LATEST_PATH })" 
-      >
-        LATEST MANGA &rarr;
-      </a>
     </div>
     <div 
       class="latest-container" 

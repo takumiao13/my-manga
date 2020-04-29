@@ -1,11 +1,17 @@
 <template>
-  <div class="chapter-area  mb-4" v-show="list.length">
+  <div
+    v-show="list.length"
+    class="chapter-area mb-4"
+    :data-view-mode="showCover ? 'grid' : 'list'"
+  >
     <div class="area-header">
-      CHAPTERS
-      <div class="actions float-right">
-        <a @click="sort">
-          <icon :name="`sort-by-no-${desc ? 'desc' : 'asc'}`" size="18" />
-        </a>
+      <div class="area-header-inner">
+        CHAPTERS
+        <div class="actions float-right">
+          <a @click="sort">
+            <icon :name="`sort-by-no-${desc ? 'desc' : 'asc'}`" size="18" />
+          </a>
+        </div>
       </div>
     </div>
 
@@ -19,7 +25,7 @@
       />
     </div>
 
-    <div class="list-group" v-else>
+    <div v-else class="list-group">
       <a class="list-group-item list-group-item-action chapter-item"
         :class="{ active: item.name === activeName}"
         v-for="item in sortedList" 
@@ -92,6 +98,7 @@ export default {
   .list-group {
     @include media-breakpoint-up(sm) {
       margin: 0 -.2rem;
+      margin-top: .2rem;
       flex-direction: row;
       flex-wrap: wrap;
       align-items: flex-start;
@@ -99,6 +106,7 @@ export default {
       .list-group-item {
         margin: .2rem;
         width: calc(50% - .4rem);
+        border-top-width: .5px !important;
       }
     }
 

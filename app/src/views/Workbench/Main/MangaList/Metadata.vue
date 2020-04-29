@@ -84,7 +84,6 @@ export default {
 
     isEnd() {
       const m = this.metadata;
-      console.log(this);
       return m && m.status === 'completed'
     }
   },

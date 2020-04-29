@@ -34,7 +34,7 @@
 
 // reset some style
 .list-group-item+.list-group-item {
-  border-top-width: 0 !important;
+  border-top-width: 0;
 }
 
 .list-group-item-action:focus {
