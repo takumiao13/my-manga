@@ -177,7 +177,7 @@ export default {
   .list-group-item {
     text-decoration: none;
     border-radius: 0;
-    border-width: 1px 0;
+    border-width: .5px 0;
     padding-left: 1rem;
     padding-right: 3rem;
     cursor: pointer;
@@ -197,6 +197,10 @@ export default {
       top: 0;
       padding: .3rem 0;
     }
+  }
+
+  .list-group-item + .list-group-item {
+    border-top-width: 0;
   }
 
   @include media-breakpoint-up(sm) {

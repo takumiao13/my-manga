@@ -565,14 +565,24 @@ export default {
     left: .5rem;
     right: .5rem;
     position: absolute;
-    overflow: hidden;
-    max-height: 46px;
-    line-height: 1.6;
     padding: .2rem .4rem;
     display: block;
     font-size: 13px;
-    word-wrap: break-word;
-    word-break: break-all;
+
+    > div,
+    > small {
+      max-height: 44px;
+      word-wrap: break-word;
+      word-break: break-all;
+      overflow: hidden;
+      line-height: 1.6;
+    }
+
+    &.with-status {
+      > div {
+        max-height: 23px;
+      }
+    }
   }
 }
 </style>
