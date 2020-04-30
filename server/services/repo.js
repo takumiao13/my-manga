@@ -15,7 +15,10 @@ class RepoService extends Service {
 
   set(dirId, { name, baseDir }) {
     this.repoMap[dirId] = { name, baseDir, dirId };
-    this.cryptoedRepos.push({ name, dirId, accessed: fs.accessSync(baseDir) });
+    this.cryptoedRepos.push({ 
+      name, dirId,
+      accessed: fs.accessSync(baseDir)
+    });
   }
 
   get(dirId) {
@@ -33,23 +36,26 @@ class RepoService extends Service {
     return repo;
   }
   
-  add(baseDir) {
-    let repos;
-    if (!Array.isArray(baseDir)) {
-      repos = [ baseDir ]
-    } else {
-      repos = baseDir;
+  add(repos) {
+    // normalize repos to array
+    if (!Array.isArray(repos)) {
+      repos = [ repos ]
     }
 
-    repos.forEach(baseDir => {
+    for (let i = 0; i < repos.length; i++) {
+      let baseDir = repos[i];
+
+      // get repo name
       const name = pathFn.basename(baseDir) || 
         pathFn.dirname(baseDir).replace(pathFn.sep, '');
 
-      // normalize dir first
+      // normalize dir to slash style
       baseDir = pathFn.slash(baseDir);
+      // get dirId
       const dirId = this.dirId(baseDir);
+      
       this.set(dirId, { name, baseDir });
-    });
+    }
   }
 
   remove(index) {

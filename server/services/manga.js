@@ -89,7 +89,7 @@ class MangaService extends Service {
           if (child.type === FileTypes.MANGA) {
             count++;
             callback(pick(child, [
-              'name', 'path', 'type', 'birthtime', 'mtime', 
+              'name', 'path', 'type', 'birthtime', 'mtime', 'cover', 
               'cover', 'width', 'height', 'verNames', 'chapterSize', 'metadata'
             ]));
           } else if (child.isDir && child.type === FileTypes.FILE) {
@@ -156,13 +156,13 @@ class MangaService extends Service {
    * 
    * @param {string} dirId 
    */
-  async latest(dirId) {
+  async latest(dirId, count = 100) {
     const { db } = await this._indexedDB.get(dirId);
     const mangaColl = db.getCollection('mangas');
     const results = mangaColl
       .chain()
       .simplesort('birthtime', { desc: true })
-      .limit(100)
+      .limit(count)
       .data();
 
     return results;
@@ -175,7 +175,6 @@ class MangaService extends Service {
 
     // database path
     const filepath = pathFn.resolve(datadir, 'repos', `repo.${dirId}.db`);
-    console.log(filepath);
     const dbOptions = { dirId, baseDir, filepath, indexing: false };
 
     this._indexedDB.set(dirId, dbOptions);

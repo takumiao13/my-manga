@@ -28,7 +28,7 @@ class Data {
 
 class SettingsService extends Service {
 
-  initialize() {
+  async initialize() {
     const { options } = this.app;
     const { settings, baseDir, appinfo: { version, startAt } } = options;
 
@@ -39,9 +39,10 @@ class SettingsService extends Service {
       this._setPath('user', settings, {
         version,
         startAt
-      }); 
-      const repos = this.get('user', 'repos', false);
+      });
 
+      // when path setted, we can get value by key
+      const repos = await this.get('user', 'repos', false);
       this.service.repo.multiple = true;
       this.service.repo.add(repos);
 
@@ -57,7 +58,7 @@ class SettingsService extends Service {
     }
   }
 
-  get(scope, key, encode) {
+  async get(scope, key, encode) {
     const settings = this._getScope(scope);
 
     // if unknown scope settings return null
@@ -80,6 +81,18 @@ class SettingsService extends Service {
           name: repo.name,
           dirId: repo.dirId
         });
+      }
+    }
+
+    // handle get all user settings
+    // addon latest updated mangas
+    if (scope == 'user' && !key) {
+      const repos = value.repos;
+      for (let i = 0; i < repos.length; i++) {
+        const repo = repos[i];
+        const { dirId } = repo;
+        const latest = await this.service.manga.latest(dirId, 10);
+        repo.latest = latest;
       }
     }
     
@@ -128,13 +141,12 @@ class SettingsService extends Service {
 
     settings.path = path;
     settings.data = new Data(Object.assign(data || {}, addonData));
+
     return settings;
   }
 
   _getScope(scope) {
     let settings = null;
-
-    
 
     // scope ['user'] has loaded when init
     if (scope === 'user') {

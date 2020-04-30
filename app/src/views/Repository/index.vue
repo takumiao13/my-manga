@@ -28,6 +28,7 @@
         REPOS - {{ repos.length }} items
       </p>
 
+      <!-- old repo list
       <div class="list-group">
         <div 
           :class="['list-group-item', 'text-truncate', { disabled: !repo.accessed }]"
@@ -51,11 +52,35 @@
           />
           <div 
             v-else
-            class="svg-icon mr-3"
-            style="display: inline-block; width: 16px; height: 16px;"
+            class="svg-icon mr-3 icon-placeholder"
           />
 
           <strong>{{ repo.name }}</strong>&nbsp;
+        </div>
+      </div>
+      -->
+
+      <div class="row">
+        <div 
+          class="col-12 col-md-6 mb-3"
+          v-for="(repo, index) in repos"
+          :key="index"
+          @click="handleToggleRepo($event, repo)"
+        >
+          <div class="repo-item">
+            <div class="repo-item-inner">
+              <div 
+                class="repo-item-cover"
+                v-for="src in latestCovers(repo)"
+                :key="src"  
+              >
+                <img :src="src" />
+              </div>
+            </div>
+          </div>
+          <div class="repo-item-caption">
+            {{ repo.name }}
+          </div>
         </div>
       </div>
     </div>
@@ -105,6 +130,16 @@ export default {
   methods: {
     repoItem(repo) {
       return repo
+    },
+
+    latestCovers(repo) {
+      const { latest, dirId } = repo;
+      return latest
+        .filter(item => item.cover)
+        .map(item => {
+          return this.$service.image.makeSrc(item.cover, false, dirId)
+        })
+        .slice(0, 3);
     },
 
     handleAddRepo(event, paths) {
@@ -206,6 +241,47 @@ export default {
   @include media-breakpoint-up(sm) {
     margin-left: 0;
     margin-right: 0;
+  }
+}
+
+.icon-placeholder {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+}
+
+.repo-item {
+  position: relative;
+  background: #ddd;
+  padding: 0px 0px 48%;
+  margin-bottom: .25rem;
+  border-radius: .25rem;
+  overflow: hidden;
+}
+
+.repo-item-inner {
+  font-size: 1.5rem;
+  cursor: pointer;
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.repo-item-cover {
+  height: 100%;
+  width: 33.3%;
+  overflow: hidden;
+
+  > img {
+    max-height: 100%;
   }
 }
 </style>
