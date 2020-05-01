@@ -180,7 +180,7 @@ module.exports = {
       swSrc: 'src/service-worker.js',
       importWorkboxFrom: 'disabled',
       importScripts: 'https://storage.googleapis.com/workbox-cdn/releases/5.1.2/workbox-sw.js',
-      exclude: [ /\.map$/ ]
+      exclude: [ /index\.html/ ]
     }
   }
 }

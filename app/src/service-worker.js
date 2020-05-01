@@ -24,10 +24,15 @@ workbox.routing.registerRoute(
 
 workbox.routing.registerRoute(
   /\.(?:png|gif|jpg|jpeg|svg|cur)$/,
-  new workbox.strategies.StaleWhileRevalidate()
+  new workbox.strategies.CacheFirst()
 );
 
 // for SW
+workbox.routing.registerRoute(
+  /index\.html/,
+  new workbox.strategies.NetworkFirst()
+);
+
 workbox.routing.registerRoute(
   /service-worker\.js/,
   new workbox.strategies.NetworkFirst()
