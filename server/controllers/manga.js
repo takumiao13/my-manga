@@ -44,11 +44,11 @@ class MangaController extends Controller {
 
   async _cache(ctx, process) {
     try {
+      const appinfo = this.config('appinfo');
       const { request, response, headers } = ctx;
       const { path = '', dirId } = ctx.params;
-      const { appinfo } = this.app.options;
-      const { baseDir } = this.app.service.repo.get(dirId);
-      const settings = this.app.service.settings.get(dirId);
+      const { baseDir } = this.service.repo.get(dirId);
+      const settings = this.service.settings.get(dirId);
       const dirPath = pathFn.resolve(baseDir, path);
       const dirStat = await fs.stat(dirPath);
 

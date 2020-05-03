@@ -2,8 +2,8 @@ const mount = require('koa-mount');
 const static = require('koa-static');
 const pathFn = require('path');
 
-const staticDist = ({ options }) => {
-  const { isElectron, appinfo } = options;
+const staticDist = (app) => {
+  const { isElectron, appinfo } = app.config();
   const assetsPath = isElectron ? 'electron_dist/assets' : 'dist';
 
   return static(pathFn.resolve(appinfo.context, assetsPath), { 
@@ -11,11 +11,11 @@ const staticDist = ({ options }) => {
   })
 }
 
-const staticAssets = ({ options }) => {
+const staticAssets = (app) => {
 
   return mount(
     '/assets', 
-    staticDist({ options })
+    staticDist(app)
   )
 }
 

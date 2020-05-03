@@ -171,10 +171,10 @@ class MangaService extends Service {
   _loadIndex(repo) {
     const { dirId } = repo;
     const { baseDir } = this.service.repo.get(dirId);
-    const { datadir } = this.app.options;
+    const dataDir = this.config('dataDir');
 
     // database path
-    const filepath = pathFn.resolve(datadir, 'repos', `repo.${dirId}.db`);
+    const filepath = pathFn.resolve(dataDir, 'repos', `repo.${dirId}.db`);
     const dbOptions = { dirId, baseDir, filepath, indexing: false };
 
     this._indexedDB.set(dirId, dbOptions);

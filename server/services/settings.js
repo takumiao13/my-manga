@@ -29,8 +29,11 @@ class Data {
 class SettingsService extends Service {
 
   async initialize() {
-    const { options } = this.app;
-    const { settings, baseDir, appinfo: { version, startAt } } = options;
+    const { 
+      settings, 
+      baseDir, 
+      appinfo: { version, startAt }
+    } = this.config();
 
     this._settings = {};
 
