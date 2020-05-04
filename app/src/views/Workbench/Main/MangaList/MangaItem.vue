@@ -183,9 +183,9 @@ $status-color: red;
     left: 0;
     background: #999;
     opacity: 0;
-    -webkit-animation: ant-progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
-    animation: ant-progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
-    z-index: 1;
+    -webkit-animation: progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
+    animation: progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
+    z-index: 4;
     content: '';
   }
 }

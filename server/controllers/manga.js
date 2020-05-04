@@ -48,7 +48,7 @@ class MangaController extends Controller {
       const { request, response, headers } = ctx;
       const { path = '', dirId } = ctx.params;
       const { baseDir } = this.service.repo.get(dirId);
-      const settings = this.service.settings.get(dirId);
+      const settings = await this.service.settings.get(dirId);
       const dirPath = pathFn.resolve(baseDir, path);
       const dirStat = await fs.stat(dirPath);
 

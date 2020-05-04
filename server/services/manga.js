@@ -221,7 +221,7 @@ class MangaService extends Service {
 
     if (!fs.accessSync(filepath)) {
       options.indexing = true;
-      const settings = this.service.settings.get(dirId);
+      const settings = await this.service.settings.get(dirId);
       await this.service.manga.walk(baseDir, '', settings, (child) => {
         // only pick need key
         collection.push(child);
