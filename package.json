@@ -40,6 +40,7 @@
     "chokidar": "^3.3.0",
     "commander": "^2.20.0",
     "default-gateway": "^5.0.2",
+    "dotenv-flow": "^3.1.0",
     "fs-extra": "^8.1.0",
     "image-size": "^0.7.4",
     "koa": "^2.7.0",
@@ -58,7 +59,6 @@
   },
   "devDependencies": {
     "cross-env": "^5.2.0",
-    "dotenv-flow": "^3.1.0",
     "nodemon": "^1.19.1"
   },
   "license": "MIT"
