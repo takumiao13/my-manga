@@ -1,4 +1,5 @@
 import mangaAPI from '@/apis/manga';
+import { find } from '@/helpers/utils';
 import { createTypesWithNamespace, createRequestStatus } from '../helpers';
 
 // Namespace
@@ -6,21 +7,28 @@ export const NAMESPACE = 'explorer';
 
 // Types Enum
 const FETCH = 'FETCH';
+const LATEST = 'LATEST';
 
 const statusHelper = createRequestStatus('status');
 
-export const types = createTypesWithNamespace([ FETCH ], NAMESPACE);
+export const types = createTypesWithNamespace([ FETCH, LATEST ], NAMESPACE);
 
-export default {
+const initialState = {
+  folders: null,
+  latest: [],
+  ...statusHelper.state()
+};
+
+const createModule = (state = { ...initialState }) => ({
   namespaced: true,
 
-  state: {
-    inited: false,
-    folders: [],
-    ...statusHelper.state()
-  },
+  state,
 
   getters: {
+    folderTree(state) {
+      return state.folders ? treeify(state.folders) : null;
+    },
+
     pending(state) {
       return statusHelper.is.pending(state);
     },
@@ -30,7 +38,7 @@ export default {
     },
 
     empty(state) {
-      return state.inited && !state.folders.length;
+      return state.folders && !state.folders.length;
     }
   },
 
@@ -41,54 +49,87 @@ export default {
       if (global) statusHelper.pending(commit);
 
       return mangaAPI.folder({ path, dirId })
-        .then(({ folders }) => {
-          commit(FETCH, { path, folders });
+        .then(({ list }) => {
+          commit(FETCH, { path, list });
 
           if (global) {
             return statusHelper.success(commit)
           }
         })
         .catch(error => {
-          console.error(error);
           global && statusHelper.error(commit, { error })
           throw error
         });
+    },
+
+    [LATEST]({ commit }, payload = {}) {
+      const { dirId } = payload;
+      return mangaAPI.latest({ dirId })
+        .then((latest) => {
+          commit(LATEST, { latest });
+        })
     }
   },
 
   mutations: {
     [FETCH](state, payload) {
-      const { path, folders } = payload;
-      state.inited || (state.inited = true);
+      const { path, list } = payload;
+      let folders;
 
-      if (!path) {
+      // handle folders only contains `_mangaGroup`
+      if (list && list.length == 1 && list[0]._mangaGroup) {
+        const parent = find(state.folders, { path });
+        folders = list[0].children;
+
+        // care for root has not parent
+        if (parent) {
+          parent._mangaGroup = true;
+        }
+      } else {
+        folders = list;
+      }
+
+      // TODO: 
+      // - optimize
+      // - duplicate when hot-reload
+      if (!state.folders) {
         state.folders = folders;
       } else {
-        const childState = findStateByPath(state.folders, path);
-        if (childState) childState.children = folders;
+        state.folders = [...state.folders, ...folders ];
       }
+    },
+
+    [LATEST](state, payload) {
+      const { latest } = payload;
+      state.latest = latest;
     },
 
     ...statusHelper.mutation()
   }
-};
+});
 
-function findStateByPath(children, path) {
-  let i, l = children.length;
-  for (i = 0; i < l; i++) {
-    const node = children[i];
-    
-    // find the target node.
-    if (node.path === path) {
-      return node; 
+export default createModule;
 
-    // skip _mangaGroup for performance
-    } else if (!node._mangaGroup && node.children && node.children.length) {
-      // dfs walk
-      const state = findStateByPath(node.children, path);
-      if (state) return state;
+function treeify(list) {
+  const tree = [], seed = {};
+
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    const path = item.path;
+    if (path) {
+      seed[path] = item;
+      item.children = [];
     }
   }
 
-  return null;
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    if (seed[item._parentPath]) {
+      seed[item._parentPath].children.push(item)
+    } else {
+      tree.push(item);
+    }
+  }
+
+  return tree;
 }

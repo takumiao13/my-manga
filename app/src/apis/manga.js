@@ -12,22 +12,36 @@ function _transformResponse(res) {
   
   // FIXED: put this in store ??
   const group = groupBy(list, 'type');
-  const versions = group.VERSION ? orderBy(group.VERSION, ['fileType', 'name'], ['desc', 'asc']) : [];
-  
-  // FIXED: simple extract cover, but we should do more check later.
-  const images = group.IMAGE && group.IMAGE.length > 1 ? group.IMAGE : [];
+  const versions = group.VERSION ? 
+    orderBy(group.VERSION, 
+      ['fileType', 'name'], 
+      ['desc', 'asc']
+    ) : [];
 
   Object.assign(res, {
     list,
     cover,
     files: group.FILE || [],
-    mangas: group.MANGA || [],
-    chapters: group.CHAPTER || [],
-    images,
+    chapters: _attachPlaceholder(group.CHAPTER || []),
+    mangas: _attachPlaceholder(group.MANGA || []),
+    images: group.IMAGE || [],
     versions
   });
 
   return res;
+}
+
+function _attachPlaceholder(mangas) {
+  // add placeholder for manga to fill gutter 
+  // when some manga cover is to long
+  return mangas.map(item => {
+    item.placeholder = 1;
+    const ratio = (item.height / item.width) * 100;
+    if (!isNaN(ratio) && ratio < 85) {
+      item.placeholder++;
+    }
+    return item;
+  });
 }
 
 function search({ dirId, path, keyword }) {
@@ -38,8 +52,9 @@ function search({ dirId, path, keyword }) {
   });
 }
 
-function list({ dirId, path }) {
-  const url = `${_buildURL(dirId, path)}/list`;
+function list({ dirId, path, _t }) {
+  let url = `${_buildURL(dirId, path)}/list`;
+  if (_t) url += `?_t=` + _t;
   return fetch(url).then(_transformResponse)
 }
 
@@ -48,30 +63,38 @@ function folder({ dirId, path }) {
   return fetch(url).then(res => {
     // group manga
     const mangaGroup = {
+      _parentPath: path,
       _mangaGroup: true,
       children: []
     };
-    const folders = [];
+    const list = [];
     res.children.forEach(child => {
+      child._parentPath = path;
       if (child.type === 'FILE') {
-        folders.push(child);
+        child._mangaGroup = false;
+        list.push(child);
       } else {
         mangaGroup.children.push(child);
       }
     });
-
+    
     const count = mangaGroup.children.length;
     if (count) {
-      folders.unshift(mangaGroup);
+      list.unshift(mangaGroup);
     }
 
-    return { folders }
+    return { list }
   })
 }
 
 function pick({ dirId, path }) {
   const url = `${_buildURL(dirId, path)}/pick`;
   return fetch(url);
+}
+
+function latest({ dirId }) {
+  const url = `${_buildURL(dirId)}/latest`;
+  return fetch(url).then(res => _attachPlaceholder(res));
 }
 
 function share(longUrl) {
@@ -90,5 +113,6 @@ export default {
   list,
   folder,
   pick,
+  latest,
   share
 }

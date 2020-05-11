@@ -7,8 +7,8 @@ $light-300:    #ccc;
 $light-400:    #999;
         
 // Variables
-$app-main:        #dc143c;
-$app-primary:     $white;
+$app-primary:     $primary;
+$app-main:        $white;
 $app-bg:          $light;
 $app-color:       $black;
 $app-sidebar-bg:  $light-100;
@@ -20,6 +20,7 @@ $app-shadow-color:    $black;
 $app-border-color:    $light-200;
 $app-muted-color:     $light-400;
 $app-item-active-bg:  $light-200;
+$app-grid-active-bg:  $light-300;
 $app-item-hover-bg:   $light;
 
 $app-scrollbar-thumb:       $light-200;

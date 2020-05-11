@@ -16,10 +16,10 @@ const Bounding = {
 class ImageService extends Service {
 
   makeSrc(paths, escape) {
-    const { baseURL } = this.$config;
+    const { BASE_URL } = this.$config.api;
     const { dirId } = this.$store.getters[`${APP_NAMESPACE}/repo`];
     const path = isArray(paths) ? paths.join('/') : paths;
-    let src = dirId && path && `${baseURL}img/${dirId}/${encodeURIComponent(path)}`;
+    let src = dirId && path && `${BASE_URL}img/${dirId}/${encodeURIComponent(path)}`;
     
     // TODO: remove it ?
     if (src && escape) {
@@ -73,12 +73,12 @@ class ImageService extends Service {
 
     return {
       class: { scale, fitW, fitH },
-      style: { padding:'0 0 ' + ratio + '%' } // height: '100%'
+      style: { padding: '0 0 ' + ratio + '%' } // height: '100%'
     }
   }
 
-  // when thumb should use maxRatio to prevent size to long
-  // when in viewer must no maxRation to show origin size
+  // when thumb should use maxRatio to prevent size too long
+  // when in viewer must no maxRation to show the origin size
   style({ width, height }, maxRatio) {
     let ratio = (height / width) * 100;
 
@@ -89,6 +89,12 @@ class ImageService extends Service {
     return { padding:'0 0 ' + ratio + '%' }
   }
 
+  shouldMultiWidth({ width, height }) {
+    if (!width || !height) return false;
+    const ratio = (height / width) * 100;
+    if (ratio < 72) return true;
+    return false;
+  }
 }
 
 export default ImageService;

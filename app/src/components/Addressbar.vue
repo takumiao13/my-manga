@@ -1,12 +1,12 @@
 <template>
   <div class="addressbar" ref="addressbar">
     <!-- pc addressbar -->
-    <ul v-if="finished && !hasTouch" class="addressbar-container">
+    <ul v-if="finished && !$feature.touch" class="addressbar-container">
       <li 
         class="address-item"
         @click="$emit('back', $event)"
       >
-        <a class="address-link address-back" title="Back to parent">
+        <a class="address-link address-back" title="Back">
           <icon name="arrow-left" />
         </a>
       </li>
@@ -45,7 +45,7 @@
           class="address-separator"
           v-if="!isLastNav(index)"
         >
-          <icon name="chevron-right" />
+          <icon name="chevron-right" size="14" />
         </span>
       </li>
     </ul>
@@ -53,6 +53,8 @@
 </template>
 
 <script>
+import { debounce } from '@/helpers/utils';
+
 const BASIS_WIDTH = 40 + 38 // back + ... width
 
 // TODO:
@@ -68,14 +70,16 @@ export default {
   data() {
     return {
       finished: false,
-      hasTouch: 'ontouchstart' in window,
       navs_: []
     }
   },
 
   computed: {
     mobileStyle() {
-      return { visibility: this.hasTouch ? 'visible': 'hidden' }
+      return { 
+        visibility: this.$feature.touch ? 'visible': 'hidden', 
+        'overflow-x': 'auto'
+      }
     }
   },
 
@@ -89,9 +93,18 @@ export default {
     this.refresh();
   },
 
+  created() {
+    this._handleResize = debounce(this.refresh, 500);
+    window.addEventListener('resize', this._handleResize);
+  },
+
+  destroyed() {
+    window.removeEventListener('resize', this._handleResize);
+  },
+
   methods: {
     isLastNav(index) {
-      return index === this.navs.length - 1;
+      return index === this.navs_.length - 1;
     },
 
     refresh() {
@@ -100,7 +113,7 @@ export default {
       this.finished = true;
 
       // scroll to right
-      if (this.hasTouch) {
+      if (this.$feature.touch) {
         this.$nextTick(() => this.$refs.mobile.scrollLeft = 9999);
       }
     },
@@ -124,7 +137,7 @@ export default {
 
       const diff = this.navs.length - navs.length;
 
-      if (!this.hasTouch && diff) {
+      if (!this.$feature.touch && diff) {
         if (diff > 1) {
           navs.unshift({ 
             name: '...', 
@@ -154,7 +167,7 @@ export default {
   white-space: nowrap;
   margin: 0;
   padding: 0;
-  overflow-x: auto;
+  overflow: hidden;
   list-style: none;
   min-width: 100%;
 

@@ -1,5 +1,6 @@
-
 const isElectron = () => / (?:e|E)lectron\//.test(navigator.userAgent);
+
+const isWxBrowser = () => /MicroMessenger/i.test(navigator.userAgent);
 
 /**
 * Detecting if your app is launched from the home screen
@@ -10,5 +11,6 @@ const isLaunchedFromHS = () => window.navigator.standalone === true
 
 export default {
   isElectron,
-  isLaunchedFromHS
+  isWxBrowser,
+  isLaunchedFromHS,
 }

@@ -27,6 +27,10 @@ export default {
       default: () => []
     },
 
+    activeItem: {
+      type: Object,
+    },
+
     props: {
       type: Object,
       default: () => ({
@@ -41,14 +45,12 @@ export default {
 
   data() {
     return {
-      depth: 1,
-      activeItem: null
+      depth: 1
     }
   },
 
   methods: {
     selectItem(item, ctx) {
-      this.activeItem = item;
       this.$emit('selected', item, ctx);
     },
 
@@ -74,15 +76,11 @@ export default {
       background: none;
       padding: 0 .75rem;
       border: .5px solid transparent;
-
-      &.active {
-        font-weight: bold;
-      }
     }
 
     .list-nested-toggle-icon {
       cursor: pointer;
-      padding: 0.35rem 0;
+      padding: 0.3rem 0;
       text-align: center;
       position: absolute;
     }

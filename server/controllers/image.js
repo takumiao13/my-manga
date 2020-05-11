@@ -1,6 +1,7 @@
 const Controller = require('./_base');
 const to = require('await-to-js').default;
 
+const ONE_MONTH = 30*24*60;
 class ImageController extends Controller {
 
   async show(ctx) {
@@ -10,12 +11,12 @@ class ImageController extends Controller {
     const repo = this.app.service.repo.get(dirId);
     const root = repo.baseDir; // get real path;
     
-    // path should re-encode when if contains `%` will throw 400 error.
+    // path should re-encode when it contains `%` will throw 400 error.
     const [ err, result ] = await to(app.send(ctx, encodeURIComponent(path), { 
       root,
       hidden: true,
       setHeaders: (res) => {
-        res.setHeader('Cache-Control', 'max-age=31536000')
+        res.setHeader('Cache-Control', `max-age=${ONE_MONTH}`)
       }
     }));
   

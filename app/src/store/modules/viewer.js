@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { safeAssign, isDef } from '@/helpers/utils';
+import { safeAssign, isDef, find } from '@/helpers/utils';
 import { createTypesWithNamespace, createRequestStatus } from '../helpers';
 import { NAMESPACE as APP_NAMESPACE } from './app'
 import mangaAPI from '@/apis/manga';
@@ -11,6 +11,7 @@ export const NAMESPACE = 'viewer';
 const LOAD  = 'LOAD';
 const GO    = 'GO';
 const VIEW  = 'VIEW';
+const VIEW_VIDEO = 'VIEW_VIDEO';
 const SETTINGS = 'SETTINGS';
 const TOGGLE_AUTO_SCROLLING = 'TOGGLE_AUTO_SCROLLING';
 
@@ -18,31 +19,36 @@ const TOGGLE_AUTO_SCROLLING = 'TOGGLE_AUTO_SCROLLING';
 const statusHelper = createRequestStatus('status');
 
 export const types = createTypesWithNamespace([ 
-  LOAD, GO, VIEW, SETTINGS, TOGGLE_AUTO_SCROLLING
+  LOAD, GO, VIEW, VIEW_VIDEO, SETTINGS, TOGGLE_AUTO_SCROLLING
 ], NAMESPACE);
 
-export default {
+const initialState = {
+  mode: 'scroll',  
+  autoScrolling: false,
+  name: '',
+  path: '',
+  page: 1,
+  ch: '',
+  chName: '',
+  chIndex: 0,
+  cover: '',
+  verNames: [],
+  activeVer: '',
+  images: [],
+  chapters: [],
+  settings: {
+    zoom: 'width',
+    gaps: true,
+    pagerInfo: true,
+    handMode: 'right',
+  },
+  ...statusHelper.state()
+};
+
+const createModule = (state = { ...initialState }) => ({
   namespaced: true,
 
-  state: {
-    mode: 'scroll',  
-    autoScrolling: false,
-    name: '',
-    path: '',
-    page: 1,
-    ch: '',
-    chName: '',
-    chIndex: 0,
-    images: [],
-    chapters: [],
-    settings: {
-      zoom: 'width',
-      gaps: true,
-      pagerInfo: true,
-      handMode: 'right',
-    },
-    ...statusHelper.state()
-  },
+  state,
 
   getters: {
     pending(state) {
@@ -89,28 +95,25 @@ export default {
   },
 
   actions: {
-    [LOAD]({ commit }, payload = {}) {
-      commit(LOAD, payload);
-    },
-
     [VIEW]({ commit, state }, payload = {}) {
       const { dirId, path, ch, page } = payload;
       const promiseArray = [];
       const pathResStub = () => {};
-      const chResStub = () => {};
 
       const pathPromise = state.path !== path ? 
         mangaAPI.list({ dirId, path }) : 
         pathResStub;
   
       promiseArray.push(pathPromise);
-      
-      // should fetch chapters
-      if (ch) {
-        const chPromise = state.ch !== ch ? 
-          mangaAPI.list({ dirId, path: `${path}/${ch}` }) : 
-          chResStub;
 
+ 
+      // fetch chapters images every time
+      // TODO: should check is not need fetch again
+      if (ch) {
+        const chPromise = mangaAPI.list({ 
+          dirId, 
+          path: `${path}/${ch}` 
+        }); 
         promiseArray.push(chPromise);
       }
   
@@ -122,7 +125,9 @@ export default {
         let name = state.name, 
             path = state.path, 
             chapters, 
-            images;
+            images,
+            verNames,
+            cover;
   
         // handle no chapters
         if (res2 === void 0) {
@@ -131,6 +136,8 @@ export default {
             path = res1.path;
             images = res1.images;
             chapters = res1.chapters;
+            cover = res1.cover;
+            verNames = res1.verNames
           }
           
         // handle chapters
@@ -139,25 +146,53 @@ export default {
             name = res1.name;
             path = res1.path;
             chapters = res1.chapters;
+            cover = res1.cover;
+            verNames = res1.verNames;
           }
   
-          if (res2 !== chResStub) {
-            images = res2.images;
-          }
+ 
+          images = res2.images;
         }
   
         // try to remove name prefix
         const chName = ch.replace(`${name} - `, '');
-
+        
         // TODO: replace `safeAssign`
         // sometimes images chapters will be undefined
         // so we should safeAssign it.
-        commit(LOAD, { name, path, images, chapters, chName });
+        commit(LOAD, { name, path, cover, images, chapters, chName, verNames });
         commit(GO, { page, ch });
         Vue.nextTick(() => statusHelper.success(commit));
       }).catch(error => {
         statusHelper.error(commit, { error });
       });
+    },
+
+    [VIEW_VIDEO]({ commit }, payload = {}) {
+      const { dirId, path, ver } = payload;
+
+      statusHelper.pending(commit);
+      return mangaAPI.list({ dirId, path }).then(res => {
+        const { name, cover, children, verNames } = res;
+        // find video from list
+        // - version
+        // - name (parts of video)
+        const findOptions = ver ? { ver } : { name: payload.name };
+        const video = find(children, findOptions);
+
+        commit(LOAD, {
+          name, 
+          verNames,
+          path: video.path,
+          cover: cover || '', // overwrite cover
+          activeVer: ver
+        });
+
+        // should update status after state mutated 
+        Vue.nextTick(() => statusHelper.success(commit));
+      }).catch(error => {
+        statusHelper.error(commit, { error });
+      })
     },
 
     [GO]({ commit, getters }, payload = {}) {
@@ -169,15 +204,7 @@ export default {
       
       // should empty ch
       commit(GO, payload);
-    },
-
-    [SETTINGS]({ commit }, payload = {}) {
-      commit(SETTINGS, payload);
-    },
-
-    [TOGGLE_AUTO_SCROLLING]({ commit }, payload = {}) {
-      commit(TOGGLE_AUTO_SCROLLING, payload);
-    },
+    }
   },
 
   mutations: {
@@ -202,4 +229,6 @@ export default {
 
     ...statusHelper.mutation()
   }
-};
+});
+
+export default createModule;

@@ -75,7 +75,7 @@ export default {
         query: { search: 1, kw: this.keyword }
       });
 
-      this.$store.dispatch(types.TOGGLE_ASIDE, { open: false });
+      this.$store.commit(types.TOGGLE_ASIDE, { open: false });
     }
 
   }

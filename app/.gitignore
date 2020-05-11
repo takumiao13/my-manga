@@ -1,7 +1,7 @@
 .DS_Store
 node_modules
+output.*.js
 /dist
-vue.output.js
 
 # local env files
 .env.local

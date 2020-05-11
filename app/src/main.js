@@ -4,10 +4,12 @@ import './registerServiceWorker';
 import Vue from 'vue';
 import App from './App.vue';
 import config from '@/config';
+import consts from '@/consts';
 
 // Helpers
 import { byId } from '@/helpers/dom';
 import { delay } from '@/helpers/promise';
+import feature from '@/helpers/feature';
 import platform from '@/helpers/platform';
 import EventEmitter from '@/helpers/eventemitter';
 
@@ -40,8 +42,6 @@ import clickOutSideDirective from '@/directives/click-out-side';
 // Services
 import $Service from '@/services';
 
-
-
 Vue.component('spinner', Spinner);
 Vue.component('navbar', Navbar);
 Vue.component('toolbar', Toolbar);
@@ -72,23 +72,23 @@ Vue.use(VueLazyload, {
   }
 });
 
-Vue.use($Service, {
-  router,
-  store
-});
+Vue.use($Service, { router, store });
+Vue.prototype.$platform = platform;
+Vue.prototype.$feature = feature;
+Vue.prototype.$config = config;
+Vue.prototype.$consts = consts;
 
-Vue.config.productionTip = false;
+Vue.config.productionTip = process.env.NODE_ENV === 'production';
 
 const $loading = byId('app-loading');
 const $message = byId('app-message');
 const REPO_KEY = '_REPO';
 
-
-
 bootstrapApp();
 
 function bootstrapApp() {
   let hideSplashScreen;
+
   // not show custom splash screen when lanuched form pwa
   if (platform.isLaunchedFromHS()) {
     $loading.style.display = 'none';
@@ -101,19 +101,20 @@ function bootstrapApp() {
     const ipc = window.require('electron').ipcRenderer;
     // get real ip from electron
     ipc.on('app-config', (event, { host }) => {
-      config.host = host;
+      config.api.HOST = host;
     });
   
     window.onload = () => ipc.send('win-load');
   }
 
-  // Add app to Home Screen
+  // Add To Home Screen
   window.addEventListener('beforeinstallprompt', (e) => {
     // Prevent Chrome 67 and earlier from automatically showing the prompt
     e.preventDefault();
     // Stash the event so it can be triggered later.
-    store.dispatch(appTypes.PWA_INSTALL_PROMPT, e);
-    console.log(appTypes.PWA_INSTALL_PROMPT, 'install prompt called');
+    store.commit(appTypes.PWA_INSTALL_PROMPT, {
+      pwaInstallPrompt: e
+    });
   });
 
   EventEmitter.$on('store.reset', (repo) => {
@@ -125,13 +126,15 @@ function bootstrapApp() {
     $loading.style.display = '';
     $message.innerHTML = '<p>Change Repository</p> <strong>' + name + '</strong>';
     
-    
     // store repo key
     window.localStorage.setItem(REPO_KEY, dirId);
 
     // reset store
+    resetStore();
+
+    // reset history
     resetHistory(() => {
-      resetStore();
+      // goto new repo explorer
       router.push({ name: 'explorer', params: { dirId }});
       // delay 1000 ms wait fetch data to render view 
       delay(1000).then(() => {

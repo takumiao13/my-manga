@@ -78,7 +78,7 @@
 import { mapState, mapGetters } from 'vuex';
 import screenfull from 'screenfull';
 import animateScrollTo from 'animate-scroll-to.js';
-import { last, isDef, capitalize } from '@/helpers/utils';
+import { isDef, capitalize } from '@/helpers/utils';
 import { types } from '@/store/modules/viewer';
 
 // Components
@@ -86,37 +86,6 @@ import Viewport from './Viewport';
 import ScrollMode from './ScrollMode';
 import Seekbar from './Seekbar';
 import HelpOverlay from './HelpOverlay';
-
-const KEY_CODE = {
-  LEFT: 37,
-  RIGHT: 39,
-  UP: 38,
-  DOWN: 40,
-  A: 65,
-  D: 68,
-  W: 87,
-  S: 83,
-  F1: 112,
-  F11: 122
-};
-
-const KEYBOARD_ACTION = {
-  left: {
-    prev: KEY_CODE.A,
-    next: KEY_CODE.D,
-    up: KEY_CODE.W,
-    down: KEY_CODE.S,
-    help: KEY_CODE.F1
-  },
-
-  right: {
-    prev: KEY_CODE.LEFT,
-    next: KEY_CODE.RIGHT,
-    up: KEY_CODE.UP,
-    down: KEY_CODE.DOWN,
-    help: KEY_CODE.F1
-  }
-}
 
 export default {
   components: {
@@ -133,9 +102,7 @@ export default {
   data() {
     return {
       locking: true,
-
       isFullscreen: this.fullscreen,
-
       helpOpen: false
     }
   },
@@ -156,19 +123,23 @@ export default {
       'page', 'ch', 'chName', 'images', 'chapters' 
     ]),
 
-    ...mapState('app', { appError: 'error' }),
+    ...mapState('app', { appError: 'error', appSize: 'size' }),
 
     ...mapGetters('app', [ 'repo' ]),
 
     ...mapGetters('viewer', [ 'count', 'chIndex', 'chCount', 'pending', 'settings' ]),
 
     title() {
-      // FIXED: Why not use name directory ??
-      let title = last(this.path.split('/'));
+      if (this.appSize === 'sm') {
+        return this.ch ? this.chName : '';
+      } else {
+        let title = this.name;
 
-      // addon chapter name
-      if (this.ch) title = `${this.chName} / ${title}`;
-      return ' ' + title;
+        // addon chapter name
+        // TODO: use chName ....
+        if (this.ch) title = `${this.chName} / ${title}`;
+        return ' ' + title;
+      }
     },
 
     pager() {
@@ -342,20 +313,20 @@ export default {
     },
 
     zoomToggle(zoom) {
-      this.$store.dispatch(types.SETTINGS, { zoom });
+      this.$store.commit(types.SETTINGS, { zoom });
     },
 
     gapsToggle() {
-      this.$store.dispatch(types.SETTINGS, { gaps: !this.settings.gaps })
+      this.$store.commit(types.SETTINGS, { gaps: !this.settings.gaps })
     },
 
     pagerInfoToggle() {
-      this.$store.dispatch(types.SETTINGS, { pagerInfo: !this.settings.pagerInfo })
+      this.$store.commit(types.SETTINGS, { pagerInfo: !this.settings.pagerInfo })
     },
 
     handModeToggle() { 
       const handMode = { left: 'right', right: 'left' }[this.settings.handMode];
-      this.$store.dispatch(types.SETTINGS, { handMode });
+      this.$store.commit(types.SETTINGS, { handMode });
       this.helpOpen = true;
     },
 
@@ -367,7 +338,7 @@ export default {
     autoScrollToggle(val) {
       this.locking = false;
       
-      this.$store.dispatch(types.TOGGLE_AUTO_SCROLLING, { 
+      this.$store.commit(types.TOGGLE_AUTO_SCROLLING, { 
         autoScrolling: val 
       });
     },
@@ -397,7 +368,7 @@ export default {
       
       $event.stopPropagation();
       const keyCode = $event.keyCode;
-      const action = KEYBOARD_ACTION[this.settings.handMode];
+      const action = this.$consts.KEYBOARD_ACTION[this.settings.handMode];
 
       switch (keyCode) {
         case action.help:

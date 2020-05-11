@@ -5,16 +5,16 @@ import { errorCodeMap, ERR_CODE } from '@/helpers/error';
 
 // Load Modules
 import appModule, { types as appTypes } from './modules/app';
-import explorerModule from './modules/explorer';
-import mangaModule, { cacheStack as mangaCacheStack } from './modules/manga';
-import viewerModule from './modules/viewer';
-import motionModule from './modules/motion';
 import settingsModule, { 
   types as settingTypes, 
   NAMESPACE as SETTINGS_NAMESPACE,
   createTypes, 
   createSettings 
 } from './modules/settings';
+
+import explorerModule from './modules/explorer';
+import mangaModule, { cacheStack as mangaCacheStack } from './modules/manga';
+import viewerModule from './modules/viewer';
 
 Vue.use(Vuex);
 
@@ -26,8 +26,7 @@ const staticModules = {
 const dynamicModules = {
   explorer: explorerModule,
   manga: mangaModule,
-  viewer: viewerModule,
-  motion: motionModule
+  viewer: viewerModule
 };
 
 const store = new Vuex.Store({
@@ -37,24 +36,28 @@ const store = new Vuex.Store({
 registerModules();
 
 function unregisterModules() {
-  Object.keys(dynamicModules).forEach(key => store.unregisterModule(key));
+  Object.keys(dynamicModules).forEach(key => {
+    store.unregisterModule(key);
+  });
 }
 
 function registerModules() {
   Object.keys(dynamicModules).forEach(key => {
-    store.registerModule(key, dynamicModules[key]);
+    // re-create module
+    const mod = dynamicModules[key]();
+    store.registerModule(key, mod);
   });
 }
 
 export default store;
 
 export function resetStore() {
-  store.dispatch(appTypes.TOGGLE_ASIDE, { open: false });
-  store.dispatch(appTypes.TOGGLE_SIDEBAR, { open: true });
-  store.dispatch(appTypes.TOGGLE_ACTIVITY, { activity: '' });
+  store.commit(appTypes.TOGGLE_ASIDE, { open: false });
+  store.commit(appTypes.TOGGLE_SIDEBAR, { open: true });
+  store.commit(appTypes.TOGGLE_ACTIVITY, { activity: '' });
   mangaCacheStack.clear();
-  unregisterModules()
-  registerModules()
+  unregisterModules();
+  registerModules();
 }
 
 export const loadSettingsState = (scope) => {
@@ -65,8 +68,8 @@ export const loadSettingsState = (scope) => {
   if (!isExists) {
     const code = ERR_CODE.REPO_UNACCESSED;
     const error = errorCodeMap[code];
-    return store.dispatch(appTypes.TOGGLE_REPO, { repo: '' })
-      .then(() => Promise.reject(Object.assign(error, { code })));
+    store.commit(appTypes.TOGGLE_REPO, { repo: '' })
+    return Promise.reject(Object.assign(error, { code }))
   }
 
   // register nested settings state
@@ -74,5 +77,5 @@ export const loadSettingsState = (scope) => {
   settingTypes[scope] = createTypes(scope);
   store.registerModule(['settings', scope], settingsState);
   return store.dispatch(settingTypes[scope].INIT)
-    .then(() => store.dispatch(appTypes.TOGGLE_REPO, { repo: scope }))
+    .then(() => store.commit(appTypes.TOGGLE_REPO, { repo: scope }))
 }

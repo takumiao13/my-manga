@@ -40,18 +40,28 @@ export default {
   // when route change should show correct activity
   activated() {
     const { activity } = this.$route.query;
-    this.$store.dispatch(types.TOGGLE_ACTIVITY, { activity });
+    this.$store.commit(types.TOGGLE_ACTIVITY, { activity });
   },
 
   beforeRouteUpdate(to, from, next) {
     const { activity } = to.query;
-    this.$store.dispatch(types.TOGGLE_ACTIVITY, { activity });
+    this.$store.commit(types.TOGGLE_ACTIVITY, { activity });
     next();
+  },
+
+  created() {
+    this._removeListener = this.$service.media.addListener(evt => {
+      this.$store.commit(types.TOGGLE_SIZE, { size: evt.$active });
+    });
+  },
+
+  destroyed() {
+    this._removeListener();
   },
 
   methods: {
     closeAside() {
-      this.$store.dispatch(types.TOGGLE_ASIDE, { open: false });
+      this.$store.commit(types.TOGGLE_ASIDE, { open: false });
     }
   }  
 }

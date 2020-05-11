@@ -16,7 +16,7 @@
       <hr/>
 
       <div class="a2hs" v-show="pwaInstallPrompt">
-        <img class="a2hs-logo my-3" src="@/assets/logo.png" />
+        <img class="a2hs-logo my-3" :src="appLogoPath" />
 
         <button type="button"
           class="btn btn-outline-secondary"
@@ -31,8 +31,6 @@
 </template>
 
 <script>
-import config from '@/config';
-import platform from '@/helpers/platform';
 import { mapState } from 'vuex';
 
 export default {
@@ -42,8 +40,8 @@ export default {
         content: 'Read on Mobile',
         className: 'navbar-brand-xs'
       },
-
-      installed: platform.isLaunchedFromHS()
+      appLogoPath: process.env.APP_LOGO,
+      installed: this.$platform.isLaunchedFromHS()
     }
   },
 
@@ -55,17 +53,17 @@ export default {
     },
 
     qrcodeValue() {
-      const { host } = config;
+      const { HOST, PORT } = this.$config.api;
       
-      const protocol = platform.isElectron() ? 
+      const protocol = this.$platform.isElectron() ? 
         'http:' : 
         window.location.protocol;
       
       // when dev env use location port
       const port = process.env.NODE_ENV === 'development' ?
-        window.location.port : config.port;
+        window.location.port : PORT;
 
-      return `${protocol}//${host}:${port}`
+      return `${protocol}//${HOST}:${port}`
     }
   },
 

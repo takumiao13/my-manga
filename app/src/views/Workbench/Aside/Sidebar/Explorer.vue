@@ -2,6 +2,7 @@
   <div class="explorer">
     <div class="topbar">
       <navbar :title="title" :right-btns="rightBtns" />
+      <div class="explorer-repo-name" @click="handleBack">{{ repo.name }}</div>
     </div>
     
     <data-view 
@@ -9,11 +10,19 @@
       :loading="pending" 
       :empty="empty"
     >
-      <div class="explorer-repo-name" @click="handleBack">{{ repo.name }}</div>
+      <div 
+        class="explorer-latest"
+        title="Latest manga"
+        :class="{ active: activeItem && activeItem.path === $consts.LATEST_PATH }"
+        @click="handleLatest"
+      >
+        <icon name="rocket-launch" size="14" />Latest
+      </div>
       <nested-list 
         v-show="success"  
         :props="treeProps"
-        :data="folders"
+        :data="folderTree || []"
+        :active-item="activeItem"
         @expanded="handleItemExpanded"
         @selected="handleItemSelected" 
       />
@@ -35,17 +44,18 @@ export default {
         click: this.closeSidebar
       },
 
+      activeItem: null,
+
       treeProps: {
         key: 'path',
-        label: (item) => item._mangaGroup ? 
-          `<span class="manga-group-btn">
-            ${item.children.length} MANGA${item.children.length > 1 ? 'S' : ''}
-          </span>` :
-          item.name
-        ,
-        className: (item) => item._mangaGroup ? 'manga-group-item' : '',
         title: 'name',
         children: 'children',
+        label: (item) => {
+          const { _mangaGroup, name } = item;
+          if (_mangaGroup && !name) return '@MANGAS'
+          return name;
+        },
+        className: (item) => item._mangaGroup ? 'manga-group-item' : '',
         isBranch: (item) => item._mangaGroup || (item.type === 'FILE' && item.hasSubfolder)
       }
     }
@@ -54,11 +64,11 @@ export default {
   computed: {
     ...mapState('app', { appError: 'error' }),
 
-    ...mapState('explorer', [ 'inited', 'folders', 'empty' ]),
+    ...mapState('explorer', [ 'empty' ]),
     
     ...mapGetters('app', [ 'repo' ]),
 
-    ...mapGetters('explorer', [ 'pending', 'success', 'empty' ]),
+    ...mapGetters('explorer', [ 'folderTree', 'pending', 'success', 'empty' ]),
 
     rightBtns() {
       return null
@@ -67,20 +77,26 @@ export default {
 
   activated() {
     if (
-      this.appError || 
-      (this.$route.meta.isBack && this.inited) || 
-      this.$router._reset
+      this.appError || // error
+      (this.$route.meta.isBack && this.folderTree) // has loaded 
     ) {
       return;
     }
 
     this.fetchFolders();
+    this.fetchLatest();
   },
 
   beforeRouteUpdate(to, from, next) {
-    if (!this.appError && to.params.dirId !== from.params.dirId) {
-      this.fetchFolders();
+    if (
+      this.appError || 
+      to.params.dirId == from.params.dirId // the same route
+    ) {
+      return;
     }
+
+    this.fetchFolders();
+    this.fetchLatest();
 
     next();
   },
@@ -91,8 +107,13 @@ export default {
       this.$store.dispatch(types.FETCH, { dirId });
     },
 
+    fetchLatest() {
+      const { dirId } = this.repo;
+      this.$store.dispatch(types.LATEST, { dirId });
+    },
+
     closeSidebar() {
-      this.$store.dispatch(appTypes.TOGGLE_ASIDE, { open: false });
+      this.$store.commit(appTypes.TOGGLE_ASIDE, { open: false });
     },
 
     // events
@@ -115,7 +136,9 @@ export default {
     },
 
     handleItemSelected(item, ctx) {
-      if (item._mangaGroup) {
+      this.activeItem = item;
+
+      if (item._mangaGroup && !item.name) {
         ctx.open = !ctx.open;
         return;
       }
@@ -141,6 +164,17 @@ export default {
       }
       
       this.closeSidebar();
+    },
+
+    handleLatest() {
+      const { dirId } = this.repo;
+      const path = this.$consts.LATEST_PATH;
+
+      this.activeItem = { path };
+      this.$router.push({ 
+        name: 'explorer', 
+        params: { dirId, path }
+      }).then(() => this.closeSidebar());
     }
   }
 }
@@ -148,12 +182,24 @@ export default {
 
 <style lang="scss" scoped>
 .explorer-container {
-  min-height: calc(100vh - 3rem);
+  min-height: calc(100vh - 5rem);
 }
 
 .explorer-repo-name {
-  padding: .25rem .8rem;
   cursor: pointer;
+  padding: .25rem .8rem;
+  position: relative;
+  z-index: 1030;
+}
+
+.explorer-latest {
+  cursor: pointer;
+  padding: .5rem 0rem;
+  font-size: 80%;
+
+  .svg-icon {
+    width: 2rem;
+  }
 }
 </style>
 

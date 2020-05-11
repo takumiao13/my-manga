@@ -21,7 +21,7 @@
 
 <script>
 import { mapState } from 'vuex';
-import { types } from '@/store/modules/motion';
+import { types } from '@/store/modules/viewer';
 
 import screenfull from 'screenfull';
 
@@ -39,7 +39,7 @@ export default {
   computed: {
     ...mapState('app', { appError: 'error' }),
 
-    ...mapState('motion', [ 'name', 'path', 'cover', 'mime' ]),
+    ...mapState('viewer', [ 'name', 'path', 'cover' ]),
     
     options() {
       return this.inited ? {
@@ -116,7 +116,7 @@ export default {
   },
 
   mounted() {
-    if (this.appError) return
+    if (this.appError) return;
     
     this.$on('leave', () => {
       setTimeout(() => screenfull.exit());
@@ -124,7 +124,8 @@ export default {
 
     this.$on('update', (route) => {
       const { dirId, path } = route.params;
-      this.$store.dispatch(types.VIEW, { dirId, path })
+      const { ver, name } = route.query;
+      this.$store.dispatch(types.VIEW_VIDEO, { dirId, path, ver, name })
         .then(() => {
           // TODO: tmp use inited to support async init videojs
           this.inited = true;
@@ -200,7 +201,7 @@ export default {
   }
 
   .vjs-play-progress {
-    background: #dc143c !important;
+    background: $primary !important;
   }
 
   .vjs-progress-control {

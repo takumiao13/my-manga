@@ -1,21 +1,32 @@
 import { NAMESPACE as APP_NAMESPACE } from '@/store/modules/app';
 import store from '@/store';
 import { last } from '@/helpers/utils';
+import platform from '@/helpers/platform';
 
 export default async function title(ctx, next) {
+	let title;
 
   if (['explorer', 'viewer'].indexOf(ctx.to.name) > -1) {
-		let title = 'My Manga';
-		const { path } = ctx.to.params;
-		const { name: repoName } = store.getters[`${APP_NAMESPACE}/repo`];
-		
-		if (path) title = last(path.split('/'));
-		if (repoName) title += ` - ${repoName}`
+		title = 'MyManga';
 
-		document.title = title;
+		if (platform.isLaunchedFromHS() || platform.isWxBrowser()) {
+			// skip;
+		} else {
+			const { path } = ctx.to.params;
+			const { name: repoName } = store.getters[`${APP_NAMESPACE}/repo`];
+			
+			if (path) title = last(path.split('/'));
+			if (repoName) title += ` - ${repoName}`
+		}
 	} else {
-		document.title = ctx.to.meta.title || 'My Manga';
-  }
+		title = ctx.to.meta.title || 'MyManga';
+	}
+
+	if (process.env.APP_MODE) {
+		title = `[${process.env.APP_MODE}] ${title}`;
+	}
+
+	document.title = title;
   
   await next();
 }
