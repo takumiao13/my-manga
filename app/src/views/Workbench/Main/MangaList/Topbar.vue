@@ -20,6 +20,7 @@
 <script>
 import { types as appTypes } from '@/store/modules/app';
 import { mapState, mapGetters } from 'vuex';
+import qs from '@/helpers/querystring';
 import animateScrollTo from 'animate-scroll-to.js';
 
 const PATH_SEP = '/';
@@ -49,6 +50,10 @@ export default {
         icon: 'arrow-left',
         tip: 'Back',
         click: this.handleBack
+      }, {
+        icon: 'bars',
+        className: 'd-inline-block d-md-none',
+        click: this.handleToggleSidebar
       }]
     },
 
@@ -106,7 +111,7 @@ export default {
       const { dirId } = this.repo;
       const path = this.path.split(PATH_SEP).slice(0, -1).join(PATH_SEP);
       const params = { dirId };
-      if (path) params.path = path;
+      if (path) params.path = qs.encode(path);
  
       this.$router.navigate({
         name: 'explorer',
@@ -137,7 +142,7 @@ export default {
 
       this.$router.navigate({
         name: 'explorer',
-        params: { dirId, path }
+        params: { dirId, path: qs.encode(path) }
       });
     }
   }

@@ -76,6 +76,7 @@
 
 <script>
 import { mapState, mapGetters } from 'vuex';
+import qs from '@/helpers/querystring';
 import screenfull from 'screenfull';
 import animateScrollTo from 'animate-scroll-to.js';
 import { isDef, capitalize } from '@/helpers/utils';
@@ -264,7 +265,7 @@ export default {
       this.locking = true;
       window._ignoreScrollEvent = true;
 
-      this.$store.dispatch(types.VIEW, { dirId, path, ch, page });
+      this.$store.dispatch(types.VIEW, { dirId, path: qs.decode(path), ch, page });
     });
   },
 
@@ -291,7 +292,7 @@ export default {
       const params = {
         type: 'manga',
         dirId: this.repo.dirId,
-        path: this.path,
+        path: qs.encode(this.path),
         ch: chapter.name
       };
 
