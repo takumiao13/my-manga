@@ -69,6 +69,7 @@
 
 <script>
 import { mapState, mapGetters } from 'vuex';
+import qs from '@/helpers/querystring';
 
 export default {
   props: {
@@ -102,7 +103,7 @@ export default {
   
       this.$router.replace({
         name: 'explorer', 
-        params: { dirId, path: this.path },
+        params: { dirId, path: qs.encode(this.path) },
         query: { ver, type: 'manga' }
       });
     },

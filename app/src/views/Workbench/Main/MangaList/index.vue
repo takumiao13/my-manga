@@ -80,6 +80,7 @@
 <script>
 import { isDef, get, eq } from '@/helpers/utils';
 import { getScrollTop } from '@/helpers/dom';
+import qs from '@/helpers/querystring';
 import { types as mangaTypes } from '@/store/modules/manga';
 import { types as viewerTypes } from '@/store/modules/viewer';
 import { mapState, mapGetters } from 'vuex';
@@ -160,15 +161,16 @@ export default {
 
     topbarTitle() {
       return (!this.isManga || (this.isManga && this.showTitle)) ? 
-        this.title : ''
+        this.title : '';
     },
 
     navs() {
       const { path } = this.$route.params;
+      const safepath = qs.decode(path);
       const items = [];
 
-      if (path) {
-        const fragments = path.split('/');
+      if (safepath) {
+        const fragments = safepath.split('/');
         const { name } = this.repo;
         items.push({ name });
         
@@ -257,13 +259,14 @@ export default {
         query: { kw, search, ver } 
       } = route;
       const { dirId } = this.repo;
+      const safepath = qs.decode(path);
 
       let promise = Promise.resolve();
 
       if (path !== this.path || clear) {
         promise = promise.then(() => 
           this.$store.dispatch(mangaTypes.FETCH, { 
-            isBack, dirId, path, ver, search, clear,
+            isBack, dirId, path: safepath, ver, search, clear,
             keyword: kw, 
           })
         );
@@ -299,7 +302,7 @@ export default {
 
         this.$router.push({
           name: 'explorer', 
-          params: { dirId, path },
+          params: { dirId, path: qs.encode(path) }, // hanle path with % char
           query
         });
 
@@ -312,7 +315,7 @@ export default {
 
         this.$router.push({
           name: 'viewer',
-          params: { type: 'video', dirId, path: this.path },
+          params: { type: 'video', dirId, path: qs.encode(this.path) },
           query
         });
       } else if (fileType === 'pdf') {
@@ -358,12 +361,14 @@ export default {
         });
       }
 
+      const path = this.activeVer ? this.activeVerPath : this.path;
+      
       this.$router.push({
         name: 'viewer',
         params: { 
           type: 'manga', 
           dirId, 
-          path: this.activeVer ? this.activeVerPath : this.path, 
+          path: qs.encode(path),
           ch 
         },
         query: {
@@ -460,52 +465,52 @@ export default {
   top: 48px;
 }
 
-.area-container {
+// over the below list-group-item
+[data-view-mode="list"] {
+  .area-header-inner {
+    border-bottom: 1px solid;  
+  }
+}
 
-  // over the below list-group-item
-  [data-view-mode="list"] {
-    .area-header-inner {
-      border-bottom: 1px solid;  
-    }
+.area-header {
+  margin-left: -15px;
+  margin-right: -15px;
+  
+  @include media-breakpoint-up(sm) {
+    padding-left: 15px;
+    padding-right: 15px;
   }
 
-  .area-header {
-    margin-left: -15px;
-    margin-right: -15px;
-    
+  position: sticky;
+  top: 78px;
+  z-index: 3;
+  transition-duration: .3s;
+
+  .area-header-inner {
+
+    padding: .5rem 15px;
+
     @include media-breakpoint-up(sm) {
-      padding-left: 15px;
-      padding-right: 15px;
+      padding: .5rem 0;
+    }
+    
+    margin: 0;
+    font-size: 80%;
+    
+    a[href] {
+      cursor: pointer;
     }
 
-    position: sticky;
-    top: 78px;
-    z-index: 3;
-    transition-duration: .3s;
-
-    .area-header-inner {
-
-      padding: .5rem 15px;
-
-      @include media-breakpoint-up(sm) {
-        padding: .5rem 0;
-      }
-      
-      margin: 0;
-      font-size: 80%;
-      
-      a[href] {
+    .actions {
+      .svg-icon {
+        margin-left: .5rem;
         cursor: pointer;
       }
-
-      .actions {
-        .svg-icon {
-          margin-left: .5rem;
-          cursor: pointer;
-        }
-      }
     }
   }
+}
+
+.area-container {
 
   .area-item {
     cursor: pointer;

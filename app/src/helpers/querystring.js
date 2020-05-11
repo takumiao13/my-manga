@@ -6,6 +6,10 @@ function decode(str) {
   }
 }
 
+function encode(str) {
+  return encodeURIComponent(str);
+}
+
 function parseValue(url) {
   var search;
   if (url === void 0) {
@@ -37,5 +41,7 @@ export const parse = (url) => {
 }
 
 export default {
-  parse
+  parse,
+  encode,
+  decode
 }

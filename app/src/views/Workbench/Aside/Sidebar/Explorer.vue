@@ -45,6 +45,7 @@
 import { mapState, mapGetters } from 'vuex';
 import { types as appTypes } from '@/store/modules/app';
 import { types } from '@/store/modules/explorer';
+import qs from '@/helpers/querystring';
 
 export default {
   data() {
@@ -159,7 +160,7 @@ export default {
    
       this.$router.push({ 
         name: 'explorer', 
-        params: { dirId, path },
+        params: { dirId, path: qs.encode(path) },
         query: item.type === 'MANGA' ? { type: 'manga' } : null
       }).then(() => this.closeSidebar());
     },

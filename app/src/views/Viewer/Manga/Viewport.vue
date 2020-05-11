@@ -49,6 +49,7 @@ export default {
   min-height: 100vh;
   padding-top: 3rem;
   padding-bottom: 3rem;
+  user-select: none;
 
   &:after {
     content: none;
