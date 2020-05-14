@@ -30,10 +30,10 @@ const config = {
     TEMP,
     context: pathFn.resolve(__dirname, '..')
   },
-  port: 3000,
+  port: 3033,
   baseDir: process.cwd(),
-  dataDir: pathFn.join(HOME, appName),
-  cacheDir: pathFn.join(TEMP, appName),
+  dataDir: pathFn.join(HOME, `.${appName}`),
+  cacheDir: pathFn.join(TEMP, `.${appName}`),
   server: {
     protocol: 'http',
     ssl: false, // http default

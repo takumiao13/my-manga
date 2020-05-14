@@ -261,6 +261,8 @@ export default {
       const { dirId } = this.repo;
       const safepath = qs.decode(path);
 
+      console.log('fetchManga: ', safepath);
+
       let promise = Promise.resolve();
 
       if (path !== this.path || clear) {

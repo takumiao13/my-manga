@@ -232,7 +232,9 @@ class MangaService extends Service {
       mangasColl.insert(collection);
       
       // TODO: saveDatabase later
-      db.saveDatabase();
+      if (process.env.NODE_ENV === 'dev') {
+        db.saveDatabase();
+      }
     }
     
     // invoke callback by some info.
