@@ -3,7 +3,8 @@ const koaSend = require('koa-send');
 const http = require('http');
 const https = require('https');
 const fs = require('./helpers/fs');
-const { pick, get } = require('./helpers/utils');
+const pathFn = require('./helpers/path');
+const { pick, get, merge } = require('./helpers/utils');
 const { CustomError } = require('./error');
 const EventEmitter = require('events');
 
@@ -41,8 +42,8 @@ class Application extends EventEmitter {
     super();
     this.koa = new Koa();
     this.router = new KoaRouter();
-    this.config = config;
     this._setOptions(options);
+    this._prepare();
   }
 
   async setup() {
@@ -54,48 +55,63 @@ class Application extends EventEmitter {
 
   /**
    * Ensure app options
-   * options > settings > config
+   * CLI args > .env > config
    * @param {*} options 
    */
   _setOptions(options) {
-    
+    let settings = {};
     const settingsPath = options.settings || config.settings;
-    let serverSettings;
+
     if (settingsPath && fs.accessSync(settingsPath)) {
-      const settings = JSON.parse(fs.readFileSync(settingsPath, { encoding: 'utf8' }));
-      serverSettings = get(settings, 'server') || {};
+      settings = fs.readJsonSync(settingsPath) || {};
     }
 
-    this.options = Object.assign({
-      protocol: 'http',
-      baseDir: process.cwd(),
-      ssl: false, // http default
-      clientCert: false, // client auth,
-      cors: true,
-    }, config, serverSettings, options);
+    this.options = merge({}, config, settings, options);
 
-    
     // always use http for development
+    const serverConfig = this.options.server;
+
     if (process.env.NODE_ENV === 'development') {
-      this.options.ssl = false;
+      serverConfig.ssl = false;
     }
 
-    if (this.options.ssl) {
-      const { key, cert, ca, clientCert } = this.options;
+    if (serverConfig.ssl) {
+      const { key, cert, ca, clientCert } = serverConfig;
 
-      this.options.protocol = 'https';
-      if (key) this.options.key = fs.readFileSync(key, 'utf8').toString();
-      if (cert) this.options.cert = fs.readFileSync(cert, 'utf8').toString();
-      if (ca) this.options.ca = fs.readFileSync(ca, 'utf8').toString();
+      serverConfig.protocol = 'https';
+      if (key) serverConfig.key = fs.readFileSync(key, 'utf8').toString();
+      if (cert) serverConfig.cert = fs.readFileSync(cert, 'utf8').toString();
+      if (ca) serverConfig.ca = fs.readFileSync(ca, 'utf8').toString();
       if (clientCert) {
-        this.options.requestCert = true;
-        this.options.rejectUnauthorized = false;
+        serverConfig.requestCert = true;
+        serverConfig.rejectUnauthorized = false;
       }
     }
+
+
+    // fallback use options
+    this._config = this.options;
+  }
+
+  // readonly config
+  config(path) {
+    if (!path) {
+      return this._config;
+    }
+
+    return get(this._config, path);
+  }
+
+  _prepare() {
+    const { dataDir, cacheDir } = this.config();
+    // if not find datadir and cachedir try to make it
+    fs.ensureDirSync(pathFn.join(dataDir, 'repos'));
+    fs.ensureDirSync(pathFn.join(dataDir, 'users'));
+    fs.ensureDirSync(cacheDir);
   }
 
   _loadMiddlewares() {
-    const { ssl, clientCert } = this.options;
+    const { ssl, clientCert } = this.config('server');
     const middlewares = [ corsMw, ...staticMw, bodyParserMw ]
 
     // validate client cert if clientCert is true
@@ -114,7 +130,6 @@ class Application extends EventEmitter {
     const service = {};
     const options = {
       app: this,
-      config: this.config,
       service
     };
 
@@ -136,7 +151,6 @@ class Application extends EventEmitter {
   _loadControllers() {
     const options = {
       app: this,
-      config: this.config,
       service: this.service
     };
 
@@ -156,8 +170,9 @@ class Application extends EventEmitter {
   }
 
   start(callback) {
-    const { protocol, port, ssl } = this.options;
-    const httpsOptions = pick(this.options, [
+    const { port, server: serverConfig } = this.config();
+    const { protocol, ssl } = serverConfig
+    const httpsOptions = pick(serverConfig, [
       'key', 'cert', 'ca', 'requestCert', 'rejectUnauthorized'
     ]);
 

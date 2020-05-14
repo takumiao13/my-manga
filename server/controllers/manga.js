@@ -44,11 +44,11 @@ class MangaController extends Controller {
 
   async _cache(ctx, process) {
     try {
+      const appinfo = this.config('appinfo');
       const { request, response, headers } = ctx;
       const { path = '', dirId } = ctx.params;
-      const { appinfo } = this.app.options;
-      const { baseDir } = this.app.service.repo.get(dirId);
-      const settings = this.app.service.settings.get(dirId);
+      const { baseDir } = this.service.repo.get(dirId);
+      const settings = await this.service.settings.get(dirId);
       const dirPath = pathFn.resolve(baseDir, path);
       const dirStat = await fs.stat(dirPath);
 
@@ -75,17 +75,16 @@ class MangaController extends Controller {
         }
       }
 
-      const xAppStartChanged = headers['x-app-startat'] && headers['x-app-startat'] !== appinfo.startAt;
+      const xAppStartChanged = headers['x-app-startat'] && headers['x-app-startat'] !== ''+appinfo.startAt;
       const xAppVersionChanged = headers['x-app-version'] && headers['x-app-version'] !== appinfo.version;
       const lastModifiedChanged = !ifModifiedSince || lastModified - ifModifiedSince >= 1000;
       
       if (xAppStartChanged || xAppVersionChanged || lastModifiedChanged) {
         // remove force cache for fetch list
-        // const TEN_MINUTES = 30*60;
         response.lastModified = lastModified;
-        // response.set({
-        //   'Cache-Control': `max-age=${TEN_MINUTES}`
-        // });
+        response.set({
+          'Cache-Control': 'no-cache'
+        });
         await process({ baseDir, path, settings });
       } else {
         response.status = 304;

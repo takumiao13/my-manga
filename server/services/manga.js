@@ -89,7 +89,7 @@ class MangaService extends Service {
           if (child.type === FileTypes.MANGA) {
             count++;
             callback(pick(child, [
-              'name', 'path', 'type', 'birthtime', 'mtime', 
+              'name', 'path', 'type', 'birthtime', 'mtime', 'cover', 
               'cover', 'width', 'height', 'verNames', 'chapterSize', 'metadata'
             ]));
           } else if (child.isDir && child.type === FileTypes.FILE) {
@@ -156,13 +156,13 @@ class MangaService extends Service {
    * 
    * @param {string} dirId 
    */
-  async latest(dirId) {
+  async latest(dirId, count = 100) {
     const { db } = await this._indexedDB.get(dirId);
     const mangaColl = db.getCollection('mangas');
     const results = mangaColl
       .chain()
       .simplesort('birthtime', { desc: true })
-      .limit(100)
+      .limit(count)
       .data();
 
     return results;
@@ -171,8 +171,12 @@ class MangaService extends Service {
   _loadIndex(repo) {
     const { dirId } = repo;
     const { baseDir } = this.service.repo.get(dirId);
-    const filepath = pathFn.resolve(baseDir, 'db.json');
+    const dataDir = this.config('dataDir');
+
+    // database path
+    const filepath = pathFn.resolve(dataDir, 'repos', `repo.${dirId}.db`);
     const dbOptions = { dirId, baseDir, filepath, indexing: false };
+
     this._indexedDB.set(dirId, dbOptions);
     
     return new Promise((resolve, reject) => {
@@ -217,7 +221,7 @@ class MangaService extends Service {
 
     if (!fs.accessSync(filepath)) {
       options.indexing = true;
-      const settings = this.service.settings.get(dirId);
+      const settings = await this.service.settings.get(dirId);
       await this.service.manga.walk(baseDir, '', settings, (child) => {
         // only pick need key
         collection.push(child);
@@ -228,7 +232,9 @@ class MangaService extends Service {
       mangasColl.insert(collection);
       
       // TODO: saveDatabase later
-      //db.saveDatabase();
+      if (process.env.NODE_ENV === 'dev') {
+        db.saveDatabase();
+      }
     }
     
     // invoke callback by some info.

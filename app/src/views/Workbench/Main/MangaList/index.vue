@@ -1,14 +1,21 @@
 <template>
-  <div class="main-explorer">
+  <div 
+    class="main-explorer" 
+    :class="{ 
+      'addressbar-collapsed': !showAddress || !needAddress
+    }"
+  >
     <topbar
       :title="topbarTitle"
-      :show-address="showAddress"
       :view-type="viewType"
+      :navs="navs"
+      :need-address="needAddress"
       @refresh="handleRefresh"
     />
     
     <data-view 
-      class="main-explorer-container" 
+      class="main-explorer-container"
+      :class="{ 'has-addressbar' : needAddress }"
       :loading="pending"
       :empty="empty"
       :error="error"
@@ -73,6 +80,7 @@
 <script>
 import { isDef, get, eq } from '@/helpers/utils';
 import { getScrollTop } from '@/helpers/dom';
+import qs from '@/helpers/querystring';
 import { types as mangaTypes } from '@/store/modules/manga';
 import { types as viewerTypes } from '@/store/modules/viewer';
 import { mapState, mapGetters } from 'vuex';
@@ -153,8 +161,33 @@ export default {
 
     topbarTitle() {
       return (!this.isManga || (this.isManga && this.showTitle)) ? 
-        this.title : ''
-    }
+        this.title : '';
+    },
+
+    navs() {
+      const { path } = this.$route.params;
+      const safepath = qs.decode(path);
+      const items = [];
+
+      if (safepath) {
+        const fragments = safepath.split('/');
+        const { name } = this.repo;
+        items.push({ name });
+        
+        fragments.pop(); // remove curr path
+        fragments.length && fragments.forEach((item, idx) => {
+          const path = fragments.slice(0, idx + 1).join('/');
+          const data = { name: item, path };
+          items.push(data);
+        });
+      }
+      
+      return items;
+    },
+
+    needAddress() {
+      return Boolean(this.viewType !== 'manga' && this.navs.length);
+    },
   },
 
   watch: {
@@ -226,13 +259,16 @@ export default {
         query: { kw, search, ver } 
       } = route;
       const { dirId } = this.repo;
+      const safepath = qs.decode(path);
+
+      console.log('fetchManga: ', safepath);
 
       let promise = Promise.resolve();
 
       if (path !== this.path || clear) {
         promise = promise.then(() => 
           this.$store.dispatch(mangaTypes.FETCH, { 
-            isBack, dirId, path, ver, search, clear,
+            isBack, dirId, path: safepath, ver, search, clear,
             keyword: kw, 
           })
         );
@@ -268,7 +304,7 @@ export default {
 
         this.$router.push({
           name: 'explorer', 
-          params: { dirId, path },
+          params: { dirId, path: qs.encode(path) }, // hanle path with % char
           query
         });
 
@@ -281,7 +317,7 @@ export default {
 
         this.$router.push({
           name: 'viewer',
-          params: { type: 'video', dirId, path: this.path },
+          params: { type: 'video', dirId, path: qs.encode(this.path) },
           query
         });
       } else if (fileType === 'pdf') {
@@ -327,12 +363,14 @@ export default {
         });
       }
 
+      const path = this.activeVer ? this.activeVerPath : this.path;
+      
       this.$router.push({
         name: 'viewer',
         params: { 
           type: 'manga', 
           dirId, 
-          path: this.activeVer ? this.activeVerPath : this.path, 
+          path: qs.encode(path),
           ch 
         },
         query: {
@@ -416,17 +454,51 @@ export default {
     margin-right: auto;
     margin-left: auto;
   }
+
+  &.has-addressbar {
+    margin-top: 2rem;
+  }
 }
 
 // Area
 // ==
-.area-container {
 
-  .area-header {
-    padding: .5rem 0;
+.addressbar-collapsed .area-container .area-header {
+  top: 48px;
+}
+
+// over the below list-group-item
+[data-view-mode="list"] {
+  .area-header-inner {
+    border-bottom: 1px solid;  
+  }
+}
+
+.area-header {
+  margin-left: -15px;
+  margin-right: -15px;
+  
+  @include media-breakpoint-up(sm) {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  position: sticky;
+  top: 78px;
+  z-index: 3;
+  transition-duration: .3s;
+
+  .area-header-inner {
+
+    padding: .5rem 15px;
+
+    @include media-breakpoint-up(sm) {
+      padding: .5rem 0;
+    }
+    
     margin: 0;
     font-size: 80%;
-
+    
     a[href] {
       cursor: pointer;
     }
@@ -438,6 +510,9 @@ export default {
       }
     }
   }
+}
+
+.area-container {
 
   .area-item {
     cursor: pointer;
@@ -448,6 +523,7 @@ export default {
   .list-group {
     margin-left: -15px;
     margin-right: -15px;
+    margin-top: -1px;
 
     .list-group-item {
       text-decoration: none;
@@ -458,6 +534,10 @@ export default {
       @include media-breakpoint-up(sm) {
         border-width: .5px;
       }
+    }
+
+    .list-group-item + .list-group-item {
+      border-top-width: 0px;
     }
 
     @include media-breakpoint-up(sm) {
@@ -492,14 +572,24 @@ export default {
     left: .5rem;
     right: .5rem;
     position: absolute;
-    overflow: hidden;
-    max-height: 46px;
-    line-height: 1.6;
     padding: .2rem .4rem;
     display: block;
     font-size: 13px;
-    word-wrap: break-word;
-    word-break: break-all;
+
+    > div,
+    > small {
+      max-height: 44px;
+      word-wrap: break-word;
+      word-break: break-all;
+      overflow: hidden;
+      line-height: 1.6;
+    }
+
+    &.with-status {
+      > div {
+        max-height: 23px;
+      }
+    }
   }
 }
 </style>

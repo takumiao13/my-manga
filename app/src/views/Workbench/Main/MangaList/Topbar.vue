@@ -9,8 +9,7 @@
     />
     
     <addressbar
-      v-if="needAddress" 
-      :class="{ collapsed: !showAddress }"
+      v-if="needAddress"
       :navs="navs"
       @back="handleNavigateBack"
       @navigate="handleNavigate"
@@ -21,6 +20,7 @@
 <script>
 import { types as appTypes } from '@/store/modules/app';
 import { mapState, mapGetters } from 'vuex';
+import qs from '@/helpers/querystring';
 import animateScrollTo from 'animate-scroll-to.js';
 
 const PATH_SEP = '/';
@@ -28,7 +28,8 @@ const PATH_SEP = '/';
 export default {
   props: {
     title: String,
-    showAddress: Boolean,
+    navs: Array,
+    needAddress: Boolean,
     viewType: {
       type: String,
       default: 'file' // file | manga | search
@@ -40,30 +41,6 @@ export default {
 
     ...mapGetters('app', [ 'repo' ]),
 
-    needAddress() {
-      return this.viewType !== 'manga' && this.navs.length;
-    },
-
-    navs() {
-      const { path } = this.$route.params;
-      const items = [];
-
-      if (path) {
-        const fragments = path.split('/');
-        const { name } = this.repo;
-        items.push({ name });
-        
-        fragments.pop(); // remove curr path
-        fragments.length && fragments.forEach((item, idx) => {
-          const path = fragments.slice(0, idx + 1).join(PATH_SEP);
-          const data = { name: item, path };
-          items.push(data);
-        });
-      }
-      
-      return items;
-    },
-
     leftBtns() {
       return (this.viewType === 'file') ? [{
         icon: 'bars',
@@ -73,6 +50,10 @@ export default {
         icon: 'arrow-left',
         tip: 'Back',
         click: this.handleBack
+      }, {
+        icon: 'bars',
+        className: 'd-inline-block d-md-none',
+        click: this.handleToggleSidebar
       }]
     },
 
@@ -130,7 +111,7 @@ export default {
       const { dirId } = this.repo;
       const path = this.path.split(PATH_SEP).slice(0, -1).join(PATH_SEP);
       const params = { dirId };
-      if (path) params.path = path;
+      if (path) params.path = qs.encode(path);
  
       this.$router.navigate({
         name: 'explorer',
@@ -161,7 +142,7 @@ export default {
 
       this.$router.navigate({
         name: 'explorer',
-        params: { dirId, path }
+        params: { dirId, path: qs.encode(path) }
       });
     }
   }
@@ -172,6 +153,8 @@ export default {
 // Topbar
 // ==
 .topbar {
+  height: 3rem;
+
   .manga-title-shown {
     color: '';
 
@@ -196,8 +179,10 @@ export default {
 .addressbar {
   transition-duration: .3s;
   height: 2rem;
+}
 
-  &.collapsed {
+.addressbar-collapsed {
+  .addressbar {
     transform: translateY(-100%);
   }
 }

@@ -6,6 +6,10 @@ class Controller {
     this._bindActions();
   }
 
+  config(path) {
+    return this.app.config(path);
+  }
+
   _bindActions() {
     const { actions } = this.constructor;
 

@@ -33,6 +33,10 @@
 }
 
 // reset some style
+.list-group-item+.list-group-item {
+  border-top-width: 0;
+}
+
 .list-group-item-action:focus {
   outline: none;
 }
@@ -56,14 +60,22 @@ input {
 
 .app-toast {
   .vue-notification {
-    padding: .5rem 1rem;
-    margin: .25rem;
-    font-size: 1rem;
-    border-radius: .5rem;
+    padding: .75rem 1rem;
+    font-size: .9rem;
+    border-radius: .25rem;
+    max-width: 280px;
     border-left: 0;
+    text-align: center;
     color: #fff;
-    background: rgba(0,0,0,.7);
+    background: rgba(0,0,0,.9);
     box-shadow: 2px 2px 3px rgba(0,0,0,.3);
+
+    @include media-breakpoint-up(sm) {
+      max-width: none;
+      margin: .5rem;
+      font-size: 1rem;
+      text-align: left;
+    }
     
     &.warn {
       background: #ffb648;
@@ -82,13 +94,13 @@ input {
   }
 }
 
-@-webkit-keyframes ant-progress-active {
+@-webkit-keyframes progress-active {
   0% { width: 0; opacity: .1 }
   20% { width: 0; opacity: .5 }
   100% { width: 100%; opacity: 0 }
 }
 
-@keyframes ant-progress-active {
+@keyframes progress-active {
   0% { width: 0; opacity: .1 }
   20% { width: 0; opacity: .5 }
   100% { width: 100%; opacity: 0 }

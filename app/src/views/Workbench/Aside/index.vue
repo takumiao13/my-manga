@@ -1,7 +1,7 @@
 <template>
   <div id="aside">
     <Menubar />
-    <div class="sidebar">
+    <div class="sidebar" id="workbench.aside.sidebar">
       <Explorer v-show="!activity || activity === ActivityTypes.EXPLORER" />
       <Search v-show="activity === ActivityTypes.SEARCH" />
       <WatchOnMobile v-show="activity === ActivityTypes.MOBILE" />

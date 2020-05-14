@@ -33,8 +33,8 @@
     <div class="metadata-main metadata-inner" v-show="!sharing">
 
       <p class="metadata-title" href="javascript:void 0;">
-        <span v-if="isEnd" class="manga-status">[End]</span>
         {{ title }}
+        <span v-if="isEnd" class="manga-status">[Completed]</span>
       </p>
 
     </div>
@@ -45,7 +45,12 @@
       :class="{ touch: $feature.touch}" 
       v-show="versions.length"
     >
-      <p class="area-header">VERSIONS - {{ versions.length }}</p>
+      <div class="area-header">
+        <div class="area-header-inner">
+          VERSIONS - {{ versions.length }}
+        </div>
+      </div>
+
       <div class="list-group pb-2">
         <a 
           class="list-group-item list-group-item-action version-item text-truncate"
@@ -64,6 +69,7 @@
 
 <script>
 import { mapState, mapGetters } from 'vuex';
+import qs from '@/helpers/querystring';
 
 export default {
   props: {
@@ -84,7 +90,6 @@ export default {
 
     isEnd() {
       const m = this.metadata;
-      console.log(this);
       return m && m.status === 'completed'
     }
   },
@@ -98,7 +103,7 @@ export default {
   
       this.$router.replace({
         name: 'explorer', 
-        params: { dirId, path: this.path },
+        params: { dirId, path: qs.encode(this.path) },
         query: { ver, type: 'manga' }
       });
     },

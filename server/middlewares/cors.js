@@ -1,13 +1,14 @@
-const cors = require('koa2-cors');
+const corsMw = require('koa2-cors');
 
-module.exports = ({ options }) => {
-  if (!options.cors) {
+module.exports = (app) => {
+  const { cors } = app.config('server');
+  if (!cors) {
     return async (ctx, next) => {
       await next();
     }
   } else {
-    return cors({
-      origin: (ctx) => checkOriginAgainstWhitelist(ctx, options),
+    return corsMw({
+      origin: (ctx) => checkOriginAgainstWhitelist(ctx, cors),
       maxAge: 5,
       credentials: true,
       allowMethods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -20,9 +21,8 @@ module.exports = ({ options }) => {
   }
 }
 
-function checkOriginAgainstWhitelist(ctx, options) {
+function checkOriginAgainstWhitelist(ctx, cors) {
   const requestOrigin = ctx.accept.headers.origin;
-  const { cors } = options;
 
   if (cors === true) return requestOrigin;
 

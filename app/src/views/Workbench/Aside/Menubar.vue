@@ -1,11 +1,20 @@
 <template>
-  <div class="menubar">
+  <div class="menubar" id="workbench.aside.menubar">
     <a
       class="menubar-btn" 
       :title="asideOpen ? 'Close Aside' : 'Toggle Sidebar'"
       @click="toggleSidebar"
     >
       <icon :name="asideOpen ? 'times' : 'bars'" />
+    </a>
+
+    <a
+      v-if="canChangeRepos"
+      class="menubar-btn"
+      title="Repository"
+      @click="gotoRepos"
+    >
+      <icon name="warehouse" />
     </a>
 
     <a
@@ -30,15 +39,6 @@
       @click="toggleActivity('mobile')"
     >
       <icon name="mobile" />
-    </a>
-
-    <a
-      v-if="canChangeRepos"
-      class="menubar-btn bottom"
-      title="Repository"
-      @click="gotoRepos"
-    >
-      <icon name="warehouse" />
     </a>
 
     <!-- support later

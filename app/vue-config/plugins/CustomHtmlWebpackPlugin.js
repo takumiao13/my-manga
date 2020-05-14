@@ -94,7 +94,6 @@ class CustomHtmlWebpackPlugin {
 				}
 			);
 			
-			// 勾子任务处理完毕发送事件时
 			compilation.hooks.htmlWebpackPluginAfterEmit.tapAsync(
 				pluginName,
 				/**

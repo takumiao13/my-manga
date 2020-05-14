@@ -5,6 +5,10 @@ class Service {
     this.service = service;
   }
 
+  config(path) {
+    return this.app.config(path);
+  }
+
   initialize() {
     
   }

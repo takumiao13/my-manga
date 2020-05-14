@@ -36,6 +36,8 @@ Options:
   -p, --port .................. port to use (default: 3033)  
   -d, --dir ................... specify dir as manga repo
   -s, --settings .............. settings file
+  --datadir ................... specify data dir
+  --cachedir .................. specify cache dir
   -h, --help .................. output usage information
 ```
 
@@ -53,7 +55,9 @@ Options:
     "ssl": true, // Enable https
     "cert": "cert.pem", // Path to ssl cert file
     "key": "key.pem", // Path to ssl key file
-  }
+  },
+  "cachedir": "/usr/mymanga/cache",
+  "datadir": "/usr/mymanga/config"
 }
 ```
 

@@ -37,13 +37,19 @@
       </div>
     </a>
 
-    <div v-show="viewMode == 'grid'" class="caption">
-      <span v-if="status" class="manga-status">
-        [End]
-      </span>
-      {{ item.name | stripVer }}
-    </div>
+    <div 
+      v-show="viewMode == 'grid'" 
+      class="caption" 
+      :class="{ 'with-status': status }"
+    >
+      <div>{{ item.name | stripVer }}</div>
 
+      <small v-if="completed" class="manga-status">[Completed]</small>
+      <small v-if="status && !completed" class="manga-status text-muted">
+        Chapter {{ status }}
+      </small>
+    </div>
+    
     <div v-show="viewMode == 'list'" class="manga-row">
       <div v-if="status" class="manga-status"></div>
       <div class="manga-row-left">
@@ -51,9 +57,15 @@
       </div>
       <div class="manga-row-main">
         <div class="manga-name">
-          <span v-if="status" class="manga-status">
-            [End]
-          </span>
+          <!-- show latest chapter -->
+          <small v-if="completed" class="manga-status">
+            [Completed]
+          </small>
+          <small class="manga-status text-muted" v-if="status && !completed">
+            Chapter {{ status }}
+          </small>
+
+          <!-- manga name -->
           {{ item.name | stripVer }}
         </div>
         <div class="manga-time text-muted">
@@ -89,7 +101,11 @@ export default {
   computed: {
     status() {
       if (!this.item.metadata) return false;
-      return this.item.metadata.status === 'completed';  
+      return this.item.metadata.status; 
+    },
+
+    completed() {
+      return this.status && this.status === 'completed';
     }
   },
 
@@ -167,9 +183,9 @@ $status-color: red;
     left: 0;
     background: #999;
     opacity: 0;
-    -webkit-animation: ant-progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
-    animation: ant-progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
-    z-index: 1;
+    -webkit-animation: progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
+    animation: progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
+    z-index: 4;
     content: '';
   }
 }
@@ -192,6 +208,11 @@ $status-color: red;
 .manga-status {
   color: $status-color;
   font-weight: normal;
+}
+
+.manga-name .manga-status {
+  float: right;
+  margin-top: .25rem;
 }
 
 // TODO: should rename `.tags` -> `version-labels` ??

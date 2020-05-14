@@ -22,7 +22,7 @@
 <script>
 import { mapState } from 'vuex';
 import { types } from '@/store/modules/viewer';
-
+import qs from '@/helpers/querystring';
 import screenfull from 'screenfull';
 
 export default {
@@ -125,7 +125,7 @@ export default {
     this.$on('update', (route) => {
       const { dirId, path } = route.params;
       const { ver, name } = route.query;
-      this.$store.dispatch(types.VIEW_VIDEO, { dirId, path, ver, name })
+      this.$store.dispatch(types.VIEW_VIDEO, { dirId, path: qs.decode(path), ver, name })
         .then(() => {
           // TODO: tmp use inited to support async init videojs
           this.inited = true;

@@ -13,6 +13,8 @@ function fetch$(input, options) {
   
   if (input.indexOf('api/settings') == -1) {
     options.headers['X-APP-VERSION'] = data.version;
+
+    // when dev mode use app-start to check version change
     if (process.env.APP_MODE == 'dev') {
       options.headers['X-APP-STARTAT'] = data.startAt;
     }

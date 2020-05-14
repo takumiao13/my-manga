@@ -15,6 +15,7 @@
 </template>
 
 <script>
+import Vue from 'vue';
 import ListItem from './ListItem.vue';
 export default {
   components: {
@@ -40,13 +41,23 @@ export default {
         children: 'children',
         className: ''
       })
-    }
+    },
+  },
+
+  provide() {
+    return {
+      eventHub: this.eventHub
+    } 
   },
 
   data() {
     return {
       depth: 1
     }
+  },
+
+  beforeCreate() {
+    this.eventHub = new Vue();
   },
 
   methods: {
@@ -56,6 +67,18 @@ export default {
 
     expandItem(item, ctx) {
       this.$emit('expanded', item, ctx);
+    },
+
+    collapseItem(item, ctx) {
+      this.$emit('collapsed', item, ctx);
+    },
+
+    collapseAll() {
+      this.eventHub.$emit('collapsed:all');
+    },
+
+    reset() {
+      this.eventHub.$emit('reset:all');
     }
   }
 }

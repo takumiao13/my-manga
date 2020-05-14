@@ -15,13 +15,19 @@ const Bounding = {
 
 class ImageService extends Service {
 
-  makeSrc(paths, escape) {
+  /**
+   * 
+   * @param {string[]|string} paths 
+   * @param {Boolean} escape escape `(` and `)`
+   * @param {string} dirId 
+   */
+  makeSrc(paths, escape, dirId) {
+    dirId = dirId || this.$store.getters[`${APP_NAMESPACE}/repo`].dirId
     const { BASE_URL } = this.$config.api;
-    const { dirId } = this.$store.getters[`${APP_NAMESPACE}/repo`];
     const path = isArray(paths) ? paths.join('/') : paths;
     let src = dirId && path && `${BASE_URL}img/${dirId}/${encodeURIComponent(path)}`;
     
-    // TODO: remove it ?
+    // escape () when in background-image
     if (src && escape) {
       src = src.replace(/(\(|\))/g, '\\$1');
     }

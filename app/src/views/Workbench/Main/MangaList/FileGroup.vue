@@ -1,22 +1,23 @@
 <template>
-  <div class="file-area mb-4" v-show="list.length">
+  <div class="file-area mb-4" v-show="list.length" :data-view-mode="viewMode">
     <div class="area-header">
-      <div class="actions float-right">
-      <icon 
-        v-if="viewMode == 'grid'"
-        name="th"
-        size="18"
-        @click.native="$emit('viewModeChange', 'list')"
-      />
-      <icon 
-        v-else-if="viewMode == 'list'"
-        name="th-list"
-        size="18" 
-        @click.native="$emit('viewModeChange', 'grid')"
-      />
-    </div>
-      
-      FILES - {{ list.length }} items
+      <div class="area-header-inner">
+        <div class="actions float-right">
+          <icon 
+            v-if="viewMode == 'grid'"
+            name="th"
+            size="18"
+            @click.native="$emit('viewModeChange', 'list')"
+          />
+          <icon 
+            v-else-if="viewMode == 'list'"
+            name="th-list"
+            size="18" 
+            @click.native="$emit('viewModeChange', 'grid')"
+          />
+        </div>
+        FILES - {{ list.length }} items
+      </div>
     </div>
 
     <div :class="{ 
@@ -42,7 +43,7 @@
         </div>
         
         <div v-show="viewMode == 'grid'" class="caption">
-          {{ item.name }}
+          <div>{{ item.name }}</div>
         </div>
 
         <div v-show="viewMode == 'list'" class="text-truncate">

@@ -5,7 +5,7 @@ class SettingsController extends Controller {
   async get(ctx) {
     const { service } = this;
     const { scope, key } = ctx.query;
-    const data = service.settings.get(scope, key);
+    const data = await service.settings.get(scope, key);
 
     ctx.body = { data };
   }
