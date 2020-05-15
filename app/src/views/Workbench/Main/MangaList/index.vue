@@ -266,7 +266,7 @@ export default {
         query: { kw, search, ver } 
       } = route;
       const { dirId } = this.repo;
-      let safepath = path ? qs.decode(path) : '';
+      let safepath = qs.decode(path);
 
       let promise = Promise.resolve();
 

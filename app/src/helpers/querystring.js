@@ -1,4 +1,6 @@
 function decode(str) {
+  if (!str) return str;
+
   try {
     // will cause filename with `+` error
     // str.replace(/\+/g, ' ')
@@ -9,6 +11,7 @@ function decode(str) {
 }
 
 function encode(str) {
+  if (!str) return str;
   return encodeURIComponent(str);
 }
 

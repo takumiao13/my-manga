@@ -48,17 +48,17 @@ import dateFormatFilter from '@/filters/dateFormat';
 // Services
 import $Service from '@/services';
 
-Vue.component('spinner', Spinner);
-Vue.component('navbar', Navbar);
-Vue.component('toolbar', Toolbar);
-Vue.component('icon', SvgIcon);
-Vue.component('nested-list', NestedList);
-Vue.component('side-toolbar', SideToolbar);
-Vue.component('data-view', DataView);
-Vue.component('addressbar', Addressbar);
-Vue.component('dropdown', Dropdown);
-Vue.component('video-player', VideoPlayer);
-Vue.component('modal', Modal);
+Vue.component('Spinner', Spinner);
+Vue.component('Navbar', Navbar);
+Vue.component('Toolbar', Toolbar);
+Vue.component('Icon', SvgIcon);
+Vue.component('NestedList', NestedList);
+Vue.component('SideToolbar', SideToolbar);
+Vue.component('DataView', DataView);
+Vue.component('Addressbar', Addressbar);
+Vue.component('Dropdown', Dropdown);
+Vue.component('VideoPlayer', VideoPlayer);
+Vue.component('Modal', Modal);
 
 Vue.directive('loading', loadingDirective);
 Vue.directive('click-out-side', clickOutSideDirective);

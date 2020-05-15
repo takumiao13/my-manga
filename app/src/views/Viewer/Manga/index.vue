@@ -7,7 +7,7 @@
         { 'viewer-autoscrolling': autoScrolling, open: locking }
       ]"
     >
-      <navbar
+      <Navbar
         :title="{ 
           content: pager, 
           className: 'text-center d-none d-md-block'
@@ -16,15 +16,19 @@
         :right-btns="rightBtns"
       />
     </div>
+
+    <!-- mouseover header lock viewer
     <div 
       v-show="!locking"
       class="viewer-topbar-placeholder" 
       @mouseenter="locking = true"
     />
+    -->
+
     <!-- /TOPBAR -->
 
     <!-- VIEWPORT -->
-    <viewport
+    <Viewport
       :hand="settings.handMode"
       :locking="locking"
       :autoScrolling="autoScrollToggle"
@@ -33,7 +37,7 @@
       @next="next"
     >
       <!-- TODO: may be support more mode later -->
-      <scroll-mode
+      <ScrollMode
         :gallery="images"
         :chapters="chapters"
         :page="page"
@@ -42,17 +46,18 @@
         :isFullscreen="isFullscreen"
         :autoScrolling="autoScrolling"
         :locking="locking"
+        :speed="speed"
         @pageChange="go"
         @chapterChange="goChapter"
       />
-    </viewport>
+    </Viewport>
     <!-- /VIEWPORT -->
 
     <div class="viewer-loading" v-show="pending">
-      <spinner class="loading-spinner" size="lg" tip="Loading" />
+      <Spinner class="loading-spinner" size="lg" tip="Loading" />
     </div>
 
-    <help-overlay
+    <HelpOverlay
       v-show="helpOpen"
       :hand="settings.handMode"
       @click.native="helpOpen = false"
@@ -62,7 +67,12 @@
       class="viewer-toolbar fixed-bottom" 
       :class="{ open: locking }"
     >
-      <seekbar :value="page" :max="count" @end="go" />
+      <Seekbar :value="page" :max="count" @end="go" />
+      <Controlbar
+        :speed="speed"
+        @auto-scroll="autoScrollToggle"
+        @speed="adjustScrollSpeed"
+      />
     </div>
 
     <div 
@@ -86,6 +96,7 @@ import { types } from '@/store/modules/viewer';
 import Viewport from './Viewport';
 import ScrollMode from './ScrollMode';
 import Seekbar from './Seekbar';
+import Controlbar from './Controlbar';
 import HelpOverlay from './HelpOverlay';
 
 export default {
@@ -93,6 +104,7 @@ export default {
     Viewport,
     ScrollMode,
     Seekbar,
+    Controlbar,
     HelpOverlay
   },
 
@@ -103,6 +115,7 @@ export default {
   data() {
     return {
       locking: true,
+      speed: 50, // px/s
       isFullscreen: this.fullscreen,
       helpOpen: false
     }
@@ -171,9 +184,6 @@ export default {
       }, {
         zoom: 'screen',
         text: 'Fit to screen'
-      }, {
-        zoom: 100,
-        text: '100%'
       }].map(item => ({
         ...item,
         click: () => this.zoomToggle(item.zoom)
@@ -181,64 +191,52 @@ export default {
 
       const selected = menu.map(item => item.zoom).indexOf(this.settings.zoom);
 
-      return this.autoScrolling ? 
-        [
-          leftHandBack,
-          {
-            icon: 'pause',
-            title: 'Stop scrolling',
-            click: () => this.autoScrollToggle(false)
-          }
-        ] : 
-        [
-          leftHandBack,
-          {
-            icon: this.isFullscreen ? 'compress' : 'expand',
-            tip: 'Fullscreen',
-            click: () => this.fullscreenToggle()
-          }, 
-          {
-            icon: 'page-alt',
-            tip: 'Page Display',
-            dropdown: {
-              props: {
-                menu: [{
-                  html: `
-                    Hand Mode : 
-                    <strong class="text-primary">
-                      ${capitalize(this.settings.handMode)}
-                    </strong>
-                  `,
-                  click: this.handModeToggle
-                }, {
-                  type: 'check',
-                  checked: this.settings.gaps,
-                  text: 'Show Gaps Between Pages',
-                  click: this.gapsToggle
-                }, {
-                  type: 'check',
-                  checked: this.settings.pagerInfo,
-                  text: 'Show Pager Info',
-                  click: this.pagerInfoToggle
-                }, {
-                  text: 'Auto Scrolling',
-                  click: () => this.autoScrollToggle(true)
-                }]
-              }
-            }
-          }, 
-          {
-            icon: 'search-plus',
-            tip: 'Zoom',
-            dropdown: {
-              props: {
-                type: 'select',
-                selected,
-                menu
-              }
+      return [
+        leftHandBack,
+        {
+          icon: this.isFullscreen ? 'compress' : 'expand',
+          tip: 'Fullscreen',
+          click: () => this.fullscreenToggle()
+        }, 
+        {
+          icon: 'page-alt',
+          tip: 'Page Display',
+          dropdown: {
+            props: {
+              menu: [{
+                html: `
+                  Hand Mode : 
+                  <strong class="text-primary">
+                    ${capitalize(this.settings.handMode)}
+                  </strong>
+                `,
+                click: this.handModeToggle
+              }, {
+                type: 'check',
+                checked: this.settings.gaps,
+                text: 'Show Gaps Between Pages',
+                click: this.gapsToggle
+              }, {
+                type: 'check',
+                checked: this.settings.pagerInfo,
+                text: 'Show Pager Info',
+                click: this.pagerInfoToggle
+              }]
             }
           }
-        ];
+        }, 
+        {
+          icon: 'search-plus',
+          tip: 'Zoom',
+          dropdown: {
+            props: {
+              type: 'select',
+              selected,
+              menu
+            }
+          }
+        }
+      ];
     }
   },
 
@@ -344,6 +342,17 @@ export default {
       });
     },
 
+    adjustScrollSpeed(val) {
+      if (this.speed === 10 && val < 0) return;
+      if (this.speed === 200 && val > 0) return;
+
+      if (val === 0) {
+        this.speed = this.$options.data().speed;
+      } else {
+        this.speed += val;
+      }
+    },
+
     // events
     handleBack() {
       if (this.$router._routerHistory.length === 1) {
@@ -364,13 +373,25 @@ export default {
     },
 
     handleKeydown($event) {
-      // when autoScrolling (no-pause) should disable keyboard events
-      if (this.autoScrolling && !this.locking) return;
-      
       $event.stopPropagation();
       const keyCode = $event.keyCode;
       const action = this.$consts.KEYBOARD_ACTION[this.settings.handMode];
 
+      if (keyCode == action.lock) {
+         $event.preventDefault();
+      }
+
+      // when autoScrolling (no-pause) should disable keyboard events
+      if (this.autoScrolling) {
+        if (keyCode === action.lock) {
+          this.lockToggle();
+        }
+
+        if (!this.locking) {
+          return
+        }  
+      }
+      
       switch (keyCode) {
         case action.help:
           $event.preventDefault();
@@ -386,11 +407,11 @@ export default {
           break;  
         case action.up:
           $event.preventDefault();
-          animateScrollTo('-=50', { animate: false });
+          animateScrollTo('-=100', { animate: false });
           break;
         case action.down:
           $event.preventDefault();
-          animateScrollTo('+=50', { animate: false });
+          animateScrollTo('+=100', { animate: false });
           break;
       }
     }
@@ -453,21 +474,23 @@ export default {
     display: block;
   }
 
-  .navbar-nav-left {
-    order: 2;
+  .topbar {
+    .navbar-nav-left {
+      order: 2;
 
-    .viewer-title .svg-icon {
-      display: none;
+      .viewer-title .svg-icon {
+        display: none;
+      }
     }
-  }
 
-  .navbar-nav-right {
-    order: 1;
-    margin-left: 0 !important;
-    
-    .dropdown-menu-right {
-      left: 0;
-      right: auto;
+    .navbar-nav-right {
+      order: 1;
+      margin-left: 0 !important;
+      
+      .dropdown-menu-right {
+        left: 0;
+        right: auto;
+      }
     }
   }
 }

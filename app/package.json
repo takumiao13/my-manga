@@ -16,7 +16,7 @@
   },
   "main": "main.js",
   "dependencies": {
-    "animate-scroll-to.js": "^0.1.4",
+    "animate-scroll-to.js": "^0.1.5",
     "bootstrap": "^4.4.1",
     "colorthief": "^2.3.0",
     "core-js": "^2.6.11",

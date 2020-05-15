@@ -90,7 +90,7 @@ const createModule = (state = { ...initialState }) => ({
         });
       }
 
-      return Object.assign(state.settings, { gaps })
+      return Object.assign({}, state.settings, { gaps })
     }
   },
 
@@ -217,7 +217,7 @@ const createModule = (state = { ...initialState }) => ({
     },
 
     [SETTINGS](state, payload) {
-      safeAssign(state.settings, payload);
+      state.settings = safeAssign(state.settings, payload);
     },
 
     [TOGGLE_AUTO_SCROLLING](state, payload) {

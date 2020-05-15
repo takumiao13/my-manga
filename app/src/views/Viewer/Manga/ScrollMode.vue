@@ -58,7 +58,8 @@ export default {
     },
     isFullscreen: Boolean,
     autoScrolling: Boolean,
-    locking: Boolean
+    locking: Boolean,
+    speed: Number
   },
 
   data() {
@@ -92,17 +93,20 @@ export default {
       }
     },
 
-    zoom() {
-      this.refresh();
-    },
-
     isFullscreen() {
       this.refresh();
     },
 
     settings(newVal, oldVal) {
-      if (newVal.gaps !== oldVal.gaps) {
-        this.refresh();
+      // when settings changed refresh
+      if (
+        newVal.gaps !== oldVal.gaps || 
+        newVal.zoom !== oldVal.zoom
+      ) {
+        this.$nextTick(() => {
+          this.refresh();
+          this.scrollToCurrPage(); 
+        });
       }
     },
 
@@ -116,6 +120,10 @@ export default {
         this[val ? 'pauseScroll' : 'resumeScroll']();
         this._$preventScroll(!val);
       } 
+    },
+
+    speed(val) {
+      this.changeScrollSpeed(val);
     }
   },
 
@@ -196,13 +204,14 @@ export default {
       let y = this._offsets[this.page - 1];
       // not covered image
       if (this.locking) {
-        y -= 48
+        let margin = 48;
         if (this.settings.gaps) {
-          y -= 2;
+          margin += 2;
         }
-        
+        y -= margin;
       }
-      console.log('scrollTo', this.page, y, this.locking);
+
+      // console.log('scrollTo', this.page, y, this.locking);
 
       window._ignoreScrollEvent = true;
       window.scrollTo(0, y);
@@ -213,7 +222,7 @@ export default {
       console.log('start');
       if (!this._scroller) {
         this._scroller = animateScrollTo('bottom', {
-          speed: 50
+          speed: this.speed
         }, () => {
           this.stopScroll();
         });
@@ -227,6 +236,12 @@ export default {
         console.log('stop');
         this._scroller.pause();
         this.$store.commit(types.TOGGLE_AUTO_SCROLLING, { autoScrolling: false });
+      }
+    },
+
+    changeScrollSpeed(value) {
+      if (this._scroller) {
+        this._scroller.speed(value);
       }
     },
 
