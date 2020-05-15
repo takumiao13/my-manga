@@ -1,6 +1,6 @@
 const Service = require('./_base');
 const fs = require('../helpers/fs');
-const { take, escapeRegExp } = require('../helpers/utils'); 
+const { take, get, escapeRegExp } = require('../helpers/utils'); 
 const to = require('await-to-js').default;
 const sizeOf = require('image-size');
 const pathFn = require('path');
@@ -338,8 +338,8 @@ async function traverse({
 
     let _filterdFiles = [];
     const _versionFiles = [];
-    const _chapterFiles = [];
-    const _chapterWithCoverFiles = [];
+    let _chapterFiles = [];
+    let _chapterWithCoverFiles = [];
 
     files
       .filter(ignorePathFilter)
@@ -395,7 +395,8 @@ async function traverse({
     // - else directory consider it as `FILE`
     _isManga = _versionFiles.length || _chapterFiles.length;
 
-    const fixedTopNames = ['banner', 'cover']
+    // sort files
+    const fixedTopNames = ['banner', 'cover'];
     _chapterFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames));
     _chapterWithCoverFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames));
     _filterdFiles.sort((a, b) => fs.filenameComparator(
@@ -404,7 +405,14 @@ async function traverse({
       fixedTopNames
     ));
 
-    const filesLength = _filterdFiles.length;
+
+    // speical sort for chapters
+    const spConfig = get(metadata, 'chapters.sort');
+    if (spConfig) {
+      _chapterFiles = adjustChapters(_chapterFiles, spConfig);
+      _chapterWithCoverFiles = adjustChapters(_chapterWithCoverFiles, spConfig);
+    }
+
     if (maxDepth === 0) _filterdFiles = take(_filterdFiles, LAST_LOOP_COUNT);
     
     // build async traverse task
@@ -591,6 +599,46 @@ async function readMeta(path) {
   }
   
   return metadata;
+}
+
+const adjustChapters = (chs, config) => {
+  const _chs = [];
+  const shouldAdjustChs = {};
+
+  Object.keys(config).forEach(key => {
+    config[key].forEach(ch => {
+      shouldAdjustChs[ch] = 1;
+    })
+  });
+
+  for (let i = 0; i < chs.length; i++) {
+    const ch = chs[i];
+    const { chapterName } = ch;
+
+    // if not match just put to results
+    if (!config[chapterName] && !shouldAdjustChs[chapterName]) {
+      _chs.push(ch);
+    } else if (config[chapterName]) {
+      // find after chapters
+      const afterChs = findAfterChs(chs, config[chapterName]);
+      _chs.push(ch, ...afterChs);
+    }
+  }
+
+  // handle first and last chapters
+  if (config.$1) {
+    _chs.unshift(...findAfterChs(chs, config.$1));
+  }
+
+  if (config.$$) {
+    _chs.push(...findAfterChs(chs, config.$$));
+  }
+
+  return _chs;
+
+  function findAfterChs(chs, names) {
+    return chs.filter(ch => names.includes(ch.chapterName));
+  }
 }
 
 const isChapter = (name, { parentName, metadata, filepath }) => {
