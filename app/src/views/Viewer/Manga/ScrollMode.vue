@@ -78,7 +78,7 @@ export default {
       if (val) {
         this.$nextTick(() => {
           this.refresh('gallery');
-          this.scrollToCurrPage(true); 
+          this.scrollToCurrPage(); 
         });
       }
     },
@@ -131,7 +131,7 @@ export default {
   mounted() {
     if (this.gallery.length) {
       this.refresh()
-      this.scrollToCurrPage(true);
+      this.scrollToCurrPage();
     }
   },
 
@@ -192,10 +192,18 @@ export default {
       console.log(this._offsets);
     },
 
-    scrollToCurrPage(margin) {
+    scrollToCurrPage() {
       let y = this._offsets[this.page - 1];
-      if (margin) y -= 48
-      console.log('scrollTo', this.page, y, margin);
+      // not covered image
+      if (this.locking) {
+        y -= 48
+        if (this.settings.gaps) {
+          y -= 2;
+        }
+        
+      }
+      console.log('scrollTo', this.page, y, this.locking);
+
       window._ignoreScrollEvent = true;
       window.scrollTo(0, y);
     },
