@@ -112,17 +112,26 @@ class MangaService extends Service {
   async search(dirId, path = '', queryparams) {
     const { db } = await this._indexedDB.get(dirId);
     const mangaColl = db.getCollection('mangas');
-    let { keyword, version } =  queryparams;
+    let { keyword, ver } =  queryparams;
     const queryObject = {};
 
+    if (!keyword && !ver) {
+      return [];
+    }
+
     if (keyword) {
-      if (path) keyword = `${path}/${keyword}`;
-      queryObject.name = { $regex : new RegExp(keyword, 'i') };
+      queryObject.name = { $regex: new RegExp(keyword, 'i') };
+
+      // search manga in path
+      if (path) {
+        queryObject.path = { $regex: new RegExp(path, 'i') };
+      }
     }
     
-    if (version) {
-      if (!isArray(version)) version = [version];
-      queryObject.version = { $contains : version };
+    if (ver) {
+      ver = ver.replace(/\s/g, '+');
+      if (!isArray(ver)) ver = [ver];
+      queryObject.verNames = { $contains : ver };
     }
 
     const results = mangaColl
@@ -130,8 +139,8 @@ class MangaService extends Service {
       .find(queryObject)
       .limit(200)
       .data();
-    
-      return results;
+
+    return results;
   }
 
   /**
@@ -139,16 +148,22 @@ class MangaService extends Service {
    * 
    * @param {string} dirId 
    */
-  async version(dirId) {
+  async versions(dirId) {
     const { db } = await this._indexedDB.get(dirId);
     const mangaColl = db.getCollection('mangas');
     const results = mangaColl
       .chain()
-      .find({ version: { $exists: true }})
-      .extract('version') // ?? has problem ??
+      .find({ verNames: { $exists: true }})
       .data();
 
-    return results;
+
+    const versions = new Set();
+
+    results.forEach(manga => {
+      manga.verNames.forEach(v => versions.add(v));
+    });
+
+    return Array.from(versions).sort();
   }
 
   /**
@@ -607,18 +622,27 @@ const isVersion = (name, { parentName } = {}) => {
   }
 
   const basename = parentName ? `^${parentName}` : '';
+  // filename like `foo [ver1] [ver2]`
   const baskets = '((?:\\s\\[[^\\]]*?\\]){0,})';
-	const suffix = '(?:\\.(mp4|pdf|zip))?';
+  // filetname list `foo.mp4` `foo.zip`
+  const suffix = '(?:\\.(mp4|pdf|zip))?';
+  
+  // make RegExp
 	const reStr = `${basename}${baskets}${suffix}$`;
   const versionRE = new RegExp(reStr);
   const matched = name.match(versionRE);
+
+  // when filename is contains versions
   if (matched) {
+    // a -> verNames
+    // b -> suffix
     let [ _, a, b ] = matched;
     // handle combined versions
     // [ver1] [ver2] -> [ver1+ver2];
     a = a.trim().replace(/\]\s\[/g, '+').replace(/\[|\]/g, '');
 
     if (a && b) {
+      // like `mp4.voice` both has ver and suffix
       return b + '.' + a;
     } else {
       return a || b;

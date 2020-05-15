@@ -24,7 +24,7 @@
             v-for="ver in filterVers(item.verNames)"
             :key="ver"
           >
-            {{ ver.toUpperCase() }}
+            {{ ver | verName }}
           </li>
         </ul>
       </div>
@@ -84,9 +84,6 @@
 </template>
 
 <script>
-
-import date from '@/helpers/date';
-
 export default {
   props: {
     item: Object,
@@ -113,10 +110,6 @@ export default {
     filterVers(vers) {
       return vers && vers
         .filter(item => item !== 'default')
-        .map(item => {
-          const parts = item.split('.');
-          return parts[1] || parts[0];
-        });
     }
   },
 
@@ -124,10 +117,6 @@ export default {
     stripVer(value) {
       const striped = value.replace(/(?:\s\[[^\]]*?\]){0,}/g, '');
       return striped
-    },
-
-    dateFormat(value) {
-      return date.format(new Date(value), 'yyyy-mm-dd HH:MM');
     }
   }
 }

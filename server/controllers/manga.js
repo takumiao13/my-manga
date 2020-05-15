@@ -28,10 +28,10 @@ class MangaController extends Controller {
     ctx.body = data;
   }
 
-  async version(ctx) {
+  async versions(ctx) {
     const { service } = this;
     const { dirId } = ctx.params;
-    const data = await service.manga.version(dirId, ctx.query);
+    const data = await service.manga.versions(dirId);
     ctx.body = data;
   }
 
@@ -122,7 +122,7 @@ class MangaController extends Controller {
 
 MangaController.actions = [ 
   'folder', 'list', 'pick', 
-  'latest', 'search', 'version', 
+  'latest', 'search', 'versions', 
   'share', 'expand' 
 ];
 

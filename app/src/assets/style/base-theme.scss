@@ -192,6 +192,13 @@
   }
 }
 
+// Common
+//==
+::placeholder {
+  color: $light-400 !important;
+  font-size: .85em;
+}
+
 // Addressbar
 //==
 .addressbar {

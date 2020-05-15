@@ -41,6 +41,10 @@ import VueNotifications from 'vue-notification'
 import loadingDirective from '@/directives/loading';
 import clickOutSideDirective from '@/directives/click-out-side';
 
+// Filters
+import verNameFilter from '@/filters/verName';
+import dateFormatFilter from '@/filters/dateFormat';
+
 // Services
 import $Service from '@/services';
 
@@ -58,6 +62,9 @@ Vue.component('modal', Modal);
 
 Vue.directive('loading', loadingDirective);
 Vue.directive('click-out-side', clickOutSideDirective);
+
+Vue.filter('verName', verNameFilter);
+Vue.filter('dateFormat', dateFormatFilter);
 
 Vue.use(VueQriously);
 Vue.use(VueLazyload, {

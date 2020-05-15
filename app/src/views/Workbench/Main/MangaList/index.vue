@@ -186,7 +186,7 @@ export default {
     },
 
     needAddress() {
-      return Boolean(this.viewType !== 'manga' && this.navs.length);
+      return Boolean(this.viewType === 'file' && this.navs.length);
     },
   },
 
@@ -256,26 +256,35 @@ export default {
     fetchMangas(route, { isBack = false, clear = false } = {}) {
       const { 
         params: { path }, 
-        query: { kw, search, ver } 
+        query: { kw, search, ver, repo } 
       } = route;
       const { dirId } = this.repo;
-      const safepath = qs.decode(path);
-
-      console.log('fetchManga: ', safepath);
+      let safepath = qs.decode(path);
 
       let promise = Promise.resolve();
 
-      if (path !== this.path || clear) {
+      if (safepath !== this.path || clear || search) {
+
+        // change path if search in repo scope
+        if (search && repo == 1) {
+          safepath = '';
+        }
+
+        console.log('fetchManga: ', safepath);
+
         promise = promise.then(() => 
           this.$store.dispatch(mangaTypes.FETCH, { 
-            isBack, dirId, path: safepath, ver, search, clear,
+            isBack, dirId, ver, search, clear,
+            path: safepath,
             keyword: kw, 
           })
         );
       }
 
+      // TODO: search type use another name replace `ver`
+      // when not search type
       // attach version handle multi versions
-      if (ver) {
+      if (!search && ver) {
         promise = promise.then(() => 
           this.$store.dispatch(mangaTypes.TOGGLE_VERSION, {
             dirId, ver

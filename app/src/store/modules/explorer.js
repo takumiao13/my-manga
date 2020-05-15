@@ -8,14 +8,16 @@ export const NAMESPACE = 'explorer';
 // Types Enum
 const FETCH = 'FETCH';
 const LATEST = 'LATEST';
+const VERSIONS = 'VERSIONS';
 
 const statusHelper = createRequestStatus('status');
 
-export const types = createTypesWithNamespace([ FETCH, LATEST ], NAMESPACE);
+export const types = createTypesWithNamespace([ FETCH, LATEST, VERSIONS ], NAMESPACE);
 
 const initialState = {
   folders: null,
   latest: [],
+  versions: null,
   ...statusHelper.state()
 };
 
@@ -68,6 +70,16 @@ const createModule = (state = { ...initialState }) => ({
         .then((latest) => {
           commit(LATEST, { latest });
         })
+    },
+
+    [VERSIONS]({ state, commit }, payload = {}) {
+      const { dirId } = payload;
+      if (state.versions) return;
+      
+      return mangaAPI.versions({ dirId })
+        .then(versions => {
+          commit(VERSIONS, { versions });
+        })
     }
   },
 
@@ -102,6 +114,11 @@ const createModule = (state = { ...initialState }) => ({
     [LATEST](state, payload) {
       const { latest } = payload;
       state.latest = latest;
+    },
+
+    [VERSIONS](state, payload) {
+      const { versions } = payload;
+      state.versions = versions;
     },
 
     ...statusHelper.mutation()

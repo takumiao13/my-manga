@@ -15,7 +15,7 @@ const TOGGLE_VERSION = 'TOGGLE_VERSION';
 const statusHelper = createRequestStatus('status');
 
 export const types = createTypesWithNamespace([ 
-  FETCH, SHARE, 
+  FETCH, SHARE,
   ADD_VERSION, TOGGLE_VERSION 
 ], NAMESPACE);
 
@@ -54,7 +54,7 @@ export const cacheStack = {
    * @param {*} path current path
    * @param {*} kw keyword
    */
-  find(dirId, path = '', kw) {
+  find(dirId, path = '', kw, ver) {
     const index = this._value
       .map(item => item.path)
       .lastIndexOf(path);
@@ -62,7 +62,7 @@ export const cacheStack = {
     //console.log('--->', index, dirId, kw);
     if (~index) {
       const target = this._value[index];
-      if (target._dirId === dirId && target._kw === kw) {
+      if (target._dirId === dirId && target._kw === kw && target._ver === ver) {
         return index;
       } else {
         return -1
@@ -132,8 +132,8 @@ const createModule = (state = { ...initialState }) => ({
   actions: {
     [FETCH]({ commit }, payload = {}) {
       let index = -1;
-      const { dirId, path, isBack, search, keyword, clear } = payload;
-      if (isBack) index = cacheStack.find(dirId, path, keyword);
+      const { dirId, path, isBack, search, keyword, clear, ver } = payload;
+      if (isBack) index = cacheStack.find(dirId, path, keyword, ver);
       // console.log(isBack, index, path);
 
       // hack no flashing when random manga
@@ -165,6 +165,7 @@ const createModule = (state = { ...initialState }) => ({
         
         if (search) {
           params.keyword = keyword;
+          params.ver = ver;
         }
 
         if (clear) {
@@ -176,7 +177,8 @@ const createModule = (state = { ...initialState }) => ({
             cacheStack[!clear ? 'push' : 'replace'](Object.assign(res, {
               _prevPath: path, // store the prev path
               _dirId: dirId,
-              _kw: keyword
+              _kw: keyword,
+              _ver: ver
             }));
 
             commit(FETCH, res);

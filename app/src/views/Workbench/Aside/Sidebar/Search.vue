@@ -12,27 +12,51 @@
               class="form-control" 
               placeholder="Search words"
               v-model="keyword"
-              required
             />
-            <!-- <div class="input-group-append">
+            <div class="input-group-append">
               <button
                 type="button"
                 class="btn btn-outline-secondary"
-                @click="handleChangeSearchScope"
+                :class="{ disabled: disableToggleScope }"
+                @click="handleToggleSearchScope"
               >
-
+                <icon :name="inRepoScope ? 'warehouse' : 'folder'" />
               </button>
-            </div> -->
+            </div>
           </div>
           <small class="form-text text-muted">
-            Search in current repo. 
-            <!-- Search in current folder with sub folders. -->
+            Search in current 
+            <span v-if="inRepoScope">repo</span>
+            <span v-else>folder with sub folders</span>
+            .
           </small>
         </div>
 
+        <div class="form-group">
+          <select class="custom-select" v-model="ver">
+            <option selected value="">Please select version</option>
+            <option 
+              v-for="name in versions"
+              :key="name"
+              :value="name"
+            >
+              {{ name.toUpperCase() }}
+            </option>
+          </select>
+        </div>
+
+        <hr />
 
         <button type="submit" class="btn btn-outline-secondary btn-block search-btn">
           SEARCH
+        </button>
+
+        <button
+          type="button" 
+          class="btn btn-link btn-block reset-btn"
+          @click="handleReset"
+        >
+          RESET
         </button>
       </form>
     </div>
@@ -40,13 +64,16 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex';
-import { types } from '@/store/modules/app';
+import { mapState, mapGetters } from 'vuex';
+import { types } from '@/store/modules/explorer';
+import { types as appTypes } from '@/store/modules/app';
 
 export default {
   data() {
     return {
       keyword: '',
+      ver: '',
+      searchInRepo: true,
       title: {
         content: 'Search',
         className: 'navbar-brand-xs'
@@ -55,27 +82,60 @@ export default {
   },
 
   computed: {
+    ...mapState('explorer', [ 'versions' ]),
+
     ...mapGetters('app', [ 'repo' ]),
+
+    disableToggleScope() {
+      // when in root or in manga type
+      // we cannot toggle search scope.
+      const { params: { path }, query: { type }} = this.$route;
+      return !path || type === 'manga';
+    },
+
+    inRepoScope() {
+      return this.searchInRepo || this.disableToggleScope;
+    }
+  },
+
+  created() {
+    const { dirId } = this.repo;
+    this.$store.dispatch(types.VERSIONS, { dirId });
   },
 
   methods: {
 
-    handleChangeSearchScope() {
-      
+    handleToggleSearchScope() {
+      if (this.disableToggleScope) return;
+      // toggle search scope
+      this.searchInRepo = !this.searchInRepo;
     },
 
     handleSearch($event) {
       $event.preventDefault();
 
       const { dirId } = this.repo;
-      //this.$store.dispatch(types.SEARCH, { dirId, keyword: this.keyword });
+      const { path } = this.$route.params;
+      
       this.$router.push({
         name: 'explorer', 
-        params: { dirId },
-        query: { search: 1, kw: this.keyword }
+        params: { dirId, path },
+        query: { 
+          search: 1,
+          kw: this.keyword,
+          repo: this.searchInRepo ? 1 : 0,
+          ver: this.ver
+        }
       });
 
-      this.$store.commit(types.TOGGLE_ASIDE, { open: false });
+      this.$store.commit(appTypes.TOGGLE_ASIDE, { open: false });
+    },
+
+    handleReset() {
+      const { keyword, searchInRepo, ver } = this.$options.data();
+      this.keyword = keyword;
+      this.ver = ver;
+      this.searchInRepo = searchInRepo;
     }
 
   }

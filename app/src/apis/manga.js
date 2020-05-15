@@ -44,8 +44,8 @@ function _attachPlaceholder(mangas) {
   });
 }
 
-function search({ dirId, path, keyword }) {
-  const url = `${_buildURL(dirId, path)}/search?keyword=${keyword}`;
+function search({ dirId, path, keyword, ver }) {
+  const url = `${_buildURL(dirId, path)}/search?keyword=${keyword}&ver=${ver}`;
   return fetch(url).then(res => {
     const obj = { path: '', children: res };
     return _transformResponse(obj);
@@ -97,6 +97,11 @@ function latest({ dirId }) {
   return fetch(url).then(res => _attachPlaceholder(res));
 }
 
+function versions({ dirId }) {
+  const url = `${_buildURL(dirId)}/versions`;
+  return fetch(url);
+}
+
 function share(longUrl) {
   const url = 'api/mangas/share';
   return fetch(url, {
@@ -114,5 +119,6 @@ export default {
   folder,
   pick,
   latest,
-  share
+  share,
+  versions
 }
