@@ -1,6 +1,8 @@
 function decode(str) {
   try {
-    return decodeURIComponent(str.replace(/\+/g, ' '));
+    // will cause filename with `+` error
+    // str.replace(/\+/g, ' ')
+    return decodeURIComponent(str);
   } catch (err) {
     return str;
   }
