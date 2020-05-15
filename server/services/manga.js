@@ -213,6 +213,13 @@ class MangaService extends Service {
 
   async createIndex(baseDir, callback) {
     const dirId = this.service.repo.dirId(baseDir);
+    const repo = this.service.repo.get(dirId);
+
+    if (!repo.accessed) {
+      callback({ message: 'repo unaccessed' });
+      return;
+    }
+
     const options = this._indexedDB.get(dirId);
     const { db, filepath } = options;
     const mangasColl = db.getCollection('mangas');

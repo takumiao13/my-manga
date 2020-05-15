@@ -14,11 +14,9 @@ class RepoService extends Service {
   }
 
   set(dirId, { name, baseDir }) {
-    this.repoMap[dirId] = { name, baseDir, dirId };
-    this.cryptoedRepos.push({ 
-      name, dirId,
-      accessed: fs.accessSync(baseDir)
-    });
+    const accessed = fs.accessSync(baseDir)
+    this.repoMap[dirId] = { name, baseDir, dirId, accessed };
+    this.cryptoedRepos.push({ name, dirId, accessed });
   }
 
   get(dirId) {

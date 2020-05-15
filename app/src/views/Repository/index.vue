@@ -28,9 +28,10 @@
         REPOS - {{ repos.length }} items
       </p>
 
-      <!-- old repo list
+      
       <div class="list-group">
-        <div 
+        <div
+          :title="!repo.accessed ? 'Repo is unaccessed' : repo.name"
           :class="['list-group-item', 'text-truncate', { disabled: !repo.accessed }]"
           v-for="(repo, index) in repos"
           :key="index"
@@ -50,16 +51,24 @@
             name="check"
             class="mr-3"
           />
+          <icon 
+            v-else-if="!repo.accessed"
+            name="ban"
+            class="mr-3"
+          />
           <div 
             v-else
             class="svg-icon mr-3 icon-placeholder"
           />
 
-          <strong>{{ repo.name }}</strong>&nbsp;
+          <strong>
+            {{ repo.name }}
+          </strong>
+          &nbsp;
         </div>
       </div>
-      -->
-
+      
+      <!--
       <div class="row">
         <div 
           class="col-12 col-md-6 mb-3"
@@ -83,6 +92,7 @@
           </div>
         </div>
       </div>
+      -->
     </div>
   </div>
 </template>
