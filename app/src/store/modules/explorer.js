@@ -17,7 +17,7 @@ export const types = createTypesWithNamespace([ FETCH, LATEST, VERSIONS ], NAMES
 const initialState = {
   folders: null,
   latest: [],
-  versions: null,
+  versions: [],
   ...statusHelper.state()
 };
 
@@ -72,10 +72,8 @@ const createModule = (state = { ...initialState }) => ({
         })
     },
 
-    [VERSIONS]({ state, commit }, payload = {}) {
+    [VERSIONS]({ commit }, payload = {}) {
       const { dirId } = payload;
-      if (state.versions) return;
-      
       return mangaAPI.versions({ dirId })
         .then(versions => {
           commit(VERSIONS, { versions });

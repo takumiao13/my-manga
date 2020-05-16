@@ -214,14 +214,21 @@ export default {
   },
 
   beforeRouteUpdate(to, from, next) {
-    // check only change activity 
-    if (this.appError || (eq(to.params, from.params))) {
-      return next();
+    if (this.appError) return next();
+
+    // check route is changed (besides `activity` querystring)
+    if (JSON.stringify(to.params) == JSON.stringify(from.params)) {
+      const { activity: a, ...toQuery  } = to.query;
+      const { activity: b, ...fromQuery } = from.query;
+
+      if (JSON.stringify(toQuery) == JSON.stringify(fromQuery)) {
+        return next();
+      }
     }
 
-    const { isBack } = to.meta;
+    // reset data and fetch mangas
     this.refreshData(to);
-    to.meta.resolver = this.fetchMangas(to, { isBack });
+    to.meta.resolver = this.fetchMangas(to, { isBack: to.meta.isBack });
     next();
   },
 
@@ -256,30 +263,28 @@ export default {
     fetchMangas(route, { isBack = false, clear = false } = {}) {
       const { 
         params: { path }, 
-        query: { kw, search, ver, repo } 
+        query: { kw, search, ver } 
       } = route;
       const { dirId } = this.repo;
-      let safepath = qs.decode(path);
+      let safepath = path ? qs.decode(path) : '';
 
       let promise = Promise.resolve();
 
-      if (safepath !== this.path || clear || search) {
 
-        // change path if search in repo scope
-        if (search && repo == 1) {
-          safepath = '';
-        }
 
-        console.log('fetchManga: ', safepath);
+      // change path if search in repo scope
+      // if (search && repo == 1) {
+      //   safepath = '';
+      // }
 
-        promise = promise.then(() => 
-          this.$store.dispatch(mangaTypes.FETCH, { 
-            isBack, dirId, ver, search, clear,
-            path: safepath,
-            keyword: kw, 
-          })
-        );
-      }
+      promise = promise.then(() => 
+        this.$store.dispatch(mangaTypes.FETCH, { 
+          isBack, dirId, ver, search, clear,
+          path: safepath,
+          keyword: kw, 
+        })
+      );
+
 
       // TODO: search type use another name replace `ver`
       // when not search type

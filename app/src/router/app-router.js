@@ -195,6 +195,5 @@ export function historyName(route) {
     .replace(/activity=([^&#]*)&?/, '')
     .replace(/\?$/, '');
 
-  console.log(name);
   return name;
 }

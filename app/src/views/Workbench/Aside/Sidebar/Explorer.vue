@@ -97,6 +97,7 @@ export default {
 
     this.fetchFolders();
     this.fetchLatest();
+    this.fetchVersions();
   },
 
   beforeRouteUpdate(to, from, next) {
@@ -109,6 +110,7 @@ export default {
 
     this.fetchFolders();
     this.fetchLatest();
+    this.fetchVersions();
 
     next();
   },
@@ -122,6 +124,11 @@ export default {
     fetchLatest() {
       const { dirId } = this.repo;
       return this.$store.dispatch(types.LATEST, { dirId });
+    },
+
+    fetchVersions() {
+      const { dirId } = this.repo;
+      return this.$store.dispatch(types.VERSIONS, { dirId });
     },
 
     closeSidebar() {

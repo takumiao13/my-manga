@@ -13,7 +13,7 @@
               placeholder="Search words"
               v-model="keyword"
             />
-            <div class="input-group-append">
+            <!-- <div class="input-group-append">
               <button
                 type="button"
                 class="btn btn-outline-secondary"
@@ -22,13 +22,12 @@
               >
                 <icon :name="inRepoScope ? 'warehouse' : 'folder'" />
               </button>
-            </div>
+            </div> -->
           </div>
           <small class="form-text text-muted">
-            Search in current 
+            search in current 
             <span v-if="inRepoScope">repo</span>
             <span v-else>folder with sub folders</span>
-            .
           </small>
         </div>
 
@@ -43,6 +42,9 @@
               {{ name.toUpperCase() }}
             </option>
           </select>
+          <small class="form-text text-muted">
+            verions of manga
+          </small>
         </div>
 
         <hr />
@@ -98,11 +100,6 @@ export default {
     }
   },
 
-  created() {
-    const { dirId } = this.repo;
-    this.$store.dispatch(types.VERSIONS, { dirId });
-  },
-
   methods: {
 
     handleToggleSearchScope() {
@@ -123,7 +120,7 @@ export default {
         query: { 
           search: 1,
           kw: this.keyword,
-          repo: this.searchInRepo ? 1 : 0,
+          // repo: this.searchInRepo ? 1 : 0,
           ver: this.ver
         }
       });

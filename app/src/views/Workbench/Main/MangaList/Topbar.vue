@@ -42,11 +42,14 @@ export default {
     ...mapGetters('app', [ 'repo' ]),
 
     leftBtns() {
-      return (this.viewType === 'file') ? [{
+
+      const fileBtns = [{
         icon: 'bars',
         className: 'd-inline-block d-md-none',
         click: this.handleToggleSidebar
-      }] : [{
+      }];
+
+      const mangaBtns = [{
         icon: 'arrow-left',
         tip: 'Back',
         click: this.handleBack
@@ -54,7 +57,21 @@ export default {
         icon: 'bars',
         className: 'd-inline-block d-md-none',
         click: this.handleToggleSidebar
+      }];
+
+      const searchBtns = [{
+        icon: 'arrow-left',
+        tip: 'Back',
+        click: this.handleBack
       }]
+
+      const buttonMap = {
+        manga: mangaBtns,
+        search: searchBtns,
+        file: fileBtns
+      };
+
+      return buttonMap[this.viewType];
     },
 
     rightBtns() {
