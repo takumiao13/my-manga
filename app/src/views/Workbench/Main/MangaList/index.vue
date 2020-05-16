@@ -5,7 +5,7 @@
       'addressbar-collapsed': !showAddress || !needAddress
     }"
   >
-    <topbar
+    <Topbar
       :title="topbarTitle"
       :view-type="viewType"
       :navs="navs"
@@ -13,7 +13,7 @@
       @refresh="handleRefresh"
     />
     
-    <data-view 
+    <DataView 
       class="main-explorer-container"
       :class="{ 'has-addressbar' : needAddress }"
       :loading="pending"
@@ -22,7 +22,7 @@
     >
       <div class="row" v-show="success">
         <!-- METADATA -->
-        <meta-data
+        <Metadata
           v-if="isManga"
           class="col-12" 
           ref="metadata"
@@ -33,7 +33,7 @@
         <div class="area-container mt-3 col-12" v-show="!sharing">
 
           <!-- LATEST -->
-          <latest-group 
+          <LatestGroup 
             v-if="!path && !isSearch && latest.length"
             :list="latest"
             :active-path="activePath"
@@ -42,7 +42,7 @@
           />
 
           <!-- FILE -->
-          <file-group
+          <FileGroup
             :view-mode="viewMode.file"
             :list="files"
             :active-path="activePath"
@@ -51,7 +51,7 @@
           />
 
           <!-- MANGA -->
-          <manga-group
+          <MangaGroup
             :view-mode="viewMode.manga"
             :list="mangas"
             @viewModeChange="(mode) => viewMode.manga = mode"
@@ -59,7 +59,7 @@
           />
 
           <!-- CHAPTER -->
-          <chapter-group
+          <ChapterGroup
             :list="chapters"
             :active-name="activeChapter"
             :metadata="metadata"
@@ -67,13 +67,13 @@
           />
 
           <!-- GALLERY -->
-          <gallery-group
+          <GalleryGroup
             :list="images"
             @item-click="readManga"
           />
         </div>      
       </div>
-    </data-view>
+    </DataView>
   </div>
 </template>
 
@@ -87,7 +87,7 @@ import { mapState, mapGetters } from 'vuex';
 
 // Components
 import Topbar from './Topbar';
-import MetaData from './Metadata';
+import Metadata from './Metadata';
 import LatestGroup from './LatestGroup';
 import FileGroup from './FileGroup';
 import ChapterGroup from './ChapterGroup';
@@ -97,7 +97,7 @@ import GalleryGroup from './GalleryGroup';
 export default {
   components: {
     Topbar,
-    MetaData,
+    Metadata,
     LatestGroup,
     FileGroup,
     ChapterGroup,
@@ -484,7 +484,7 @@ export default {
 // over the below list-group-item
 [data-view-mode="list"] {
   .area-header-inner {
-    border-bottom: 1px solid;  
+    border-bottom: .5px solid;  
   }
 }
 

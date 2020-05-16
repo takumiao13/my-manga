@@ -40,7 +40,6 @@
 <script>
 import { debounce } from '@/helpers/utils';
 import { getScrollTop, getScrollHeight, getOffsetHeight } from '@/helpers/dom';
-import { types } from '@/store/modules/viewer';
 import animateScrollTo from 'animate-scroll-to.js';
 
 export default {
@@ -56,7 +55,7 @@ export default {
       type: [ String, Number ],
       default: 'width'
     },
-    isFullscreen: Boolean,
+    fullscreen: Boolean,
     autoScrolling: Boolean,
     locking: Boolean,
     speed: Number
@@ -93,7 +92,7 @@ export default {
       }
     },
 
-    isFullscreen() {
+    fullscreen() {
       this.refresh();
     },
 
@@ -204,15 +203,14 @@ export default {
       let y = this._offsets[this.page - 1];
       // not covered image
       if (this.locking) {
-        let margin = 48;
-        if (this.settings.gaps) {
-          margin += 2;
-        }
-        y -= margin;
+        y -= 48;
+      }
+
+      if (this.settings.gaps) {
+        y -= 2;
       }
 
       // console.log('scrollTo', this.page, y, this.locking);
-
       window._ignoreScrollEvent = true;
       window.scrollTo(0, y);
     },
@@ -235,7 +233,7 @@ export default {
       if (this.autoScrolling) {
         console.log('stop');
         this._scroller.pause();
-        this.$store.commit(types.TOGGLE_AUTO_SCROLLING, { autoScrolling: false });
+        this.$emit('scrollEnd');
       }
     },
 
@@ -302,6 +300,7 @@ export default {
   cursor: pointer;
   position: relative;
   z-index: 3; // over `viewer-viewport`
+  background: #666;
 
   &:hover {
     color: #fff;

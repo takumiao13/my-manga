@@ -1,7 +1,7 @@
 <template>
   <div class="mobile">
     <div class="topbar">
-      <navbar :title="title" />
+      <Navbar :title="title" />
     </div>
     <div>
       <div class="qrcode-wrapper mb-3 mt-5">

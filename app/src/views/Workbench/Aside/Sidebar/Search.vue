@@ -1,7 +1,7 @@
 <template>
   <div id="workbench.aside.sidebar.search">
     <div class="topbar">
-      <navbar :title="title" />
+      <Navbar :title="title" />
     </div>
     <div class="p-3">
       <form @submit="handleSearch">

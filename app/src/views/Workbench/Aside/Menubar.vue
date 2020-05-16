@@ -5,7 +5,7 @@
       :title="asideOpen ? 'Close Aside' : 'Toggle Sidebar'"
       @click="toggleSidebar"
     >
-      <icon :name="asideOpen ? 'times' : 'bars'" />
+      <Icon :name="asideOpen ? 'times' : 'bars'" />
     </a>
 
     <a
@@ -14,7 +14,7 @@
       title="Repository"
       @click="gotoRepos"
     >
-      <icon name="warehouse" />
+      <Icon name="warehouse" />
     </a>
 
     <a
@@ -22,7 +22,7 @@
       :class="['menubar-btn', { active: isActive('explorer') }]" 
       @click="toggleActivity('explorer')"
     >
-      <icon name="folders" />
+      <Icon name="folders" />
     </a>
 
     <a
@@ -30,7 +30,7 @@
       :class="['menubar-btn', { active: isActive('search') }]" 
       @click="toggleActivity('search')"
     >
-      <icon name="search" />
+      <Icon name="search" />
     </a>
 
     <a
@@ -38,7 +38,7 @@
       :class="['menubar-btn', { active: isActive('mobile') }]"
       @click="toggleActivity('mobile')"
     >
-      <icon name="mobile" />
+      <Icon name="mobile" />
     </a>
 
     <!-- support later

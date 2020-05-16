@@ -1,7 +1,7 @@
 <template>
   <div class="explorer">
     <div class="topbar">
-      <navbar :title="title" :right-btns="rightBtns" />
+      <Navbar :title="title" :right-btns="rightBtns" />
       <div class="explorer-repo-name">
         <div class="float-right">
           <a class="mr-2" @click="handleCollapse" title="Collapse all">
@@ -15,7 +15,7 @@
       </div>
     </div>
     
-    <data-view 
+    <DataView 
       class="explorer-container"
       :loading="pending" 
       :empty="empty"
@@ -26,9 +26,9 @@
         :class="{ active: activeItem && activeItem.path === $consts.LATEST_PATH }"
         @click="handleLatest"
       >
-        <icon name="rocket-launch" size="14" />Latest
+        <Icon name="rocket-launch" size="14" />Latest
       </div>
-      <nested-list
+      <NestedList
         ref="nestedList"
         v-show="success"  
         :props="treeProps"
@@ -37,7 +37,7 @@
         @expanded="handleItemExpanded"
         @selected="handleItemSelected" 
       />
-    </data-view>
+    </DataView>
   </div>
 </template>
 

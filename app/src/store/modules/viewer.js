@@ -12,30 +12,46 @@ const LOAD  = 'LOAD';
 const GO    = 'GO';
 const VIEW  = 'VIEW';
 const VIEW_VIDEO = 'VIEW_VIDEO';
-const SETTINGS = 'SETTINGS';
-const TOGGLE_AUTO_SCROLLING = 'TOGGLE_AUTO_SCROLLING';
+
+const SETTINGS = 'setSettings';
+
+const LOCKING = 'setLock';
+const FULLSCREEN = 'setFullscreen';
+
+const SPEED = 'setSpeed';
+const AUTO_SCROLLING = 'setScroll';
 
 
 const statusHelper = createRequestStatus('status');
 
 export const types = createTypesWithNamespace([ 
-  LOAD, GO, VIEW, VIEW_VIDEO, SETTINGS, TOGGLE_AUTO_SCROLLING
+  LOAD, GO, VIEW, VIEW_VIDEO, SETTINGS,
+  LOCKING, FULLSCREEN, AUTO_SCROLLING, SPEED
 ], NAMESPACE);
 
 const initialState = {
-  mode: 'scroll',  
-  autoScrolling: false,
-  name: '',
-  path: '',
-  page: 1,
-  ch: '',
-  chName: '',
+  name: '', // manga name
+  path: '', // manga path
+  page: 1, // curr page
+  ch: '', // original chapter name
+  chName: '', // chapter name
   chIndex: 0,
-  cover: '',
+  cover: '', // cover path
   verNames: [],
   activeVer: '',
   images: [],
   chapters: [],
+  
+  // common state
+  fullscreen: false,
+  locking: true,
+
+  // mode state
+  mode: 'scroll',
+  autoScrolling: false, // replace later
+  speed: 100,
+
+  // settings state
   settings: {
     zoom: 'width',
     gaps: true,
@@ -199,11 +215,19 @@ const createModule = (state = { ...initialState }) => ({
       const { page, ch } = payload;
       
       if (page < 1) return;
-      if (ch && page > getters.chCount) return;
       if (!ch && page > getters.count) return;
+
+      // TODO:
+      // check chapter size ??
+      if (ch && page > getters.chCount) return;
       
       // should empty ch
       commit(GO, payload);
+    },
+
+    [AUTO_SCROLLING]({ commit }, payload) {
+      commit(LOCKING, false);
+      commit(AUTO_SCROLLING, payload);
     }
   },
 
@@ -220,11 +244,41 @@ const createModule = (state = { ...initialState }) => ({
       state.settings = safeAssign(state.settings, payload);
     },
 
-    [TOGGLE_AUTO_SCROLLING](state, payload) {
-      const { autoScrolling } = payload;
-      state.autoScrolling = isDef(autoScrolling) ? 
-        !!autoScrolling :
+    [AUTO_SCROLLING](state, payload) {
+      const autoScrolling = isDef(payload) ? 
+        !!payload :
         !state.autoScrolling;
+
+      state.autoScrolling = autoScrolling;
+    },
+
+    [SPEED](state, payload) {
+      const val = payload;
+      if (state.speed === 50 && val < 0) return;
+      if (state.speed === 200 && val > 0) return;
+
+      // reset speed
+      if (val === 0) {
+        state.speed = 100;
+      } else {
+        state.speed += val;
+      }
+    },
+
+    [LOCKING](state, payload) {
+      const locking = isDef(payload) ?
+        !!payload :
+        !state.locking;
+
+      state.locking = locking;
+    },
+
+    [FULLSCREEN](state, payload) {
+      const fullscreen = isDef(payload) ?
+        !!payload :
+        !state.fullscreen;
+
+      state.fullscreen = fullscreen;
     },
 
     ...statusHelper.mutation()

@@ -2,7 +2,7 @@
   <div class="viewer-container">
     <div class="viewer-viewport-left" @click.stop="handleLeft"/>
     <div 
-      :class="['viewer-viewport', { 'viewer-locking': shouldLock() }]"
+      :class="['viewer-viewport', { 'viewer-locking': shouldLock }]"
       @click.stop="$emit('click')"
     >
       <slot /> 
@@ -17,12 +17,17 @@ export default {
 
   props: [ 'hand', 'autoScrolling', 'locking' ],
 
-  methods: {
+  computed: {
     shouldLock() {
+      // TODO:
+      // lock viewport disable prev and next ??
+      // use css to implement ??
       return (this.autoScrolling && !this.locking) || 
-        (!this.autoScrolling && this.locking);
-    },
+             (!this.autoScrolling && this.locking);
+    }
+  },
 
+  methods: {
     handleLeft() {
       this.$emit(this.hand === 'right' ? 'prev' : 'next');
     },
@@ -81,11 +86,6 @@ export default {
 
     &.gaps {
       margin: .25rem auto;
-
-      @include media-breakpoint-up(md) {
-        margin-top: .5rem;
-        margin-bottom: .5rem;
-      }
     }
 
     > .img-loading {

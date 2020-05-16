@@ -1,38 +1,24 @@
 <template>
   <div id="viewer" :class="`viewer-${settings.handMode}-hand`">
-    <!-- TOPBAR -->
-    <div
-      :class="[
-        'topbar viewer-topbar fixed-top',
-        { 'viewer-autoscrolling': autoScrolling, open: locking }
-      ]"
-    >
-      <Navbar
-        :title="{ 
-          content: pager, 
-          className: 'text-center d-none d-md-block'
-        }"
-        :left-btns="leftBtns"
-        :right-btns="rightBtns"
-      />
-    </div>
-
-    <!-- mouseover header lock viewer
-    <div 
-      v-show="!locking"
-      class="viewer-topbar-placeholder" 
-      @mouseenter="locking = true"
+    <!-- HEADER -->
+    <Header 
+      :title="title"
+      :pager="pager"
+      :auto-scrolling="autoScrolling"
+      :locking="locking"
+      :fullscreen="fullscreen"
+      :settings="settings"
+      @back="handleBack"
+      @fullscreen="setFullscreen"
+      @settings="handleSettings"
     />
-    -->
-
-    <!-- /TOPBAR -->
 
     <!-- VIEWPORT -->
     <Viewport
       :hand="settings.handMode"
       :locking="locking"
-      :autoScrolling="autoScrollToggle"
-      @click="lockToggle()"
+      :auto-scrolling="setScroll"
+      @click="setLock"
       @prev="prev"
       @next="next"
     >
@@ -43,12 +29,13 @@
         :page="page"
         :chIndex="chIndex"
         :settings="settings"
-        :isFullscreen="isFullscreen"
-        :autoScrolling="autoScrolling"
+        :fullscreen="fullscreen"
+        :auto-scrolling="autoScrolling"
         :locking="locking"
         :speed="speed"
         @pageChange="go"
         @chapterChange="goChapter"
+        @scrollEnd="setScroll(false)"
       />
     </Viewport>
     <!-- /VIEWPORT -->
@@ -70,8 +57,8 @@
       <Seekbar :value="page" :max="count" @end="go" />
       <Controlbar
         :speed="speed"
-        @auto-scroll="autoScrollToggle"
-        @speed="adjustScrollSpeed"
+        @auto-scroll="setScroll"
+        @speed="setSpeed"
       />
     </div>
 
@@ -85,14 +72,14 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex';
+import { mapState, mapGetters, mapMutations, mapActions } from 'vuex';
 import qs from '@/helpers/querystring';
 import screenfull from 'screenfull';
 import animateScrollTo from 'animate-scroll-to.js';
-import { isDef, capitalize } from '@/helpers/utils';
 import { types } from '@/store/modules/viewer';
 
 // Components
+import Header from './Header';
 import Viewport from './Viewport';
 import ScrollMode from './ScrollMode';
 import Seekbar from './Seekbar';
@@ -101,6 +88,7 @@ import HelpOverlay from './HelpOverlay';
 
 export default {
   components: {
+    Header,
     Viewport,
     ScrollMode,
     Seekbar,
@@ -108,33 +96,22 @@ export default {
     HelpOverlay
   },
 
-  props: {
-    fullscreen: Boolean
-  },
-
   data() {
     return {
-      locking: true,
-      speed: 50, // px/s
-      isFullscreen: this.fullscreen,
       helpOpen: false
     }
   },
 
   watch: {
-    // when prop change
-    fullscreen() {
-      this.isFullscreen = this.fullscreen;
-    },
-
-    isFullscreen() {}
+    fullscreen(val) {
+      screenfull[val ? 'request' : 'exit']();
+    }
   },
   
   computed: {
-    
     ...mapState('viewer', [ 
-      'name', 'path', 'mode', 'settings', 'autoScrolling', 
-      'page', 'ch', 'chName', 'images', 'chapters' 
+      'name', 'path', 'page', 'ch', 'chName', 'images', 'chapters',
+      'settings', 'autoScrolling', 'fullscreen', 'locking', 'speed'
     ]),
 
     ...mapState('app', { appError: 'error', appSize: 'size' }),
@@ -158,85 +135,6 @@ export default {
 
     pager() {
       return this.page + ' / ' + this.count;
-    },
-
-    leftBtns() {
-      return [{
-        icon: 'arrow-left',
-        tip: 'Back',
-        title: this.title,
-        click: this.handleBack,
-        className: 'text-truncate viewer-title'
-      }];
-    },
-
-    rightBtns() {
-      const leftHandBack = {
-        icon: 'arrow-left',
-        tip: 'Back',
-        click: this.handleBack,
-        className: 'viewer-back'
-      }
-
-      const menu = [{
-        zoom: 'width',
-        text: 'Fit to width'
-      }, {
-        zoom: 'screen',
-        text: 'Fit to screen'
-      }].map(item => ({
-        ...item,
-        click: () => this.zoomToggle(item.zoom)
-      }));
-
-      const selected = menu.map(item => item.zoom).indexOf(this.settings.zoom);
-
-      return [
-        leftHandBack,
-        {
-          icon: this.isFullscreen ? 'compress' : 'expand',
-          tip: 'Fullscreen',
-          click: () => this.fullscreenToggle()
-        }, 
-        {
-          icon: 'page-alt',
-          tip: 'Page Display',
-          dropdown: {
-            props: {
-              menu: [{
-                html: `
-                  Hand Mode : 
-                  <strong class="text-primary">
-                    ${capitalize(this.settings.handMode)}
-                  </strong>
-                `,
-                click: this.handModeToggle
-              }, {
-                type: 'check',
-                checked: this.settings.gaps,
-                text: 'Show Gaps Between Pages',
-                click: this.gapsToggle
-              }, {
-                type: 'check',
-                checked: this.settings.pagerInfo,
-                text: 'Show Pager Info',
-                click: this.pagerInfoToggle
-              }]
-            }
-          }
-        }, 
-        {
-          icon: 'search-plus',
-          tip: 'Zoom',
-          dropdown: {
-            props: {
-              type: 'select',
-              selected,
-              menu
-            }
-          }
-        }
-      ];
     }
   },
 
@@ -246,13 +144,12 @@ export default {
     this.$on('leave', () => {
       // when manga or chapter changed this function will be invoked
       // we should stop scrolling and lock viewer to show title info.
-      this.autoScrollToggle(false);
+      this.setScroll(false);
+      this.setFullscreen(false);
       
      // prevent locked when scroll.
-      this.locking = true;
+      this.setLock(true);
       window._ignoreScrollEvent = true;
-
-      setTimeout(() => screenfull.exit());
     });
 
     this.$on('update', (route) => {
@@ -260,7 +157,7 @@ export default {
       const page = route.query.start || 1;
 
       // prevent locked when scroll.
-      this.locking = true;
+      this.setLock(true);
       window._ignoreScrollEvent = true;
 
       this.$store.dispatch(types.VIEW, { dirId, path: qs.decode(path), ch, page });
@@ -272,6 +169,17 @@ export default {
   destroyed() { this._$effects(false) },
 
   methods: {
+    ...mapActions('viewer', [
+      'setScroll'
+    ]),
+
+    ...mapMutations('viewer', [
+      'setSettings',
+      'setSpeed',
+      'setLock',
+      'setFullscreen'
+    ]),
+
     // private
     _$effects(val) {
       window[val ? 'addEventListener' : 'removeEventListener']('keydown', this.handleKeydown);
@@ -304,55 +212,7 @@ export default {
     next() {
       this.go(this.page + 1);
     },
-
-    lockToggle(val) {
-      this.locking = isDef(val) ?
-        !!val :
-        !this.locking;
-    },
-
-    zoomToggle(zoom) {
-      this.$store.commit(types.SETTINGS, { zoom });
-    },
-
-    gapsToggle() {
-      this.$store.commit(types.SETTINGS, { gaps: !this.settings.gaps })
-    },
-
-    pagerInfoToggle() {
-      this.$store.commit(types.SETTINGS, { pagerInfo: !this.settings.pagerInfo })
-    },
-
-    handModeToggle() { 
-      const handMode = { left: 'right', right: 'left' }[this.settings.handMode];
-      this.$store.commit(types.SETTINGS, { handMode });
-      this.helpOpen = true;
-    },
-
-    fullscreenToggle() {
-      screenfull.toggle();
-      this.isFullscreen = !this.isFullscreen;
-    },
-
-    autoScrollToggle(val) {
-      this.locking = false;
-      
-      this.$store.commit(types.TOGGLE_AUTO_SCROLLING, { 
-        autoScrolling: val 
-      });
-    },
-
-    adjustScrollSpeed(val) {
-      if (this.speed === 10 && val < 0) return;
-      if (this.speed === 200 && val > 0) return;
-
-      if (val === 0) {
-        this.speed = this.$options.data().speed;
-      } else {
-        this.speed += val;
-      }
-    },
-
+  
     // events
     handleBack() {
       if (this.$router._routerHistory.length === 1) {
@@ -366,9 +226,14 @@ export default {
       }
     },
 
+    handleSettings(payload) {
+      this.setSettings(payload);
+      if (payload.handMode) this.helpOpen = true;
+    },
+
     handleScroll() {
       if (window._ignoreScrollEvent || this.autoScrolling) return;
-      this.locking = false;
+      this.setLock(false);
       this.helpOpen = false;
     },
 
@@ -384,7 +249,7 @@ export default {
       // when autoScrolling (no-pause) should disable keyboard events
       if (this.autoScrolling) {
         if (keyCode === action.lock) {
-          this.lockToggle();
+          this.setLock();
         }
 
         if (!this.locking) {
