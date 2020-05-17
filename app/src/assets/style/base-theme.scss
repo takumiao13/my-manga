@@ -126,7 +126,7 @@
     }
 
     .badge {   
-      border: 1px solid $app-muted-color;
+      border: .5px solid $app-muted-color;
       color: $app-muted-color;
     }
 
@@ -190,6 +190,10 @@
       }
     }
   }
+
+  .manga-status {
+    color: $app-primary !important;
+  }
 }
 
 // Common
@@ -237,7 +241,14 @@
   }
 }
 
+.menubar-btn.active {
+  &::after {
+    background: $app-primary !important;
+  }
+}
+
 .explorer-latest,
+.explorer-rand,
 .list-nested .list-group .list-group-item  {
   &.active {
     background: $app-lighter-bg;

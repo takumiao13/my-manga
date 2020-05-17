@@ -95,7 +95,7 @@ export default {
   .qrcode {
     background: #fff;
     padding: .5rem;
-    border: 1px solid #ddd;
+    border: .5px solid #ddd;
     height: 158px;
   }
 }

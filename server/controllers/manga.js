@@ -15,10 +15,24 @@ class MangaController extends Controller {
   
   async list(ctx) {
     const { service } = this;
-    await this._cache(ctx, async ({ baseDir, path, settings }) => {
-      const results = await service.manga.list(baseDir, path, settings); 
-      ctx.body = { ...results };
-    });
+    const { path = '', dirId } = ctx.params;
+
+    if (path === '@random') {
+      const results = await service.manga.rand(dirId, path);
+      ctx.body = {
+        hasSubfolder: true,
+        isDir: true,
+        name: "Random",
+        path: "@random",
+        type: "FILE",
+        children: results
+      }
+    } else {
+      await this._cache(ctx, async ({ baseDir, path, settings }) => {
+        const results = await service.manga.list(baseDir, path, settings); 
+        ctx.body = { ...results };
+      });
+    }
   }
 
   async search(ctx) {

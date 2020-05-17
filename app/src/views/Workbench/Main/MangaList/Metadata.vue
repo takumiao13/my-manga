@@ -286,9 +286,4 @@ export default {
     border-left-color: $primary !important;
   }
 }
-
-// TODO: need extract color later
-.manga-status {
-  color: red;
-}
 </style>

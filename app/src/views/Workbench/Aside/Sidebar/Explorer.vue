@@ -22,11 +22,19 @@
     >
       <div 
         class="explorer-latest"
-        title="Latest manga"
+        title="Latest mangas"
         :class="{ active: activeItem && activeItem.path === $consts.LATEST_PATH }"
         @click="handleLatest"
       >
         <Icon name="rocket-launch" size="14" />Latest
+      </div>
+      <div 
+        class="explorer-rand"
+        title="Random mangas"
+        :class="{ active: activeItem && activeItem.path === $consts.RANDOM_PATH }"
+        @click="handleRand"
+      >
+        <Icon name="random" size="14" />Random
       </div>
       <NestedList
         ref="nestedList"
@@ -196,6 +204,17 @@ export default {
       }).then(() => this.closeSidebar());
     },
 
+    handleRand() {
+      const { dirId } = this.repo;
+      const path = this.$consts.RANDOM_PATH;
+
+      this.activeItem = { path };
+      this.$router.push({ 
+        name: 'explorer', 
+        params: { dirId, path }
+      }).then(() => this.closeSidebar());
+    },
+
     handleRefresh() {
       this.$refs.nestedList.reset();
 
@@ -228,7 +247,8 @@ export default {
   z-index: 1030;
 }
 
-.explorer-latest {
+.explorer-latest,
+.explorer-rand {
   cursor: pointer;
   padding: .5rem 0rem;
   font-size: 80%;

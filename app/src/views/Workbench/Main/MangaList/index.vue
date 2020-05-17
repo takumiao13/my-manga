@@ -186,7 +186,8 @@ export default {
     },
 
     needAddress() {
-      return Boolean(this.viewType === 'file' && this.navs.length);
+      return (this.viewType === 'file' || this.viewType === 'random') && 
+             !!this.navs.length;
     },
   },
 
@@ -249,13 +250,16 @@ export default {
 
       this.isManga = route.query.type === 'manga'; // quickly know page is dir or manga
       this.isSearch = route.query.search == 1;
+      this.isRandom = route.params.path === this.$consts.RANDOM_PATH;
     
       if (this.isManga) {
         this.viewType = 'manga';
       } else if (this.isSearch) {
         this.viewType = 'search';
+      } else if (this.isRandom) {
+        this.viewType = 'random';
       } else {
-        this.viewType = 'file';
+        this.viewType = 'file'
       }
     },
 
@@ -269,9 +273,7 @@ export default {
       let safepath = qs.decode(path);
 
       let promise = Promise.resolve();
-
-
-
+      
       // change path if search in repo scope
       // if (search && repo == 1) {
       //   safepath = '';
@@ -429,10 +431,12 @@ export default {
     },
 
     handleRefresh() {
-      const scrollTop = getScrollTop();
+      // TODO:
+      // refresh file list
+      // const scrollTop = getScrollTop();
       this.fetchMangas(this.$route, { clear: true })
         .then(() => {
-          window.setTimeout(() => window.scrollTo(0, scrollTop));
+          window.setTimeout(() => window.scrollTo(0, 0));
         });
     },
 

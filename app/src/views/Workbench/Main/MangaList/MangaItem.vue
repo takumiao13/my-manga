@@ -124,9 +124,6 @@ export default {
 
 <style lang="scss" scoped>
 @import '../../../../assets/style/base';
-
-$status-color: red;
-
 .area-item {
   flex-grow: 1;
 }
@@ -195,7 +192,6 @@ $status-color: red;
 }
 
 .manga-status {
-  color: $status-color;
   font-weight: normal;
 }
 

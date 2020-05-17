@@ -1,6 +1,6 @@
 const Service = require('./_base');
 const fs = require('../helpers/fs');
-const { take, get, escapeRegExp } = require('../helpers/utils'); 
+const { take, get, pickN, escapeRegExp } = require('../helpers/utils'); 
 const to = require('await-to-js').default;
 const sizeOf = require('image-size');
 const pathFn = require('path');
@@ -20,9 +20,12 @@ const FileTypes = {
   VERSION: 'VERSION'
 };
 
-const MAX_INDEX_COUNT = 100000;
+const LATEST_COUNT = 100;
+const RANDOM_COUNT = 50;
+
+const MAX_INDEX_COUNT = 50000;
 const LAST_LOOP_COUNT = 8;
-const COVER_FILENAME = 'cover.jpg';
+
 const METADATA_FILENAME = 'metadata.json';
 const imgRE = /\.(jpe?g|png|webp|gif|bmp)$/i;
 const fileRE = /\.(mp4|pdf|zip)$/i;
@@ -109,6 +112,15 @@ class MangaService extends Service {
     return result;
   }
 
+  async rand(dirId) {
+    const { db } = await this._indexedDB.get(dirId);
+    const mangaColl = db.getCollection('mangas');
+    const { data } = mangaColl;
+    const N = Math.min(data.length, RANDOM_COUNT);
+    const results = pickN(data, N);
+    return results
+  }
+
   async search(dirId, path = '', queryparams) {
     const { db } = await this._indexedDB.get(dirId);
     const mangaColl = db.getCollection('mangas');
@@ -171,7 +183,7 @@ class MangaService extends Service {
    * 
    * @param {string} dirId 
    */
-  async latest(dirId, count = 100) {
+  async latest(dirId, count = LATEST_COUNT) {
     const { db } = await this._indexedDB.get(dirId);
     const mangaColl = db.getCollection('mangas');
     const results = mangaColl

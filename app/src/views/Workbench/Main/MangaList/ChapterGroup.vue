@@ -110,9 +110,15 @@ export default {
       }
     }
 
-    @include media-breakpoint-up(lg) {
+    @include media-breakpoint-up(md) {
       .list-group-item {
         width: calc(33.3% - .4rem);
+      }
+    }
+
+    @include media-breakpoint-up(lg) {
+      .list-group-item {
+        width: calc(25% - .4rem);
       }
     }
   }

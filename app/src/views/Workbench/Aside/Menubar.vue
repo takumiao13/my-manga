@@ -103,11 +103,21 @@ export default {
   height: 100vh;
 
   .menubar-btn {
+    position: relative;
     width: 100%;
     height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
+
+    &::after {
+      width: 3px;
+      height: 100%;
+      background: transparent;
+      position: absolute;
+      left: 0;
+      content: '';
+    }
     
     .svg-icon {
       width: 18px;
@@ -116,11 +126,6 @@ export default {
 
     &:not(.active) {
       cursor: pointer;
-    }
-
-    &:hover,
-    &.active {
-      background: #ccc;
     }
 
     &.bottom {

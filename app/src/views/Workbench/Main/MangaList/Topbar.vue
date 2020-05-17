@@ -68,6 +68,7 @@ export default {
       const buttonMap = {
         manga: mangaBtns,
         search: searchBtns,
+        random: fileBtns,
         file: fileBtns
       };
 
@@ -88,7 +89,13 @@ export default {
         click: () => this.handleToggleSidebar('search')
       }];
 
-      // support later
+      const randomBtns = [{
+        icon: 'refresh',
+        tip: 'Refresh',
+        click: () => this.$emit('refresh')
+      }];
+
+      // TODO:
       // when refresh latest mangas will cause problem
       const fileBtns = [{
         icon: 'refresh',
@@ -99,6 +106,7 @@ export default {
       const buttonMap = {
         manga: mangaBtns,
         search: searchBtns,
+        random: randomBtns,
         file: null, // fileBtns
       };
 

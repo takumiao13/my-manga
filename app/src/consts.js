@@ -1,4 +1,5 @@
 const LATEST_PATH = '@latest';
+const RANDOM_PATH = '@random';
 
 const MANGA_GRID_SIZE = { 
   sm: 3,
@@ -42,6 +43,7 @@ const KEYBOARD_ACTION = {
 
 const consts = {
   LATEST_PATH,
+  RANDOM_PATH,
   MANGA_GRID_SIZE,
   KEY_CODE,
   KEYBOARD_ACTION
