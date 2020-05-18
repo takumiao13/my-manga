@@ -33,7 +33,7 @@
 
         <div class="form-group">
           <select class="custom-select" v-model="ver">
-            <option selected value="">Please select version</option>
+            <option selected value="">--</option>
             <option 
               v-for="name in versions"
               :key="name"
@@ -44,6 +44,22 @@
           </select>
           <small class="form-text text-muted">
             verions of manga
+          </small>
+        </div>
+
+        <div class="form-group">
+          <select class="custom-select" v-model="uptime">
+            <option selected value="">--</option>
+            <option 
+              v-for="item in updateRange"
+              :key="item.value"
+              :value="item.value"
+            >
+              {{ item.name }}
+            </option>
+          </select>
+          <small class="form-text text-muted">
+            update time
           </small>
         </div>
 
@@ -75,11 +91,18 @@ export default {
     return {
       keyword: '',
       ver: '',
-      searchInRepo: true,
+      uptime: '',
       title: {
         content: 'Search',
         className: 'navbar-brand-xs'
-      }
+      },
+      searchInRepo: true,
+      updateRange: [
+        { name: 'Today', value: 1 },
+        { name: 'This month', value: 3 },
+        //{ name: 'This half-year', value: 4 },
+        { name: 'This year', value: 5 }
+      ]
     }
   },
 
@@ -121,7 +144,8 @@ export default {
           search: 1,
           kw: this.keyword,
           // repo: this.searchInRepo ? 1 : 0,
-          ver: this.ver
+          ver: this.ver,
+          uptime: this.uptime
         }
       });
 
@@ -129,9 +153,10 @@ export default {
     },
 
     handleReset() {
-      const { keyword, searchInRepo, ver } = this.$options.data();
+      const { keyword, searchInRepo, ver, uptime } = this.$options.data();
       this.keyword = keyword;
       this.ver = ver;
+      this.uptime = uptime;
       this.searchInRepo = searchInRepo;
     }
 

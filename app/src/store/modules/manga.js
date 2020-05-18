@@ -132,10 +132,9 @@ const createModule = (state = { ...initialState }) => ({
   actions: {
     [FETCH]({ commit }, payload = {}) {
       let index = -1;
-      const { dirId, path, isBack, search, keyword, clear, ver } = payload;
-      if (isBack) index = cacheStack.find(dirId, path, keyword, ver);
+      const { dirId, path, isBack, search, keyword, clear, ver, uptime } = payload;
+      if (isBack) index = cacheStack.find(dirId, path, keyword, ver, uptime);
       // console.log(isBack, index, path);
-
       // hack no flashing when random manga
       statusHelper.pending(commit);
 
@@ -166,6 +165,7 @@ const createModule = (state = { ...initialState }) => ({
         if (search) {
           params.keyword = keyword;
           params.ver = ver;
+          params.uptime = uptime;
         }
 
         if (clear) {

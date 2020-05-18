@@ -44,8 +44,8 @@ function _attachPlaceholder(mangas) {
   });
 }
 
-function search({ dirId, path, keyword, ver }) {
-  const url = `${_buildURL(dirId, path)}/search?keyword=${keyword}&ver=${ver}`;
+function search({ dirId, path, keyword, ver, uptime }) {
+  const url = `${_buildURL(dirId, path)}/search?keyword=${keyword}&ver=${ver}&uptime=${uptime}`;
   return fetch(url).then(res => {
     const obj = { path: '', children: res };
     return _transformResponse(obj);

@@ -191,7 +191,8 @@ export default class AppRouter extends VueRouter {
 // ?[activity=2&]foo-3 -> /foo=3
 // ?foo=3&[activity=4&]bar=4 -> ?foo=3&bar=4
 export function historyName(route) {
-  const name = decodeURIComponent(route.fullPath)
+  const name = route.fullPath
+    .replace(/%2525/g, '%25') // handle `%` bug
     .replace(/activity=([^&#]*)&?/, '')
     .replace(/\?$/, '');
 

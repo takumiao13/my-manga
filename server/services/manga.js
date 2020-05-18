@@ -124,10 +124,10 @@ class MangaService extends Service {
   async search(dirId, path = '', queryparams) {
     const { db } = await this._indexedDB.get(dirId);
     const mangaColl = db.getCollection('mangas');
-    let { keyword, ver } =  queryparams;
+    let { keyword, ver, uptime } =  queryparams;
     const queryObject = {};
 
-    if (!keyword && !ver) {
+    if (!keyword && !ver && !uptime) {
       return [];
     }
 
@@ -146,11 +146,38 @@ class MangaService extends Service {
       queryObject.verNames = { $contains : ver };
     }
 
-    const results = mangaColl
+    let results = mangaColl
       .chain()
-      .find(queryObject)
-      .limit(200)
-      .data();
+      .find(queryObject);
+
+    // filter by update time
+    if (uptime) {
+      const now = new Date;
+      const yyyy = now.getFullYear();
+      const mm = now.getMonth();
+      const dd = now.getDate();
+
+      const today = +new Date(yyyy, mm, dd-1);
+      const thisMonth = +new Date(yyyy, mm-1, 1);
+      const thisHalfYear = +new Date(yyyy, mm-6, 1);
+      const thisYear = +new Date(yyyy-1, mm, dd);
+
+      results = results.where((manga) => {
+        const { birthtime } = manga;
+        switch (uptime) {
+          case '1': // today
+            return birthtime > today;
+          case '3': // this month
+            return birthtime <= today && birthtime > thisMonth;
+          // case '4': // this half year
+          //   return birthtime <= thisMonth && birthtime > thisHalfYear;
+          case '5': // this year
+            return birthtime <= thisMonth && birthtime > thisYear;
+        }
+      });
+    }
+  
+    results = results.limit(200).data();
 
     return results;
   }

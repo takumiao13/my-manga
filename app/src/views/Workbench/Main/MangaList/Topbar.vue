@@ -53,10 +53,6 @@ export default {
         icon: 'arrow-left',
         tip: 'Back',
         click: this.handleBack
-      }, {
-        icon: 'bars',
-        className: 'd-inline-block d-md-none',
-        click: this.handleToggleSidebar
       }];
 
       const searchBtns = [{

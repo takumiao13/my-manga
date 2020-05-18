@@ -18,9 +18,13 @@ export default {
   },
 
   computed: {
+    speed_() {
+      return (this.speed/100).toFixed(1) + 'x'
+    },
+
     leftBtns() {
       return [{
-        icon: this.scrolling ? 'pause' : 'play',
+        icon: this.scrolling ? 'stop' : 'play',
         title: this.scrolling ? 'Stop' : 'Auto Scroll',
         click: this.autoScrollToggle
       }];
@@ -31,7 +35,7 @@ export default {
         icon: 'minus-circle',
         click: this.slowDown
       }, {
-        title: this.speed,
+        title: this.speed_,
         tip: 'Reset speed',
         click: this.resetSpeed
       }, {
@@ -45,14 +49,6 @@ export default {
     autoScrollToggle() {
       this.scrolling = !this.scrolling;
       this.$emit('auto-scroll', this.scrolling);
-    },
-
-    backward() {
-
-    },
-
-    forward() {
-
     },
 
     speedUp() {

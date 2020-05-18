@@ -1,18 +1,19 @@
+
+function encode(str) {
+  if (!str) return str;
+  return encodeURI(str);
+}
+
 function decode(str) {
   if (!str) return str;
 
   try {
     // will cause filename with `+` error
     // str.replace(/\+/g, ' ')
-    return decodeURIComponent(str);
+    return decodeURI(str);
   } catch (err) {
     return str;
   }
-}
-
-function encode(str) {
-  if (!str) return str;
-  return encodeURIComponent(str);
 }
 
 function parseValue(url) {
@@ -20,9 +21,9 @@ function parseValue(url) {
   if (url === void 0) {
     search = window.location.search.substr(1).split('&');
   } else {
-    var regex = /[?&]([^&#=]+)=?([^&#]*)/g;
-    var result = null;
     search = [];
+    var regex = /[?&]([^&#=]+)=?([^&#]*)/g;
+    var result;
     while (result = regex.exec(url)) {
       search.push(result[1] + '=' + result[2]);
     }
@@ -37,9 +38,9 @@ export const parse = (url) => {
   for (var i=0, l=search.length; i<l; i++) {
     var pair = search[i].split('=');
     if (pair.length == 1) {
-      params[decode(pair[0])] = '';
+      params[decodeURIComponent(pair[0])] = '';
     } else {
-      params[decode(pair[0])] = decode(pair[1]);
+      params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
     }
   }
   return params;

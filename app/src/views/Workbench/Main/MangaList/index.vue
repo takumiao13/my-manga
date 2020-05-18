@@ -267,7 +267,7 @@ export default {
     fetchMangas(route, { isBack = false, clear = false } = {}) {
       const { 
         params: { path }, 
-        query: { kw, search, ver } 
+        query: { kw, search, ver, uptime } 
       } = route;
       const { dirId } = this.repo;
       let safepath = qs.decode(path);
@@ -283,7 +283,8 @@ export default {
         this.$store.dispatch(mangaTypes.FETCH, { 
           isBack, dirId, ver, search, clear,
           path: safepath,
-          keyword: kw, 
+          keyword: kw,
+          uptime: uptime
         })
       );
 
