@@ -20,7 +20,10 @@ const router = new AppRouter({
 	scrollBehavior (to, from, savedPosition) {
     const { name, isBack, resolver } = to.meta;
     
-    if (eq(to.params, from.params)) return null;
+    // when only querystring change not scroll
+    if (JSON.stringify(to.params) === JSON.stringify(from.params)) {
+      return null
+    }
 
     savedPosition || (savedPosition = { x: 0, y:0 });
 

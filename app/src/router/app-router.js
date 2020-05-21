@@ -1,6 +1,7 @@
 import VueRouter from 'vue-router';
 import { get, isArray } from '@/helpers/utils';
 
+
 // sync history to rotuer
 const RH = '_RH';
 const SHL = '_SHL';
@@ -192,7 +193,7 @@ export default class AppRouter extends VueRouter {
 // ?foo=3&[activity=4&]bar=4 -> ?foo=3&bar=4
 export function historyName(route) {
   const name = route.fullPath
-    .replace(/%2525/g, '%25') // handle `%` bug
+    .replace(/%25/g, '%') // fix deboule encode '%' bug
     .replace(/activity=([^&#]*)&?/, '')
     .replace(/\?$/, '');
 
