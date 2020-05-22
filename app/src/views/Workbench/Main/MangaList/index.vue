@@ -54,6 +54,7 @@
           <MangaGroup
             :view-mode="viewMode.manga"
             :list="mangas"
+            :active-path="activePath"
             @viewModeChange="(mode) => viewMode.manga = mode"
             @item-click="readFile"
           />
