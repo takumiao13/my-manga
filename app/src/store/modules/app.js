@@ -1,6 +1,7 @@
 import { createTypesWithNamespace } from '../helpers';
 import { NAMESPACE as SETTINGS_NAMESPACE } from './settings'
 import { isUndef } from '@/helpers/utils';
+import authAPI from '@/apis/auth';
 
 // Namespace
 export const NAMESPACE = 'app';
@@ -13,15 +14,26 @@ const TOGGLE_ACTIVITY = 'TOGGLE_ACTIVITY';
 const TOGGLE_SIZE     = 'TOGGLE_SIZE';
 const ERROR           = 'ERROR';
 const PWA_INSTALL_PROMPT = 'PWA_INSTALL_PROMPT';
+const USER           = 'setUser';
+const CHECK_USER     = 'checkUser';
+const SET_ERROR      = 'setError';
 
 const ClassNames = {
   ASIDE_OPEN: 'aside-open',
   SIDEBAR_COLLAPSED: 'sidebar-collapsed'
 };
 
+const TOKEN_KEY = 'Authorization';
+
+const DEFAULT_ERROR = {
+  name: 'THAT\'S AN ERROR',
+  icon: 'exclamation-triangle',
+  message: 'An error has occurred and we\'re working to fix the problem.'
+};
+
 export const types = createTypesWithNamespace([
   TOGGLE_ASIDE, TOGGLE_SIDEBAR, TOGGLE_REPO, TOGGLE_ACTIVITY, TOGGLE_SIZE,
-  ERROR, PWA_INSTALL_PROMPT
+  ERROR, PWA_INSTALL_PROMPT, USER, CHECK_USER, SET_ERROR
 ], NAMESPACE);
 
 export default {
@@ -34,7 +46,10 @@ export default {
     size: '',
     activity: '', // activity tab
     error: null,
-    pwaInstallPrompt: null
+    pwaInstallPrompt: null,
+    user: {
+      token: window.localStorage.getItem(TOKEN_KEY)
+    }
   },
 
   getters: {
@@ -45,7 +60,30 @@ export default {
     }
   },
 
+  actions: {
+    [USER]({ commit }, payload = {}) {
+      return authAPI.login(payload)
+        .then((res) => {
+          commit(USER, { ...res });
+        });
+    },
+
+    [CHECK_USER]({ commit }) {
+      return authAPI.check().then(res => {
+        commit(USER, res);
+      });
+    }
+  },
+
   mutations: {
+    [USER](state, payload) {
+      Object.assign(state.user, payload);
+      
+      // when check api not with token
+      const { token } = payload;
+      if (token) localStorage.setItem(TOKEN_KEY, token);
+    },
+
     // only in small device
     [TOGGLE_ASIDE](state, payload = {}) {
       const body = window.document.body;
@@ -87,8 +125,11 @@ export default {
       state.size = payload.size || 'lg';
     },
 
-    [ERROR](state, payload) {
-      state.error = payload;
+    [SET_ERROR](state, payload) {
+      console.log('error', payload);
+      state.error = payload === null ? 
+        null : 
+        Object.assign({}, DEFAULT_ERROR, payload || {});
     },
 
     [PWA_INSTALL_PROMPT](state, payload) {

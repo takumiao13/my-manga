@@ -61,7 +61,7 @@ export function resetStore() {
 }
 
 export const loadSettingsState = (scope) => {
-  // first we should check the scope is valid
+  // first we should check the scope is valid or not
   const repos = store.getters[`${SETTINGS_NAMESPACE}/user/repos`];
   const isExists = repos ? repos.map(repo => repo.dirId).indexOf(scope) > -1 : true;
   

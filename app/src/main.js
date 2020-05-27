@@ -72,7 +72,7 @@ Vue.use(VueLazyload, {
   attempt: 1,
   observer: true, // when image in slot observer is need.
   adapter: {
-    loaded ({ bindType, el, naturalHeight, naturalWidth, $parent, src, loading, error, Init }) {
+    loaded ({ el, bindType, naturalHeight, naturalWidth, $parent, src, loading, error, Init }) {
       // handle manga cover loaded
       if (el.classList.contains('cover-image')) {        
         el.parentNode.classList.remove('loading');
@@ -145,21 +145,37 @@ function bootstrapApp() {
 
     // reset history
     resetHistory(() => {
-      // goto new repo explorer
+      // after reset check current page is repos or not 
+      // (the first page is not `repos` from shared link)
+      if (router.history.current.name === 'repos') {
+        enterNewRepo(dirId);
+      } else {
+        // redirect to repos pages
+        router.replace({ name: 'repos' }, () => {
+          enterNewRepo(dirId);
+        })
+      }
+    });
+
+    function enterNewRepo(dirId) {
       router.push({ name: 'explorer', params: { dirId }});
       // delay 1000 ms wait fetch data to render view 
       delay(1000).then(() => {
         const hide = showSplashScreen();
         hide(); // hide self
       })
-    });
+    }
   });
 
-  // try to get user settings
-  Promise.all([
-    store.dispatch(settingTypes.user.INIT),
-    store.dispatch(settingTypes.repo.INIT)  
-  ])
+
+  // TODO: uppercase ??
+  store.dispatch(appTypes.checkUser)
+    // try to get user settings
+    .then(() => Promise.all([
+        store.dispatch(settingTypes.user.INIT),
+        store.dispatch(settingTypes.repo.INIT)  
+      ])
+    )
     .then(checkCurrentRepo)
     .then(() => {
       renderApp();
@@ -168,26 +184,27 @@ function bootstrapApp() {
     })
     .catch(error => {
       window.localStorage.removeItem(REPO_KEY);
-      renderApp({ error });
+      debugger;
+      renderApp();
       hideSplashScreen();
-      console.error('setting error', error);
+      console.error('App Bootstrap Error', error);
     });
 }
 
 function checkCurrentRepo() {
-  const _REPO = window.localStorage.getItem(REPO_KEY);
-  // check is has current repo
-  if (_REPO) {
-    const scope = _REPO;
+  const REPO = window.localStorage.getItem(REPO_KEY);
+
+  // check is current repo
+  if (REPO) {
+    const scope = REPO;
     const repoSettings = store.state.settings[scope];
     // dynamic load repo settings
     if (!repoSettings) { return loadSettingsState(scope) }
   }
 }
 
-function renderApp({ error } = {}) {
+function renderApp() {
   new Vue({
-    data: { error },
     router,
     store,
     render: h => h(App),

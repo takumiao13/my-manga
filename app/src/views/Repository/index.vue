@@ -176,9 +176,19 @@ export default {
       // 2.repo is not changed 
       // 3.can go back
       // then we just back it
-      if (repo.dirId === this.repoId && this.$router.canGoBack()) {
-        this.$router.go(-1);
-        return;
+      if (repo.dirId === this.repoId) {
+        // when come from repo click
+        if (this.$router.canGoBack()) {
+          console.log('repo back');
+          this.$router.go(-1);
+          return;
+
+        // when come from browser back
+        } else if (this.$router.delta()) {
+          console.log('repo forward');
+          this.$router.go(1);
+          return;
+        }
       }
     
       // we should reset store to change repo 

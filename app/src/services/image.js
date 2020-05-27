@@ -31,6 +31,12 @@ class ImageService extends Service {
     if (src && escape) {
       src = src.replace(/(\(|\))/g, '\\$1');
     }
+
+    // add jwt token for auth
+    const token = localStorage.getItem('Authorization');
+    if (src && token) {
+      src += `?access_token=${token}`
+    }
   
     return src;
   }

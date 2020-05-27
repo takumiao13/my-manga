@@ -92,7 +92,7 @@ export default class AppRouter extends VueRouter {
    * @returns {void}
    */
   popToRoot(done) {
-    const delta = -window.history.length + this._startHistoryLength;
+    const delta = -this.delta();
     
     if (this.canGoBack()) {
       // backward all history (we cannot clear it)
@@ -104,6 +104,10 @@ export default class AppRouter extends VueRouter {
     } else {
       done();
     }
+  }
+
+  delta() {
+    return history.length - this._startHistoryLength;
   }
 
   /**
@@ -134,12 +138,13 @@ export default class AppRouter extends VueRouter {
    * 
    * @param {Location} to 
    * @param {Location} from 
-   * @param {function} next 
+   * @param {function} next
+   * @returns {Promise<string | void 0>}
    */
-  handleBeforeEnter(to, from) {
+  handleBeforeEnter(ctx) {
     const fnMiddleware = this._compose(this._middleware);
-    const context = { router: this, to, from};
-    return fnMiddleware(context);
+    ctx.router = this;
+    return fnMiddleware(ctx);
   }
 
   /**
@@ -171,8 +176,12 @@ export default class AppRouter extends VueRouter {
       // last called middleware #
       let index = -1;
       return dispatch(0);
+
       function dispatch (i) {
-        if (i <= index) return Promise.reject(new Error('next() called multiple times'));
+        if (i <= index) {
+          return Promise.reject(new Error('next() called multiple times'));
+        }
+
         index = i;
         let fn = middleware[i];
         if (i === middleware.length) fn = next;

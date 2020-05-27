@@ -105,12 +105,7 @@ class MangaController extends Controller {
         response.lastModified = ifModifiedSince;
       }
     } catch(err) {
-      switch (err.errno) {
-        case -4058: // no such file or directory
-          this.app.throwError(ERR_CODE.MANGA_NO_DIR);
-        default:
-          throw err;
-      }
+      this.app.throwError(ERR_CODE.MANGA_NO_DIR);
     }
   }
 

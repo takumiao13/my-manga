@@ -1,11 +1,24 @@
+import store from '@/store';
+import { NAMESPACE as SETTINGS_NAMESPACE } from '@/store/modules/settings';
+
+// Views
+import Login from '@/views/Login';
 import Workbench from '@/views/Workbench';
 import MangaList from '@/views/Workbench/Main/MangaList';
 import Viewer from '@/views/Viewer';
 import Repository from '@/views/Repository';
-import store from '@/store';
-import { NAMESPACE as SETTINGS_NAMESPACE } from '@/store/modules/settings';
+import ErrorView from '@/views/Error';
 
 const routes = [
+	{
+		name: 'login',
+		path: '/login',
+		component: Login,
+		meta: {
+			title: 'LOGIN'
+		}
+	},
+
 	{
 		path: '/repo', 
 		component: Workbench,
@@ -36,6 +49,15 @@ const routes = [
 		}
 	},
 	
+	{
+		name: 'error',
+		path: '/error',
+		component: ErrorView,
+		meta: {
+			title: 'ERROR'
+		}
+	},
+
 	{
 		name: 'home',
 		path: '*', // handle not found
