@@ -47,7 +47,6 @@ $simple-slider-track-fill-bg:        #007bff !default;
 // ==
 .simple-slider {
   width: 100%;
-  height: calc(#{$simple-slider-thumb-height} + #{$simple-slider-thumb-focus-box-shadow-width * 2});
   padding: 0; // Need to reset padding
   background-color: transparent;
   appearance: none;

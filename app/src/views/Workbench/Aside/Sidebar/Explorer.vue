@@ -34,7 +34,7 @@
         :class="{ active: activeItem && activeItem.path === $consts.RANDOM_PATH }"
         @click="handleRand"
       >
-        <Icon name="random" size="14" />Random
+        <Icon name="random" size="14" />Random (50)
       </div>
       <NestedList
         ref="nestedList"

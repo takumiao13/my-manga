@@ -8,7 +8,7 @@ const Ratio = {
 }
 
 const Bounding = {
-  EDGE: 1,
+  EDGE: 2,
   MAX: (Ratio.V - 100)/2,
   MIN: (100 - Ratio.H)/2
 };
@@ -41,12 +41,11 @@ class ImageService extends Service {
 
     if (isNaN(ratio)) ratio = Ratio.V;
 
-    // ___|___|___ ratio ___|___|___
-    //   sec pri           pri sec
+    // _m____x_ (h) _x___ 100 ___x_ (v) _x____m_
     //
-    // - <= primary allow scale
-    // - <= secondary allow center
-    // - > secondary max 
+    // - ratio in [r-x ~ r+x] (scale)
+    // - ratio > max (fitW, fitH)
+    // - else center original size
 
     // should adjust v-ratio to scale image
     if (ratio > 100) {

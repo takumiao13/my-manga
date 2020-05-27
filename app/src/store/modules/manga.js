@@ -76,8 +76,11 @@ export const cacheStack = {
 const initialState = {
   inited: false,
   cover: '',
+  banner: '',
   type: '',
+  fileType: '',
   name: '',
+  birthtime: '',
   path: '',
   metadata: null,
   list: [], // <-- all children
@@ -232,18 +235,22 @@ const createModule = (state = { ...initialState }) => ({
       state.inited || (state.inited = true);
       safeAssign(state, {
         activeVer: '',
+        cover: '',
+        banner: '',
         error: null,
         shortId: false,
         metadata: null // fixed when list no-metadata cannot overwrite prev metadata
       }, payload);
     },
 
+    // TODO:
     [ADD_VERSION](state, payload) {
       const { ver, res } = payload;
       const version = find(state.versions, { ver });
       safeAssign(version, { ...res, inited: true }); // add version data
     },
 
+    // TODO:
     [TOGGLE_VERSION](state, payload) {
       const { ver, res } = payload;
       // also change parent path
@@ -252,6 +259,7 @@ const createModule = (state = { ...initialState }) => ({
       // use version date replace current data
       state.activeVer = ver;
       state.activeVerPath = res.path;
+      state.fileType = res.fileType || '';
       safeAssign(state, obj);
     },
 

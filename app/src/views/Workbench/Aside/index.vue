@@ -51,8 +51,6 @@ export default {
   position: fixed;
   z-index: 1050;
   transform: translateX(-100%);
-  overflow-y: auto;
-  overflow-y: overlay;
   padding: 0;
   display: flex;
 
@@ -78,7 +76,8 @@ export default {
 
   .sidebar {
     flex: 1;
-    overflow: auto;
+    overflow-y: auto;
+    overflow-y: overlay;
   }
 }
 

@@ -28,7 +28,7 @@
       <div 
         :class="{ 
           active: item.path === activePath, 
-          'col-4 col-sm-3 col-lg-2 area-item': viewMode == 'grid',
+          'col-4 col-sm-3 col-xl-2 area-item': viewMode == 'grid',
           'list-group-item list-group-item-action': viewMode == 'list'
         }"
 

@@ -592,6 +592,11 @@ async function traverse({
     } catch (e) {}
   }
 
+  // use big cover as banner
+  if (cover && !banner && width && height && ((height / width) * 100 <= 72)) {
+    banner = cover;
+  }
+
   // Merge base info and extra info
   return { 
     isDir, path, name, birthtime, mtime, type, 

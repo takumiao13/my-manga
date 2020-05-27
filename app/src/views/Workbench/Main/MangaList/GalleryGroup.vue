@@ -2,12 +2,13 @@
   <div class="gallery-area mb-4" v-show="list.length" data-view-mode="list">
     <div class="area-header">
       <div class="area-header-inner">
-        GALLERY - {{ list.length }} pages
+        GALLERY
       </div>
     </div>
     <div class="row">
       <div 
-        class="col-4 col-sm-3 col-xl-2 area-item" 
+        class="col-4 col-sm-3 col-xl-2 area-item"
+        :class="{ 'd-none': index === 0 && hideFirstImage }"
         v-for="(item, index) in list" 
         :key="item.path"
       >
@@ -28,7 +29,8 @@
 <script>
 export default {
   props: {
-    list: Array
+    list: Array,
+    hideFirstImage: Boolean
   }
 }
 </script>

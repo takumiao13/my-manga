@@ -20,66 +20,70 @@
       :empty="empty"
       :error="error"
     >
-      <div class="row" v-show="success">
+      <div v-show="success && !empty">
         <!-- METADATA -->
         <Metadata
           v-if="isManga"
-          class="col-12" 
           ref="metadata"
           :title="title"
           :sharing="sharing"
+          @read-manga="readManga"
+          @read-file="readFile"
         />
 
-        <div class="area-container mt-3 col-12" v-show="!sharing">
+        <div class="row">
+          <div class="area-container mt-3 col-12" v-show="!sharing">
 
-          <!-- LATEST -->
-          <LatestGroup 
-            v-if="!path && !isSearch && latest.length"
-            :list="latest"
-            :active-path="activePath"
-            @more="readFile"  
-            @item-click="readFile"
-          />
+            <!-- LATEST -->
+            <LatestGroup 
+              v-if="!path && !isSearch && latest.length"
+              :list="latest"
+              :active-path="activePath"
+              @more="readFile"  
+              @item-click="readFile"
+            />
 
-          <!-- FILE -->
-          <FileGroup
-            :view-mode="viewMode.file"
-            :list="files"
-            :active-path="activePath"
-            @viewModeChange="(mode) => viewMode.file = mode"
-            @item-click="readFile"
-          />
+            <!-- FILE -->
+            <FileGroup
+              :view-mode="viewMode.file"
+              :list="files"
+              :active-path="activePath"
+              @viewModeChange="(mode) => viewMode.file = mode"
+              @item-click="readFile"
+            />
 
-          <!-- MANGA -->
-          <MangaGroup
-            :view-mode="viewMode.manga"
-            :list="mangas"
-            :active-path="activePath"
-            @viewModeChange="(mode) => viewMode.manga = mode"
-            @item-click="readFile"
-          />
+            <!-- MANGA -->
+            <MangaGroup
+              :view-mode="viewMode.manga"
+              :list="mangas"
+              :active-path="activePath"
+              @viewModeChange="(mode) => viewMode.manga = mode"
+              @item-click="readFile"
+            />
 
-          <!-- CHAPTER -->
-          <ChapterGroup
-            :list="chapters"
-            :active-name="activeChapter"
-            :metadata="metadata"
-            @item-click="readManga"
-          />
+            <!-- CHAPTER -->
+            <ChapterGroup
+              :list="chapters"
+              :active-name="activeChapter"
+              :metadata="metadata"
+              @item-click="readManga"
+            />
 
-          <!-- GALLERY -->
-          <GalleryGroup
-            :list="images"
-            @item-click="readManga"
-          />
-        </div>      
+            <!-- GALLERY -->
+            <GalleryGroup
+              :list="images"
+              :hide-first-image="type === 'MANGA'"
+              @item-click="readManga"
+            />
+          </div>   
+        </div>   
       </div>
     </DataView>
   </div>
 </template>
 
 <script>
-import { isDef, get, eq } from '@/helpers/utils';
+import { isDef, get } from '@/helpers/utils';
 import { getScrollTop } from '@/helpers/dom';
 import qs from '@/helpers/querystring';
 import { types as mangaTypes } from '@/store/modules/manga';
@@ -132,8 +136,8 @@ export default {
     }),
 
     ...mapState('manga', [
-      'inited', 'name', 'path', 'list', 'type', 'cover', 'files', 
-      'chapters', 'versions', 'images', 
+      'inited', 'name', 'path', 'list', 'type', 'fileType', 'cover', 
+      'files', 'chapters', 'versions', 'images', 
       'activePath', 'activeVer', 'activeVerPath',
       'error', 'metadata'
     ]),
@@ -280,15 +284,18 @@ export default {
       //   safepath = '';
       // }
 
-      promise = promise.then(() => 
-        this.$store.dispatch(mangaTypes.FETCH, { 
-          isBack, dirId, ver, search, clear,
-          path: safepath,
-          keyword: kw,
-          uptime: uptime
-        })
-      );
-
+      // - toggle version
+      // - search
+      if (path !== this.path || search) {
+        promise = promise.then(() => 
+          this.$store.dispatch(mangaTypes.FETCH, { 
+            isBack, dirId, ver, search, clear,
+            path: safepath,
+            keyword: kw,
+            uptime: uptime
+          })
+        );
+      }
 
       // TODO: search type use another name replace `ver`
       // when not search type
@@ -498,7 +505,7 @@ export default {
   margin-left: -15px;
   margin-right: -15px;
   
-  @include media-breakpoint-up(sm) {
+  @include media-breakpoint-up(md) {
     padding-left: 15px;
     padding-right: 15px;
   }
@@ -512,7 +519,7 @@ export default {
 
     padding: .5rem 15px;
 
-    @include media-breakpoint-up(sm) {
+    @include media-breakpoint-up(md) {
       padding: .5rem 0;
     }
     
@@ -551,7 +558,7 @@ export default {
       border-width: .5px 0;
       cursor: pointer;
 
-      @include media-breakpoint-up(sm) {
+      @include media-breakpoint-up(md) {
         border-width: .5px;
       }
     }
@@ -560,7 +567,7 @@ export default {
       border-top-width: 0px;
     }
 
-    @include media-breakpoint-up(sm) {
+    @include media-breakpoint-up(md) {
       margin-left: 0;
       margin-right: 0;
     }

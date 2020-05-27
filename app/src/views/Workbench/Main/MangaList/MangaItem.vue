@@ -59,10 +59,10 @@
         <div class="manga-name">
           <!-- show latest chapter -->
           <small v-if="completed" class="manga-status">
-            [Completed]
+            Completed
           </small>
           <small class="manga-status text-muted" v-if="status && !completed">
-            Chapter {{ status }}
+            # {{ status }}
           </small>
 
           <!-- manga name -->
@@ -128,14 +128,30 @@ export default {
   flex-grow: 1;
 }
 
-.cover-inner {
-  cursor: pointer;
-  overflow: hidden;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  border-radius: .25rem;
+.cover {
+  .cover-inner {
+    cursor: pointer;
+    overflow: hidden;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    border-radius: .25rem;
+
+    &.loading::before {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background: #999;
+      opacity: 0;
+      -webkit-animation: progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
+      animation: progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
+      z-index: 4;
+      content: '';
+    }
+  }
 
   // scale img to fill cover
   &.scale img[lazy="loaded"] {
@@ -159,20 +175,6 @@ export default {
   &.fitH img[lazy="loaded"] {
     height: 100%;
     width: auto;
-  }
-
-  &.loading::before {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background: #999;
-    opacity: 0;
-    -webkit-animation: progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
-    animation: progress-active 2s cubic-bezier(.23, 1, .32, 1) infinite;
-    z-index: 4;
-    content: '';
   }
 }
 

@@ -29,41 +29,49 @@
       </div>
     </div>
 
-    <!-- TITLE -->
+    <!-- COVER AND INFO -->
     <div class="metadata-main metadata-inner" v-show="!sharing">
-
-      <p class="metadata-title" href="javascript:void 0;">
-        {{ title }}
-        <span v-if="isEnd" class="manga-status">[Completed]</span>
-      </p>
-
-    </div>
-
-    <!-- VERSION -->
-    <div 
-      class="version-area mb-2" 
-      :class="{ touch: $feature.touch}" 
-      v-show="versions.length"
-    >
-      <div class="area-header">
-        <div class="area-header-inner">
-          VERSIONS - {{ versions.length }}
+      
+      <!-- only hide in sm sreen when banner exists -->
+      <div class="metadata-info" 
+        :class="{ 'with-banner': banner }"
+      >
+        <img v-if="cover" :src="$service.image.makeSrc(cover)" />
+        <div>
+          <p class="title">{{ title }}</p>
+          <div v-if="versions.length" class="text-muted">
+            Versions: 
+            <select v-model="activeVer">
+              <option 
+                v-for="item in versions" 
+                :key="item.path"
+                :value="item.ver"
+              >
+                {{ (item.ver || item.name).toUpperCase() }}
+              </option>
+            </select>
+          </div>
+          <div v-if="metadata && metadata.status" class="text-muted">
+            Status:
+            <span v-if="completed" class="manga-status">Completed</span>
+            <span v-if="status && !completed">
+              # {{ status }}
+            </span>
+          </div>
+          <div v-else-if="fileType" class="text-muted">Type: {{ fileType }}</div>
+          <div v-else-if="chapters.length" class="text-muted">Chapters: {{ chapters.length }}</div>
+          <div v-else class="text-muted">Pages: <span>{{ images.length }}</span></div>
+          <div class="text-muted">Updated at: <small>{{ birthtime | dateFormat('yyyy-mm-dd') }}</small></div>        
         </div>
       </div>
-
-      <div class="list-group pb-2">
-        <a 
-          class="list-group-item list-group-item-action version-item text-truncate"
-          :class="{ 'version-active': item.ver === activeVer }"
-          v-for="item in versions" 
-          :key="item.path"
-          @click="toggleVersion(item)"
-        >
-          {{ (item.ver || item.name).toUpperCase() }} 
-        </a>
-      </div>
     </div>
-    <!-- / VERSION AREA -->
+    
+    <div class="metadata-actions row d-flex">      
+      <a class="col" @click="handleRead">
+        <icon :name="fileType === 'video' ? 'play' : 'book-open'" /> 
+        Start {{ fileType === 'video' ? 'Watching' : 'Reading' }}
+      </a>
+    </div>
   </div>  
 </template>
 
@@ -80,7 +88,20 @@ export default {
   computed: {
     ...mapGetters('app', [ 'repo' ]),
 
-    ...mapState('manga', [ 'path', 'versions', 'metadata', 'shortId', 'activeVer' ]),
+    ...mapState('manga', [ 
+      'path', 'versions', 'metadata', 'shortId', 'fileType',
+      'cover', 'banner', 'birthtime', 'files', 'chapters', 'images',
+    ]),
+
+    activeVer: {
+      set(value) {
+        this.toggleVersion({ ver: value });
+        //this.$store.dispatch('updateMessage', value);
+      },
+      get() {
+        return this.$store.state.manga.activeVer
+      }
+    },
 
     qrcodeValue() {
       const { HOST, PORT } = this.$config.api;
@@ -88,9 +109,13 @@ export default {
       return `${protocol}//${HOST}:${PORT}/s/${this.shortId}`
     },
 
-    isEnd() {
-      const m = this.metadata;
-      return m && m.status === 'completed'
+    status() {
+      if (!this.metadata) return false;
+      return this.metadata.status; 
+    },
+
+    completed() {
+      return this.status && this.status === 'completed';
     }
   },
 
@@ -107,6 +132,22 @@ export default {
         query: { ver, type: 'manga' }
       });
     },
+
+    handleRead() {
+      let item;
+
+      if (this.fileType) {
+        item = this.files[0];
+        this.$emit('read-file', item);
+      } else {
+        if (this.chapters.length) {
+          item = this.chapters[0]
+        } else {
+          item = this.images[0];
+        }
+        this.$emit('read-manga', item);
+      }
+    }
   }
 }
 </script>
@@ -115,9 +156,18 @@ export default {
 @import '../../../../assets/style/base';
 
 #metadata {
+  margin-left: -15px;
+  margin-right: -15px;
+
+
+  @include media-breakpoint-up(md) {
+    margin-left: 0;
+    margin-right: 0;
+  }
 
   .metadata-inner {
     display: flex;
+    flex-direction: column;
     position: relative;
   }
 
@@ -179,25 +229,146 @@ export default {
     }
   }
 
-  .metadata-cover {
-    display: block;
-    position: relative;
-    border-radius: .255rem;
-    max-width: 80%;
-    max-height: 240px;
+  .metadata-info {
+    display: flex;
+    height: 220px;
+    align-items: center;
+    border-bottom: .5px solid #dedede;
+    padding-left: 15px;
+    padding-right: 15px;
+    font-size: 14px;
+    background: #fff;
+
+    img {
+      width: auto !important;
+      height: auto !important;
+      max-width: 50%;
+      max-height: 180px;
+      margin-right: 1rem;
+    }
+
+    > div {
+      flex: 1;
+
+      .title {
+        font-size: 1.2rem;
+        font-weight: 300;
+      }
+
+      div {
+        margin-bottom: .25rem;
+      }
+    }
+
+    @include media-breakpoint-up(sm) {
+      height: 280px;
+
+      img {
+        max-height: 240px;
+        margin-right: 1.5rem;
+      }
+
+      > div {
+
+        .title {
+          font-size: 1.4rem;
+          font-weight: 300;
+        }
+
+        div {
+          margin-bottom: .3rem;
+        }
+      }
+    }
+
+    @include media-breakpoint-up(md) {
+      background: none;
+      height: 320px;
+
+      img {
+        max-height: 280px;
+        margin-right: 1.5rem;
+      }
+
+      > div {
+
+        .title {
+          font-size: 1.4rem;
+          font-weight: 300;
+        }
+
+        div {
+          margin-bottom: .3rem;
+        }
+      }
+    }
+
+    @include media-breakpoint-up(lg) {
+      height: 340px;
+
+      img {
+        max-height: 280px;
+        margin-right: 2rem;
+      }
+
+      > div {
+        .title {
+          font-size: 1.6rem;
+          font-weight: 300;
+        }
+
+        div {
+          margin-bottom: .4rem;
+        }
+      }
+    }
+  }
+
+  .metadata-actions {
+    padding: .75rem 15px;
+    margin: 0;
+    border-bottom: .5px solid #dedede;
+    color: #999;
+    background: #fff;
+
+    a {
+      font-size: 1.1rem;
+      font-weight: 200;
+      text-align: center;
+      cursor: pointer;
+      padding: 0 .25rem;
+    }
+
+    a + a {
+      border-left: .5px solid #dedede;
+    }
+
+    .svg-icon {
+      width: 20px;
+      height: 20px;
+      vertical-align: -0.15em;
+      margin-right: .25rem;
+    }
+
+    @include media-breakpoint-up(md) {
+      background: none;
+    }
   }
 
   .metadata-title {
-    margin: 1rem 0 .5rem 0;
+    margin: 1.5rem 0 1rem 0;
     font-size: 1.2rem;
-    text-align: center;
-    font-weight: 200;
+    font-weight: 300;
+    text-align: left;
     text-decoration: none;
     word-break: break-all;
 
-    @include media-breakpoint-up(md) {
+    @include media-breakpoint-up(sm) {
       font-size: 1.6rem;
-      text-align: left;
+    }
+
+    @include media-breakpoint-up(md) {
+      font-size: 1.8rem;
     }
   }
 
