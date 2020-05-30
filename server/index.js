@@ -17,6 +17,7 @@ const registerRouter = require('./router');
 
 // Load Middlewares
 const errorMw          = require('./middlewares/error');
+const jwtMw            = require('./middlewares/jwt');
 const clientCertAuthMw = require('./middlewares/client-cert-auth');
 const corsMw           = require('./middlewares/cors');
 const bodyParserMw     = require('./middlewares/body-parser');
@@ -29,12 +30,14 @@ const VideoController    = require('./controllers/video');
 const PDFController      = require('./controllers/pdf');
 const MangaController    = require('./controllers/manga');
 const SettingsController = require('./controllers/settings');
+const AuthController     = require('./controllers/auth');
 
 // Load Services
 const MangaService    = require('./services/manga');
 const SettingsService = require('./services/settings');
 const RepoService     = require('./services/repo');
 const ShareService    = require('./services/share');
+const AuthService     = require('./services/auth');
 
 class Application extends EventEmitter {
 
@@ -111,12 +114,14 @@ class Application extends EventEmitter {
   }
 
   _loadMiddlewares() {
-    const { ssl, clientCert } = this.config('server');
-    const middlewares = [ corsMw, ...staticMw, bodyParserMw ]
+    const { server } = this.config();
+    const { ssl, clientCert } = server;
+    const middlewares = [ jwtMw, ...staticMw, bodyParserMw ]
 
     // validate client cert if clientCert is true
     if (ssl && clientCert) middlewares.unshift(clientCertAuthMw);
 
+    middlewares.unshift(corsMw);
     // add errorMw to first
     middlewares.unshift(errorMw);
 
@@ -137,7 +142,8 @@ class Application extends EventEmitter {
       settings: new SettingsService(options),
       manga: new MangaService(options),
       share: new ShareService(options),
-      repo: new RepoService(options)
+      repo: new RepoService(options),
+      auth: new AuthService(options),
     });
 
     const keys = Object.keys(service)
@@ -160,7 +166,8 @@ class Application extends EventEmitter {
       video: new VideoController(options),
       pdf: new PDFController(options),
       manga: new MangaController(options),
-      settings: new SettingsController(options)
+      settings: new SettingsController(options),
+      auth: new AuthController(options)
     };
   }
 

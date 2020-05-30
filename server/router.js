@@ -15,6 +15,9 @@ module.exports = app => {
   router.get('/api/settings', controller.settings.get);
   router.post('/api/settings', controller.settings.post);
 
+  router.post('/api/login', controller.auth.login);
+  router.get('/api/auth/check', controller.auth.check);
+
   router.get('/img/:dirId/:path?', controller.image.show);
   router.get('/vid/:dirId/:path?', controller.video.show);
   router.get('/pdf/:dirId/:path?', controller.pdf.show);

@@ -83,7 +83,6 @@
 
 <script>
 import { mapState, mapGetters } from 'vuex';
-import { types } from '@/store/modules/explorer';
 import { types as appTypes } from '@/store/modules/app';
 
 export default {
@@ -159,7 +158,6 @@ export default {
       this.uptime = uptime;
       this.searchInRepo = searchInRepo;
     }
-
   }
 }
 </script>

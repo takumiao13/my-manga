@@ -178,7 +178,9 @@ class SettingsService extends Service {
       } 
 
       // TODO: Optimize Later
-      return omit(value, 'server');
+      // temp use accounts match user
+      // use db to create user later
+      return omit(value, ['server', 'accounts', 'image']);
 
     } else if (key === 'repos') {
       return this.service.repo.list();

@@ -93,7 +93,7 @@ class MangaController extends Controller {
       const xAppVersionChanged = headers['x-app-version'] && headers['x-app-version'] !== appinfo.version;
       const lastModifiedChanged = !ifModifiedSince || lastModified - ifModifiedSince >= 1000;
       
-      if (xAppStartChanged || xAppVersionChanged || lastModifiedChanged) {
+      if (xAppStartChanged || xAppVersionChanged || !ctx.fresh || lastModifiedChanged) {
         // remove force cache for fetch list
         response.lastModified = lastModified;
         response.set({
@@ -105,12 +105,7 @@ class MangaController extends Controller {
         response.lastModified = ifModifiedSince;
       }
     } catch(err) {
-      switch (err.errno) {
-        case -4058: // no such file or directory
-          this.app.throwError(ERR_CODE.MANGA_NO_DIR);
-        default:
-          throw err;
-      }
+      this.app.throwError(ERR_CODE.MANGA_NO_DIR);
     }
   }
 
