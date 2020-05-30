@@ -237,6 +237,7 @@ const createModule = (state = { ...initialState }) => ({
         activeVer: '',
         cover: '',
         banner: '',
+        fileType: '',
         error: null,
         shortId: false,
         metadata: null // fixed when list no-metadata cannot overwrite prev metadata

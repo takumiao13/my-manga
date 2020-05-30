@@ -184,7 +184,6 @@ function bootstrapApp() {
     })
     .catch(error => {
       window.localStorage.removeItem(REPO_KEY);
-      debugger;
       renderApp();
       hideSplashScreen();
       console.error('App Bootstrap Error', error);

@@ -252,7 +252,6 @@ export default {
 
       .title {
         font-size: 1.2rem;
-        font-weight: 300;
       }
 
       div {
@@ -272,7 +271,6 @@ export default {
 
         .title {
           font-size: 1.4rem;
-          font-weight: 300;
         }
 
         div {
@@ -294,7 +292,6 @@ export default {
 
         .title {
           font-size: 1.4rem;
-          font-weight: 300;
         }
 
         div {
@@ -314,7 +311,6 @@ export default {
       > div {
         .title {
           font-size: 1.6rem;
-          font-weight: 300;
         }
 
         div {
@@ -333,7 +329,6 @@ export default {
 
     a {
       font-size: 1.1rem;
-      font-weight: 200;
       text-align: center;
       cursor: pointer;
       padding: 0 .25rem;

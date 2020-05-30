@@ -286,7 +286,7 @@ export default {
 
       // - toggle version
       // - search
-      if (path !== this.path || search) {
+      if (path === '@random' || path !== this.path || search) {
         promise = promise.then(() => 
           this.$store.dispatch(mangaTypes.FETCH, { 
             isBack, dirId, ver, search, clear,

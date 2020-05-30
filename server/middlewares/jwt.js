@@ -21,7 +21,17 @@ module.exports = (app) => {
       },
     }).unless({ 
       // protected `api/*` and `img`
-      path: [ /\//, '/index\.html', /^\/assets\//, /^\/api\/settings/, /^\/api\/login/ ] 
+      path: [ 
+        /^\/$/, 
+        /^\/index\.html$/, 
+        /^\/assets\//, 
+        /^\/mode\//,
+        /^\/service-worker\.js/,
+        /^\/manifest\.json/,
+        /^\/precache-manifest/, 
+        /^\/api\/settings/,
+        /^\/api\/login/
+      ] 
     });
   }
 }
