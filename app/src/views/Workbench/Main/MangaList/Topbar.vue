@@ -18,8 +18,7 @@
 </template>
 
 <script>
-import { types as appTypes } from '@/store/modules/app';
-import { mapState, mapGetters } from 'vuex';
+import { mapState, mapGetters, mapMutations } from 'vuex';
 import qs from '@/helpers/querystring';
 import animateScrollTo from 'animate-scroll-to.js';
 
@@ -119,6 +118,8 @@ export default {
   },
 
   methods: {
+    ...mapMutations('app', ['toggleAside', 'setActivity']),
+
     handleBack() {
      if (this.$router._routerHistory.length === 1) {
         const { dirId } = this.$router.history.current.params;
@@ -145,9 +146,9 @@ export default {
     },
 
     handleToggleSidebar(activity) {
-      this.$store.commit(appTypes.TOGGLE_ASIDE);
+      this.toggleAside();
       if (activity) {
-        this.$store.commit(appTypes.TOGGLE_ACTIVITY, { activity });
+        this.setActivity(activity);
       }
     },
 

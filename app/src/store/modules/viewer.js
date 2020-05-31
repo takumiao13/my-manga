@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import { safeAssign, isDef, find } from '@/helpers/utils';
-import { createTypesWithNamespace, createRequestStatus } from '../helpers';
+import { createRequestStatus } from '../helpers';
 import { NAMESPACE as APP_NAMESPACE } from './app'
 import mangaAPI from '@/apis/manga';
 
@@ -8,41 +8,32 @@ import mangaAPI from '@/apis/manga';
 export const NAMESPACE = 'viewer';
 
 // Types Enum
-const LOAD  = 'LOAD';
-const GO    = 'GO';
-const VIEW  = 'VIEW';
-const VIEW_VIDEO = 'VIEW_VIDEO';
-
-const SETTINGS = 'setSettings';
-
-const LOCKING = 'setLock';
-const FULLSCREEN = 'setFullscreen';
-
-const SPEED = 'setSpeed';
-const AUTO_SCROLLING = 'setScroll';
-
+const SET_MANGA = 'setManga';
+const SET_PAGE = 'setPage';
+const SET_SETTINGS = 'setSettings';
+const SET_LOCKING = 'setLocking';
+const SET_FULLSCREEN = 'setFullscreen';
+const SET_SPEED = 'setSpeed';
+const SET_AUTO_SCROLLING = 'setAutoScrolling';
 
 const statusHelper = createRequestStatus('status');
-
-export const types = createTypesWithNamespace([ 
-  LOAD, GO, VIEW, VIEW_VIDEO, SETTINGS,
-  LOCKING, FULLSCREEN, AUTO_SCROLLING, SPEED
-], NAMESPACE);
 
 const initialState = {
   name: '', // manga name
   path: '', // manga path
-  page: 1, // curr page
-  ch: '', // original chapter name
-  chName: '', // chapter name
-  chIndex: 0,
   cover: '', // cover path
   verNames: [],
-  activeVer: '',
   images: [],
   chapters: [],
-  
+
+  ch: '', // original chapter name
+  chIndex: 0,
+  chName: '', // chapter name
+
   // common state
+  page: 1, // curr page
+  
+  activeVer: '',
   fullscreen: false,
   locking: true,
 
@@ -111,7 +102,7 @@ const createModule = (state = { ...initialState }) => ({
   },
 
   actions: {
-    [VIEW]({ commit, state }, payload = {}) {
+    fetchManga({ commit, state }, payload = {}) {
       const { dirId, path, ch, page } = payload;
       const promiseArray = [];
       const pathResStub = () => {};
@@ -172,19 +163,15 @@ const createModule = (state = { ...initialState }) => ({
   
         // try to remove name prefix
         const chName = ch.replace(`${name} - `, '');
-        
-        // TODO: replace `safeAssign`
-        // sometimes images chapters will be undefined
-        // so we should safeAssign it.
-        commit(LOAD, { name, path, cover, images, chapters, chName, verNames });
-        commit(GO, { page, ch });
+        commit(SET_MANGA, { name, path, cover, images, chapters, chName, verNames });
+        commit(SET_PAGE, { page, ch });
         Vue.nextTick(() => statusHelper.success(commit));
       }).catch(error => {
         statusHelper.error(commit, { error });
       });
     },
 
-    [VIEW_VIDEO]({ commit }, payload = {}) {
+    fetchVideo({ commit }, payload = {}) {
       const { dirId, path, ver } = payload;
 
       statusHelper.pending(commit);
@@ -196,7 +183,7 @@ const createModule = (state = { ...initialState }) => ({
         const findOptions = ver ? { ver } : { name: payload.name };
         const video = find(children, findOptions);
 
-        commit(LOAD, {
+        commit(SET_MANGA, {
           name, 
           verNames,
           path: video.path,
@@ -211,40 +198,56 @@ const createModule = (state = { ...initialState }) => ({
       })
     },
 
-    [GO]({ commit, getters }, payload = {}) {
+    gotoPage({ commit, getters }, payload) {
+      if (typeof payload === 'number') {
+        payload = { page: payload };
+      }
+
       const { page, ch } = payload;
       
-      if (page < 1) return;
-      if (!ch && page > getters.count) return;
-
+      if (page < 1 || (!ch && page > getters.count)) return;
+  
       // TODO:
       // check chapter size ??
       if (ch && page > getters.chCount) return;
       
       // should empty ch
-      commit(GO, payload);
+      commit(SET_PAGE, payload);
     },
 
-    [AUTO_SCROLLING]({ commit }, payload) {
-      commit(LOCKING, false);
-      commit(AUTO_SCROLLING, payload);
+    nextPage({ dispatch, state }) {
+      return dispatch('gotoPage', { page: state.page + 1 });
+    },
+
+    prevPage({ dispatch }) {
+      return dispatch('gotoPage', { page: state.page - 1 });
+    },
+
+    autoScroll({ commit }, payload) {
+      commit(SET_LOCKING, false);
+      commit(SET_AUTO_SCROLLING, payload);
     }
   },
 
   mutations: {
-    [LOAD](state, payload) {      
+    // TODO: replace `safeAssign`
+    // sometimes images chapters will be undefined
+    // so we should safeAssign it.
+    [SET_MANGA](state, payload) {      
       safeAssign(state, payload);
     },
 
-    [GO](state, payload) {
-      safeAssign(state, payload);
+    [SET_PAGE](state, { page, ch }) {
+      // should empty ch
+      state.page = page;
+      state.ch = ch;
     },
 
-    [SETTINGS](state, payload) {
+    [SET_SETTINGS](state, payload) {
       state.settings = safeAssign(state.settings, payload);
     },
 
-    [AUTO_SCROLLING](state, payload) {
+    [SET_AUTO_SCROLLING](state, payload) {
       const autoScrolling = isDef(payload) ? 
         !!payload :
         !state.autoScrolling;
@@ -252,7 +255,7 @@ const createModule = (state = { ...initialState }) => ({
       state.autoScrolling = autoScrolling;
     },
 
-    [SPEED](state, payload) {
+    [SET_SPEED](state, payload) {
       const val = payload;
       if (state.speed === 50 && val < 0) return;
       if (state.speed === 200 && val > 0) return;
@@ -265,7 +268,7 @@ const createModule = (state = { ...initialState }) => ({
       }
     },
 
-    [LOCKING](state, payload) {
+    [SET_LOCKING](state, payload) {
       const locking = isDef(payload) ?
         !!payload :
         !state.locking;
@@ -273,7 +276,7 @@ const createModule = (state = { ...initialState }) => ({
       state.locking = locking;
     },
 
-    [FULLSCREEN](state, payload) {
+    [SET_FULLSCREEN](state, payload) {
       const fullscreen = isDef(payload) ?
         !!payload :
         !state.fullscreen;

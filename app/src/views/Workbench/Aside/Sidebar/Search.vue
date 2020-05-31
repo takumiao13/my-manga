@@ -82,8 +82,7 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex';
-import { types as appTypes } from '@/store/modules/app';
+import { mapState, mapGetters, mapMutations } from 'vuex';
 
 export default {
   data() {
@@ -123,6 +122,7 @@ export default {
   },
 
   methods: {
+    ...mapMutations('app', [ 'toggleAside' ]),
 
     handleToggleSearchScope() {
       if (this.disableToggleScope) return;
@@ -148,7 +148,7 @@ export default {
         }
       });
 
-      this.$store.commit(appTypes.TOGGLE_ASIDE, { open: false });
+      this.toggleAside(false);
     },
 
     handleReset() {

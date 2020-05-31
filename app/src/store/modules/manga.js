@@ -8,15 +8,18 @@ export const NAMESPACE = 'manga';
 
 // Types Enum
 const FETCH = 'FETCH';
+const FETCH_VERSION = 'FETCH_VERSION';
+const FETCH_MANGAS = 'fetchMangas';
 const SHARE = 'SHARE';
+
 const ADD_VERSION = 'ADD_VERSION';
-const TOGGLE_VERSION = 'TOGGLE_VERSION';
+const SET_VERSION = 'setVersion';
 
 const statusHelper = createRequestStatus('status');
 
 export const types = createTypesWithNamespace([ 
   FETCH, SHARE,
-  ADD_VERSION, TOGGLE_VERSION 
+  FETCH_VERSION 
 ], NAMESPACE);
 
 export const cacheStack = {
@@ -75,27 +78,33 @@ export const cacheStack = {
 
 const initialState = {
   inited: false,
-  cover: '',
-  banner: '',
+  name: '',
+  path: '',
+
   type: '',
   fileType: '',
-  name: '',
+
+  cover: '',
+  banner: '',
+  
   birthtime: '',
-  path: '',
   metadata: null,
+  shortId: false,
+
+  // children
   list: [], // <-- all children
   files: [], // Manga[]
   mangas: [], // Manga[]
   chapters: [], // Manga[]
-  versions: [], // Manga[]
-  verNames: null, // String[]
   images: [], // Manga[]
 
-  // TODO: need optimize and pretty
+  versions: [], // Manga[]
+  verNames: null, // String[]
+  
+  // active item TODO: need optimize and pretty
   activePath: '', // acitve path of `state.list`
   activeVer: '', // active ver of `state.versions`
   activeVerPath: '', // active path of `state.versions`
-  shortId: false,
 
   ...statusHelper.state()
 };
@@ -142,20 +151,10 @@ const createModule = (state = { ...initialState }) => ({
       statusHelper.pending(commit);
 
       if (path === consts.LATEST_PATH) {
-        commit(FETCH, {
+        commit(FETCH, { 
+          ...initialState,
           name: 'Latest',
           path,
-          metadata: null,
-          activePath: '',
-          activeVer: '',
-          activeVerPath: '',
-          shortId: false,
-          list: [],
-          files: [], 
-          mangas: [],
-          chapters: [],
-          versions: [],
-          images: [],
         });
         return statusHelper.success(commit);
       }
@@ -200,7 +199,7 @@ const createModule = (state = { ...initialState }) => ({
       }
     },
 
-    [TOGGLE_VERSION]({ commit, state }, payload = {}) {
+    [FETCH_VERSION]({ commit, state }, payload = {}) {
       const { activeVer, versions } = state;
       const { dirId, ver } = payload;
       
@@ -208,16 +207,16 @@ const createModule = (state = { ...initialState }) => ({
 
       const currVer = find(versions, { ver });
 
-      // check version has loaded
+      // check version has been loaded
       if (currVer && currVer.inited) {
-        commit(TOGGLE_VERSION, { ver, res: currVer });
+        commit(SET_VERSION, { ver, res: currVer });
       } else {
         const { path } = currVer;
         // get version data first
         mangaAPI.list({ dirId, path })
           .then(res => {
             commit(ADD_VERSION, { ver, res });
-            commit(TOGGLE_VERSION, { ver, res }) 
+            commit(SET_VERSION, { ver, res }) 
           });
       }
     },
@@ -251,8 +250,7 @@ const createModule = (state = { ...initialState }) => ({
       safeAssign(version, { ...res, inited: true }); // add version data
     },
 
-    // TODO:
-    [TOGGLE_VERSION](state, payload) {
+    [SET_VERSION](state, payload) {
       const { ver, res } = payload;
       // also change parent path
       const obj = pick(res, ['list', 'files', 'mangas', 'chapters', 'images']);

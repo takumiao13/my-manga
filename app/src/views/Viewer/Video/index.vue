@@ -20,8 +20,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
-import { types } from '@/store/modules/viewer';
+import { mapState, mapActions } from 'vuex';
 import qs from '@/helpers/querystring';
 import screenfull from 'screenfull';
 
@@ -77,6 +76,8 @@ export default {
   },
 
   methods: {
+    ...mapActions('viewer', ['fetchVideo']),
+
     fullscreenToggle() {
       screenfull.toggle();
       this.isFullscreen = !this.isFullscreen;
@@ -125,7 +126,7 @@ export default {
     this.$on('update', (route) => {
       const { dirId, path } = route.params;
       const { ver, name } = route.query;
-      this.$store.dispatch(types.VIEW_VIDEO, { dirId, path: qs.decode(path), ver, name })
+      this.fetchVideo({ dirId, path: qs.decode(path), ver, name })
         .then(() => {
           // TODO: tmp use inited to support async init videojs
           this.inited = true;

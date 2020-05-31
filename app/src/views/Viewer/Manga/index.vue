@@ -17,10 +17,10 @@
     <Viewport
       :hand="settings.handMode"
       :locking="locking"
-      :auto-scrolling="setScroll"
-      @click="setLock"
-      @prev="prev"
-      @next="next"
+      :auto-scrolling="autoScroll"
+      @click="setLocking"
+      @prev="prevPage"
+      @next="nextPage"
     >
       <!-- TODO: may be support more mode later -->
       <ScrollMode
@@ -33,9 +33,9 @@
         :auto-scrolling="autoScrolling"
         :locking="locking"
         :speed="speed"
-        @pageChange="go"
-        @chapterChange="goChapter"
-        @scrollEnd="setScroll(false)"
+        @pageChange="gotoPage"
+        @chapterChange="gotoChapter"
+        @scrollEnd="autoScroll(false)"
       />
     </Viewport>
     <!-- /VIEWPORT -->
@@ -54,10 +54,10 @@
       class="viewer-toolbar fixed-bottom" 
       :class="{ open: locking }"
     >
-      <Seekbar :value="page" :max="count" @end="go" />
+      <Seekbar :value="page" :max="count" @end="gotoPage" />
       <Controlbar
         :speed="speed"
-        @auto-scroll="setScroll"
+        @auto-scroll="autoScroll"
         @speed="setSpeed"
       />
     </div>
@@ -76,7 +76,6 @@ import { mapState, mapGetters, mapMutations, mapActions } from 'vuex';
 import qs from '@/helpers/querystring';
 import screenfull from 'screenfull';
 import animateScrollTo from 'animate-scroll-to.js';
-import { types } from '@/store/modules/viewer';
 
 // Components
 import Header from './Header';
@@ -138,45 +137,19 @@ export default {
     }
   },
 
-  mounted() {
-    if (this.appError) return
-
-    this.$on('leave', () => {
-      // when manga or chapter changed this function will be invoked
-      // we should stop scrolling and lock viewer to show title info.
-      this.setScroll(false);
-      this.setFullscreen(false);
-      
-     // prevent locked when scroll.
-      this.setLock(true);
-      window._ignoreScrollEvent = true;
-    });
-
-    this.$on('update', (route) => {
-      const { dirId, path, ch = '' } = route.params;
-      const page = route.query.start || 1;
-
-      // prevent locked when scroll.
-      this.setLock(true);
-      window._ignoreScrollEvent = true;
-
-      this.$store.dispatch(types.VIEW, { dirId, path: qs.decode(path), ch, page });
-    });
-  },
-
-  created() { this._$effects(true) },
-
-  destroyed() { this._$effects(false) },
-
   methods: {
     ...mapActions('viewer', [
-      'setScroll'
+      'gotoPage',
+      'prevPage',
+      'nextPage',
+      'fetchManga',
+      'autoScroll'
     ]),
 
     ...mapMutations('viewer', [
       'setSettings',
       'setSpeed',
-      'setLock',
+      'setLocking',
       'setFullscreen'
     ]),
 
@@ -186,12 +159,7 @@ export default {
       window[val ? 'addEventListener' : 'removeEventListener']('scroll', this.handleScroll);
     },
 
-    // public
-    go(page) {
-      this.$store.dispatch(types.GO, { page });
-    },
-
-    goChapter(chIndex) {
+    gotoChapter(chIndex) {
       if (chIndex < 1 || chIndex > this.chCount) return;
       const chapter = this.chapters[chIndex-1];
 
@@ -204,15 +172,7 @@ export default {
 
       this.$router.replace({ name: 'viewer', params });
     },
-    
-    prev() {
-      this.go(this.page - 1);
-    },
-
-    next() {
-      this.go(this.page + 1);
-    },
-  
+      
     // events
     handleBack() {
       if (this.$router._routerHistory.length === 1) {
@@ -233,7 +193,7 @@ export default {
 
     handleScroll() {
       if (window._ignoreScrollEvent || this.autoScrolling) return;
-      this.setLock(false);
+      this.setLocking(false);
       this.helpOpen = false;
     },
 
@@ -249,7 +209,7 @@ export default {
       // when autoScrolling (no-pause) should disable keyboard events
       if (this.autoScrolling) {
         if (keyCode === action.lock) {
-          this.setLock();
+          this.setLocking();
         }
 
         if (!this.locking) {
@@ -280,6 +240,36 @@ export default {
           break;
       }
     }
+  },
+
+  created() { this._$effects(true) },
+
+  destroyed() { this._$effects(false) },
+
+  mounted() {
+    if (this.appError) return
+
+    this.$on('leave', () => {
+      // when manga or chapter changed this function will be invoked
+      // we should stop scrolling and lock viewer to show title info.
+      this.autoScroll(false);
+      this.setFullscreen(false);
+      
+     // prevent locked when scroll.
+      this.setLocking(true);
+      window._ignoreScrollEvent = true;
+    });
+
+    this.$on('update', (route) => {
+      const { dirId, path, ch = '' } = route.params;
+      const page = Number(route.query.start) || 1;
+
+      // prevent locked when scroll.
+      this.setLocking(true);
+      window._ignoreScrollEvent = true;
+
+      this.fetchManga({ dirId, path: qs.decode(path), ch, page })
+    });
   }
 }
 </script>

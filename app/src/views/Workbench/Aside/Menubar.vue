@@ -3,7 +3,7 @@
     <a
       class="menubar-btn" 
       :title="asideOpen ? 'Close Aside' : 'Toggle Sidebar'"
-      @click="toggleSidebar"
+      @click="handleBarClick"
     >
       <Icon :name="asideOpen ? 'times' : 'bars'" />
     </a>
@@ -12,7 +12,7 @@
       v-if="canChangeRepos"
       class="menubar-btn"
       title="Repository"
-      @click="gotoRepos"
+      @click="handleGotoRepos"
     >
       <Icon name="warehouse" />
     </a>
@@ -49,13 +49,12 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
-import { types } from '@/store/modules/app';
+import { mapState, mapMutations } from 'vuex';
 import { pick } from '@/helpers/utils';
 
 export default {
   computed: {
-    ...mapState('app', [ 'asideOpen', 'activity' ]),
+    ...mapState('app', ['asideOpen', 'activity']),
 
     ...mapState('settings/user', {
       canChangeRepos: (state) => !!state.data
@@ -63,17 +62,10 @@ export default {
   },
   
   methods: {
-    toggleSidebar() {
-      // when is small screen
-      if (this.asideOpen) {
-        this.$store.commit(types.TOGGLE_ASIDE, { open: false });
-      } else {
-        this.$store.commit(types.TOGGLE_SIDEBAR);
-      }
-    },
+    ...mapMutations('app', ['toggleAside', 'toggleSidebar', 'setActivity']),
 
-    gotoRepos() {
-      this.$router.push({ name: 'repos' });
+    isActive(activity) {
+      return activity === this.activity
     },
 
     toggleActivity(activity) {
@@ -83,12 +75,21 @@ export default {
       to.query = { ...to.query, activity };
       this.$router.replace(to);
 
-      this.$store.commit(types.TOGGLE_SIDEBAR, { open: true });
-      this.$store.commit(types.TOGGLE_ACTIVITY, { activity });
+      this.toggleSidebar(true);
+      this.setActivity(activity)
     },
 
-    isActive(activity) {
-      return activity === this.activity
+    handleBarClick() {
+      // when is small screen
+      if (this.asideOpen) {
+        this.toggleAside(false);
+      } else {
+        this.toggleSidebar();
+      }
+    },
+
+    handleGotoRepos() {
+      this.$router.push({ name: 'repos' });
     }
   }  
 }

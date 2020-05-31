@@ -21,7 +21,7 @@ export default async function repoSettings(ctx, next) {
     // check current `repoId` is match `repoSettings`
     // if no matched, just toggle it.
 		} else if (store.state.app.repoId !== scope) {
-      store.commit(appTypes.TOGGLE_REPO, { repo: scope });
+      store.commit(appTypes.setRepoId, scope);
       await next();
 		}
 	} else {

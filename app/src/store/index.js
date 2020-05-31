@@ -52,9 +52,9 @@ function registerModules() {
 export default store;
 
 export function resetStore() {
-  store.commit(appTypes.TOGGLE_ASIDE, { open: false });
-  store.commit(appTypes.TOGGLE_SIDEBAR, { open: true });
-  store.commit(appTypes.TOGGLE_ACTIVITY, { activity: '' });
+  store.commit(appTypes.toggleAside, false);
+  store.commit(appTypes.toggleSidebar, true);
+  store.commit(appTypes.setActivity);
   mangaCacheStack.clear();
   unregisterModules();
   registerModules();
@@ -68,7 +68,7 @@ export const loadSettingsState = (scope) => {
   if (!isExists) {
     const code = ERR_CODE.REPO_UNACCESSED;
     const error = errorCodeMap[code];
-    store.commit(appTypes.TOGGLE_REPO, { repo: '' })
+    store.commit(appTypes.setRepoId, '');
     return Promise.reject(Object.assign(error, { code }))
   }
 
@@ -77,5 +77,5 @@ export const loadSettingsState = (scope) => {
   settingTypes[scope] = createTypes(scope);
   store.registerModule(['settings', scope], settingsState);
   return store.dispatch(settingTypes[scope].INIT)
-    .then(() => store.commit(appTypes.TOGGLE_REPO, { repo: scope }))
+    .then(() => store.commit(appTypes.setRepoId, scope))
 }

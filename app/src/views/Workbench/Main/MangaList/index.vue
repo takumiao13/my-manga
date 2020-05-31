@@ -87,8 +87,7 @@ import { isDef, get } from '@/helpers/utils';
 import { getScrollTop } from '@/helpers/dom';
 import qs from '@/helpers/querystring';
 import { types as mangaTypes } from '@/store/modules/manga';
-import { types as viewerTypes } from '@/store/modules/viewer';
-import { mapState, mapGetters } from 'vuex';
+import { mapState, mapGetters, mapMutations } from 'vuex';
 
 // Components
 import Topbar from './Topbar';
@@ -219,35 +218,9 @@ export default {
     this.fetchMangas(this.$route);
   },
 
-  beforeRouteUpdate(to, from, next) {
-    if (this.appError) return next();
-
-    // check route is changed (besides `activity` querystring)
-    if (JSON.stringify(to.params) == JSON.stringify(from.params)) {
-      const { activity: a, ...toQuery  } = to.query;
-      const { activity: b, ...fromQuery } = from.query;
-
-      if (JSON.stringify(toQuery) == JSON.stringify(fromQuery)) {
-        return next();
-      }
-    }
-
-    // reset data and fetch mangas
-    this.refreshData(to);
-    to.meta.resolver = this.fetchMangas(to, { isBack: to.meta.isBack });
-    next();
-  },
-
-  created() {
-    this._prevScrollTop;
-    window.addEventListener('scroll', this.handleScroll);
-  },
-
-  destroyed() {
-    window.removeEventListener('scroll', this.handleScroll);
-  },
-
   methods: {
+    ...mapMutations('viewer', 'setManga'),
+
     refreshData(route) {
       this.sharing = false;
       this.showAddress = true; // always show addressbar when route update
@@ -279,13 +252,10 @@ export default {
 
       let promise = Promise.resolve();
       
-      // change path if search in repo scope
-      // if (search && repo == 1) {
-      //   safepath = '';
-      // }
-
       // - toggle version
       // - search
+      // - @random
+      // - toggle activity
       if (path === '@random' || path !== this.path || search) {
         promise = promise.then(() => 
           this.$store.dispatch(mangaTypes.FETCH, { 
@@ -302,7 +272,7 @@ export default {
       // attach version handle multi versions
       if (!search && ver) {
         promise = promise.then(() => 
-          this.$store.dispatch(mangaTypes.TOGGLE_VERSION, {
+          this.$store.dispatch(mangaTypes.FETCH_VERSION, {
             dirId, ver
           })
         );
@@ -380,7 +350,7 @@ export default {
 
       // sync state to viewer store
       if (shouldSyncState()) {
-        this.$store.commit(viewerTypes.LOAD, {
+        this.setManga({
           name: this.name,
           path: this.path,
           images: this.images,
@@ -464,6 +434,34 @@ export default {
         this.sharing = true;
       }); 
     }
+  },
+
+  beforeRouteUpdate(to, from, next) {
+    if (this.appError) return next();
+
+    // check route is changed (besides `activity` querystring)
+    if (JSON.stringify(to.params) == JSON.stringify(from.params)) {
+      const { activity: a, ...toQuery  } = to.query;
+      const { activity: b, ...fromQuery } = from.query;
+
+      if (JSON.stringify(toQuery) == JSON.stringify(fromQuery)) {
+        return next();
+      }
+    }
+
+    // reset data and fetch mangas
+    this.refreshData(to);
+    to.meta.resolver = this.fetchMangas(to, { isBack: to.meta.isBack });
+    next();
+  },
+
+  created() {
+    this._prevScrollTop;
+    window.addEventListener('scroll', this.handleScroll);
+  },
+
+  destroyed() {
+    window.removeEventListener('scroll', this.handleScroll);
   }
 }
 </script>

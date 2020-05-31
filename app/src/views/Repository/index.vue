@@ -25,7 +25,7 @@
       </div>
 
       <p class="my-3 text-muted" style="font-size: 80%;">
-        REPOS - {{ repos.length }} items
+        REPOS ({{ repos.length }})
       </p>
 
       

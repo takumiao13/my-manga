@@ -33,7 +33,7 @@
           {{ errMsg || '&nbsp;' }}
         </div>
 
-        <button type="submit" @click="login" class="btn btn-lg btn-primary btn-block mt-3">
+        <button type="submit" @click="handleLogin" class="btn btn-lg btn-primary btn-block mt-3">
           LOGIN
         </button>
       </form>
@@ -69,11 +69,11 @@ export default {
   },
  
   methods: {    
-    ...mapActions('app', ['setUser']),
+    ...mapActions('app', ['login']),
 
     ...mapMutations('app', ['setError']),
 
-    login($event) {
+    handleLogin($event) {
       const $form = this.$refs.form;
       $event.preventDefault();
 
@@ -85,7 +85,7 @@ export default {
         }
 
         $form.submitted = true;
-        this.setUser(this.form)
+        this.login(this.form)
           .then(() => Promise.all([
             this.$store.dispatch(settingTypes.user.INIT),
             this.$store.dispatch(settingTypes.repo.INIT)

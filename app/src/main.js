@@ -123,9 +123,7 @@ function bootstrapApp() {
     // Prevent Chrome 67 and earlier from automatically showing the prompt
     e.preventDefault();
     // Stash the event so it can be triggered later.
-    store.commit(appTypes.PWA_INSTALL_PROMPT, {
-      pwaInstallPrompt: e
-    });
+    store.commit(appTypes.setPwaInstallPrompt, e);
   });
 
   EventEmitter.$on('store.reset', (repo) => {

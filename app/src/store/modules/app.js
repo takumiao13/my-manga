@@ -7,16 +7,17 @@ import authAPI from '@/apis/auth';
 export const NAMESPACE = 'app';
 
 // Types Enum
-const TOGGLE_ASIDE    = 'TOGGLE_ASIDE';
-const TOGGLE_SIDEBAR  = 'TOGGLE_SIDEBAR';
-const TOGGLE_REPO     = 'TOGGLE_REPO';
-const TOGGLE_ACTIVITY = 'TOGGLE_ACTIVITY';
-const TOGGLE_SIZE     = 'TOGGLE_SIZE';
-const ERROR           = 'ERROR';
-const PWA_INSTALL_PROMPT = 'PWA_INSTALL_PROMPT';
-const USER           = 'setUser';
-const CHECK_USER     = 'checkUser';
+const LOGIN = 'login';
+const CHECK_USER = 'checkUser';
+
+const TOGGLE_ASIDE   = 'toggleAside';
+const TOGGLE_SIDEBAR = 'toggleSidebar';
+const SET_REPO_ID    = 'setRepoId';
+const SET_USER       = 'setUser';
+const SET_ACTIVITY   = 'setActivity';
+const SET_SIZE       = 'setSize';
 const SET_ERROR      = 'setError';
+const SET_PWA_INSTALL_PROMPT = 'setPwaInstallPrompt';
 
 const ClassNames = {
   ASIDE_OPEN: 'aside-open',
@@ -32,15 +33,16 @@ const DEFAULT_ERROR = {
 };
 
 export const types = createTypesWithNamespace([
-  TOGGLE_ASIDE, TOGGLE_SIDEBAR, TOGGLE_REPO, TOGGLE_ACTIVITY, TOGGLE_SIZE,
-  ERROR, PWA_INSTALL_PROMPT, USER, CHECK_USER, SET_ERROR
+  CHECK_USER, LOGIN,
+  TOGGLE_ASIDE, TOGGLE_SIDEBAR, SET_REPO_ID, SET_ACTIVITY, SET_SIZE,
+  SET_PWA_INSTALL_PROMPT, SET_USER, SET_ERROR
 ], NAMESPACE);
 
 export default {
   namespaced: true,
 
   state: {
-    asideOpen: false, // TODO: use a more suitable name replace it
+    asideOpen: false,
     sidebarOpen: true,
     repoId: '',
     size: '',
@@ -61,22 +63,22 @@ export default {
   },
 
   actions: {
-    [USER]({ commit }, payload = {}) {
+    [LOGIN]({ commit }, payload = {}) {
       return authAPI.login(payload)
         .then((res) => {
-          commit(USER, { ...res });
+          commit(SET_USER, { ...res });
         });
     },
 
     [CHECK_USER]({ commit }) {
       return authAPI.check().then(res => {
-        commit(USER, res);
+        commit(SET_USER, res);
       });
     }
   },
 
   mutations: {
-    [USER](state, payload) {
+    [SET_USER](state, payload) {
       Object.assign(state.user, payload);
       
       // when check api not with token
@@ -84,56 +86,81 @@ export default {
       if (token) localStorage.setItem(TOKEN_KEY, token);
     },
 
-    // only in small device
-    [TOGGLE_ASIDE](state, payload = {}) {
+    /**
+     * toggle aside only in small device
+     * @param {*} state 
+     * @param {boolean} payload 
+     */
+    [TOGGLE_ASIDE](state, payload) {
       const body = window.document.body;
-      const { open } = payload;
-
-      if (isUndef(open)) {
+      if (isUndef(payload)) {
         body.classList.toggle(ClassNames.ASIDE_OPEN);
         state.asideOpen = !state.asideOpen;
         
       } else {
-        body.classList[open ? 'add' : 'remove'](ClassNames.ASIDE_OPEN);
-        state.asideOpen = !!open;
+        body.classList[payload ? 'add' : 'remove'](ClassNames.ASIDE_OPEN);
+        state.asideOpen = !!payload;
       }
     },
 
-    [TOGGLE_SIDEBAR](state, payload = {}) {
+    /**
+     * toggle sidebar
+     * @param {*} state 
+     * @param {boolean} payload 
+     */
+    [TOGGLE_SIDEBAR](state, payload) {
       const body = window.document.body;
-      const { open } = payload;
 
-      if (isUndef(open)) {
+      if (isUndef(payload)) {
         body.classList.toggle(ClassNames.SIDEBAR_COLLAPSED);
         state.sidebarOpen = !state.sidebarOpen;
         
       } else {
-        body.classList[open ? 'remove' : 'add'](ClassNames.SIDEBAR_COLLAPSED);
-        state.sidebarOpen = !!open;
+        body.classList[payload ? 'remove' : 'add'](ClassNames.SIDEBAR_COLLAPSED);
+        state.sidebarOpen = !!payload;
       }
     },
 
-    [TOGGLE_REPO](state, payload = {}) {
-      state.repoId = payload.repo;
+    /**
+     * 
+     * @param {*} state 
+     * @param {string} payload 
+     */
+    [SET_REPO_ID](state, payload) {
+      state.repoId = payload;
     },
 
-    [TOGGLE_ACTIVITY](state, payload = {}) {
-      state.activity = payload.activity || 'explorer'; // default
+    /**
+     * 
+     * @param {*} state 
+     * @param {string} payload 
+     */
+    [SET_ACTIVITY](state, payload = 'explorer') {
+      state.activity = payload;
     },
 
-    [TOGGLE_SIZE](state, payload = {}) {
-      state.size = payload.size || 'lg';
+    /**
+     * 
+     * @param {*} state 
+     * @param {'sm | md | lg'} payload 
+     */
+    [SET_SIZE](state, payload = 'lg') {
+      state.size = payload;
     },
 
     [SET_ERROR](state, payload) {
-      console.log('error', payload);
       state.error = payload === null ? 
         null : 
         Object.assign({}, DEFAULT_ERROR, payload || {});
     },
 
-    [PWA_INSTALL_PROMPT](state, payload) {
-      state.pwaInstallPrompt = payload.pwaInstallPrompt;
+    /**
+     * 
+     * @param {*} state 
+     * @param {*} payload 
+     */
+    [SET_PWA_INSTALL_PROMPT](state, payload) {
+      state.pwaInstallPrompt = payload;
     }
   }
 };

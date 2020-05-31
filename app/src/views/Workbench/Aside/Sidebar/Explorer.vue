@@ -32,7 +32,7 @@
         class="explorer-rand"
         title="Random mangas"
         :class="{ active: activeItem && activeItem.path === $consts.RANDOM_PATH }"
-        @click="handleRand"
+        @click="handleRandom"
       >
         <Icon name="random" size="14" />Random (50)
       </div>
@@ -50,9 +50,7 @@
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex';
-import { types as appTypes } from '@/store/modules/app';
-import { types } from '@/store/modules/explorer';
+import { mapState, mapGetters, mapActions, mapMutations } from 'vuex';
 import qs from '@/helpers/querystring';
 
 export default {
@@ -61,7 +59,7 @@ export default {
       title: {
         content: 'Explorer',
         className: 'navbar-brand-xs',
-        click: this.closeSidebar
+        click: () => this.toggleAside(false)
       },
 
       activeItem: null,
@@ -95,52 +93,16 @@ export default {
     }
   },
 
-  activated() {
-    if (
-      this.appError || // error
-      (this.$route.meta.isBack && this.folderTree) // has loaded 
-    ) {
-      return;
-    }
-
-    this.fetchFolders();
-    this.fetchLatest();
-    this.fetchVersions();
-  },
-
-  beforeRouteUpdate(to, from, next) {
-    if (
-      this.appError || 
-      to.params.dirId == from.params.dirId // the same route
-    ) {
-      return;
-    }
-
-    this.fetchFolders();
-    this.fetchLatest();
-    this.fetchVersions();
-
-    next();
-  },
-
   methods: {
-    fetchFolders() {
-      const { dirId } = this.repo;
-      return this.$store.dispatch(types.FETCH, { dirId });
-    },
+    ...mapMutations('app', [ 'toggleAside' ]),
 
-    fetchLatest() {
-      const { dirId } = this.repo;
-      return this.$store.dispatch(types.LATEST, { dirId });
-    },
+    ...mapActions('explorer', [ 'fetchFolders', 'fetchLatest', 'fetchVersions' ]),
 
-    fetchVersions() {
+    reset() {
       const { dirId } = this.repo;
-      return this.$store.dispatch(types.VERSIONS, { dirId });
-    },
-
-    closeSidebar() {
-      this.$store.commit(appTypes.TOGGLE_ASIDE, { open: false });
+      this.fetchFolders({ dirId });
+      this.fetchLatest({ dirId });
+      this.fetchVersions({ dirId });
     },
 
     // events
@@ -152,7 +114,7 @@ export default {
       // maybe use two-way binding later
       // faster then vuex (but we cannot use strict mode)
       ctx.setStatus('pending');
-      this.$store.dispatch(types.FETCH, {
+      this.fetchFolders({
         path: item.path,
         dirId
       }).then(() => {
@@ -177,7 +139,7 @@ export default {
         name: 'explorer', 
         params: { dirId, path: qs.encode(path) },
         query: item.type === 'MANGA' ? { type: 'manga' } : null
-      }).then(() => this.closeSidebar());
+      }).then(() => this.toggleAside(false));
     },
 
     handleGotoRepos() {
@@ -190,7 +152,7 @@ export default {
         this.$router.push({ name: 'explorer', params: { dirId }});
       }
       
-      this.closeSidebar();
+      this.toggleAside(false);
     },
 
     handleLatest() {
@@ -201,10 +163,10 @@ export default {
       this.$router.push({ 
         name: 'explorer', 
         params: { dirId, path }
-      }).then(() => this.closeSidebar());
+      }).then(() => this.toggleAside(false));
     },
 
-    handleRand() {
+    handleRandom() {
       const { dirId } = this.repo;
       const path = this.$consts.RANDOM_PATH;
 
@@ -212,15 +174,16 @@ export default {
       this.$router.push({ 
         name: 'explorer', 
         params: { dirId, path }
-      }).then(() => this.closeSidebar());
+      }).then(() => this.toggleAside(false));
     },
 
     handleRefresh() {
+      const { dirId } = this.repo;
       this.$refs.nestedList.reset();
 
       Promise.all([
-        this.fetchFolders(),
-        this.fetchLatest()
+        this.fetchFolders({ dirId }),
+        this.fetchLatest({ dirId })
       ]).then(() => {
         this.$notify({
           title: 'Refresh Success'
@@ -231,7 +194,29 @@ export default {
     handleCollapse() {
       this.$refs.nestedList.collapseAll();
     }
-  }
+  },
+
+   activated() {
+    if (
+      this.appError || // error
+      (this.$route.meta.isBack && this.folderTree) // has loaded 
+    ) {
+      return;
+    }
+
+    this.reset();
+  },
+
+  beforeRouteUpdate(to, from, next) {
+    if (
+      this.appError || 
+      to.params.dirId == from.params.dirId // the same route
+    ) {
+      return;
+    }
+    this.reset();
+    next();
+  },
 }
 </script>
 

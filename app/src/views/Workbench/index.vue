@@ -11,15 +11,14 @@
         </div>
 
         <!-- Backdrop -->
-        <div class="backdrop" @click="closeAside"></div>
+        <div class="backdrop" @click="toggleAside(false)"></div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { mapState } from 'vuex';
-import { types } from '@/store/modules/app';
+import { mapState, mapMutations } from 'vuex';
 import Aside from './Aside';
 
 export default {
@@ -30,40 +29,36 @@ export default {
   },
 
   computed: {
-    ...mapState('app', [ 'asideOpen' ]),
+    ...mapState('app', ['asideOpen']),
 
     ...mapState('settings/user', {
       canChangeRepos: (state) => !!state.data
     }),
   },
 
+  methods: {
+    ...mapMutations('app', ['toggleAside', 'setSize', 'setActivity'])
+  },
+
   // when route change should show correct activity
   activated() {
-    const { activity } = this.$route.query;
-    this.$store.commit(types.TOGGLE_ACTIVITY, { activity });
+    this.setActivity(this.$route.query.activity);
   },
 
   beforeRouteUpdate(to, from, next) {
-    const { activity } = to.query;
-    this.$store.commit(types.TOGGLE_ACTIVITY, { activity });
+    this.setActivity(to.query.activity);
     next();
   },
 
   created() {
     this._removeListener = this.$service.media.addListener(evt => {
-      this.$store.commit(types.TOGGLE_SIZE, { size: evt.$active });
+      this.setSize(evt.$active);
     });
   },
 
   destroyed() {
     this._removeListener();
-  },
-
-  methods: {
-    closeAside() {
-      this.$store.commit(types.TOGGLE_ASIDE, { open: false });
-    }
-  }  
+  } 
 }
 </script>
 
