@@ -17,6 +17,7 @@ const registerRouter = require('./router');
 
 // Load Middlewares
 const errorMw          = require('./middlewares/error');
+const logMw            = require('./middlewares/log');
 const jwtMw            = require('./middlewares/jwt');
 const clientCertAuthMw = require('./middlewares/client-cert-auth');
 const corsMw           = require('./middlewares/cors');
@@ -74,7 +75,7 @@ class Application extends EventEmitter {
     // always use http for development
     const serverConfig = this.options.server;
 
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'dev') {
       serverConfig.ssl = false;
     }
 
@@ -110,13 +111,14 @@ class Application extends EventEmitter {
     // if not find datadir and cachedir try to make it
     fs.ensureDirSync(pathFn.join(dataDir, 'repos'));
     fs.ensureDirSync(pathFn.join(dataDir, 'users'));
+    fs.ensureDirSync(pathFn.join(dataDir, 'logs'));
     fs.ensureDirSync(cacheDir);
   }
 
   _loadMiddlewares() {
     const { server } = this.config();
     const { ssl, clientCert } = server;
-    const middlewares = [ jwtMw, ...staticMw, bodyParserMw ]
+    const middlewares = [ logMw, jwtMw, ...staticMw, bodyParserMw ]
 
     // validate client cert if clientCert is true
     if (ssl && clientCert) middlewares.unshift(clientCertAuthMw);

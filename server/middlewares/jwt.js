@@ -29,7 +29,6 @@ module.exports = (app) => {
         /^\/service-worker\.js/,
         /^\/manifest\.json/,
         /^\/precache-manifest/, 
-        /^\/api\/settings/,
         /^\/api\/login/
       ] 
     });

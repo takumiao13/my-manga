@@ -22,14 +22,18 @@ class MangaController extends Controller {
       ctx.body = {
         hasSubfolder: true,
         isDir: true,
-        name: "Random",
-        path: "@random",
-        type: "FILE",
+        name: 'Random',
+        path: '@random',
+        type: 'FILE',
         children: results
       }
     } else {
       await this._cache(ctx, async ({ baseDir, path, settings }) => {
-        const results = await service.manga.list(baseDir, path, settings); 
+        const results = await service.manga.list(baseDir, path, settings);
+        const { metadata } = results;
+        if (metadata && metadata.$error) {
+          ctx.logger('metadata').warn($error);
+        }
         ctx.body = { ...results };
       });
     }

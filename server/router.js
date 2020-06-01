@@ -2,6 +2,16 @@
 module.exports = app => {
   const { router, controller } = app;
 
+  router.use(async (ctx, next) => {
+    await next();
+    const { url, ip } = ctx;
+    if (url === '/' || url === '/api/login' || url === '/api/auth/check') {
+      ctx.logger('visit').info(`${ip} ${url}`);
+    } else {
+      ctx.logger('access').debug(ctx);
+    }
+  });
+
   router.get('/', controller.index.render);
 
   router.get('/api/mangas/:dirId/:path?/folder', controller.manga.folder);
