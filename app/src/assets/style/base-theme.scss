@@ -68,21 +68,37 @@
     }
   }
 
+  // manga item style
+  .manga-item {
+    .cover {
+      border-bottom: 0;
+    }
+
+    .badge {   
+      border: .5px solid $app-muted-color;
+      color: $app-muted-color;
+    }
+
+    .manga-status {
+      color: $app-primary;
+    }
+  }
+
+  .cover {
+    //border: .5px solid $app-border-color;
+
+    img,
+    .cover-placeholder {
+      background: $app-cover-bg;
+      color: #ccc;
+    }
+  }
+
   .manga-area,
   .chapter-area,
   .gallery-area {
     .row {
       border-color: $app-border-color;
-    }
-
-    .cover {
-      //border: .5px solid $app-border-color;
-
-      img,
-      .cover-placeholder {
-        background: $app-cover-bg;
-        color: #ccc;
-      }
     }
   }
 
@@ -117,17 +133,10 @@
 
   .manga-area,
   .chapter-area {
-    .cover {
-      border-bottom: 0;
-    }
-
-    .cover-inner {
-      box-shadow: 0 4px 8px -4px rgba($black, .4);        
-    }
-
-    .badge {   
-      border: .5px solid $app-muted-color;
-      color: $app-muted-color;
+    .manga-item {
+      .cover-inner {
+        box-shadow: 0 4px 8px -4px rgba($black, .4);        
+      } 
     }
 
     .list-group-item:hover {
@@ -171,13 +180,13 @@
     }
   }
 
-  .gallery-area .row {
-    background: $app-main;
-  }
+  .gallery-area {
+    .row {
+      background: $app-main;
 
-  .gallery-area .row {
-    .area-item.active {
-      box-shadow: 0 0 0 4px $app-grid-active-bg;
+      .area-item.active {
+        box-shadow: 0 0 0 4px $app-grid-active-bg;
+      }
     }
   }
 
@@ -189,10 +198,6 @@
         border-color: $app-border-color;
       }
     }
-  }
-
-  .manga-status {
-    color: $app-primary;
   }
 }
 
@@ -300,10 +305,6 @@
 
   .metadata-share .modal {
     color: $app-color !important;
-  }
-
-  .metadata-cover {
-    box-shadow: 0 2px 12px 0 rgba($app-shadow-color, .35);
   }
   
   .description {

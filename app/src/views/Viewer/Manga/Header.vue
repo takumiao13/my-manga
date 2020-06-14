@@ -13,14 +13,6 @@
       :left-btns="leftBtns"
       :right-btns="rightBtns"
     />
-
-    <!-- mouseover header lock viewer
-    <div 
-      v-show="!locking"
-      class="viewer-topbar-placeholder" 
-      @mouseenter="locking = true"
-    />
-    -->
   </div>
 </template>
 

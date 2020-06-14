@@ -15,7 +15,7 @@ export default async function repoSettings(ctx, next) {
 		// need check repo path first then create store;
 		if (isUndef(repoSettings)) {
       to.meta.isBack = false; 
-      await loadSettingsState(scope).then(next)
+      await loadSettingsState(scope).then(next);
 
     // if changed repo is exists
     // check current `repoId` is match `repoSettings`

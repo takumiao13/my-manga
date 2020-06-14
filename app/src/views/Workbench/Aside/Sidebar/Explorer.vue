@@ -139,7 +139,8 @@ export default {
         name: 'explorer', 
         params: { dirId, path: qs.encode(path) },
         query: item.type === 'MANGA' ? { type: 'manga' } : null
-      }).then(() => this.toggleAside(false));
+      });
+      this.toggleAside(false)
     },
 
     handleGotoRepos() {
@@ -151,7 +152,6 @@ export default {
         const { dirId } = this.repo;
         this.$router.push({ name: 'explorer', params: { dirId }});
       }
-      
       this.toggleAside(false);
     },
 
@@ -163,7 +163,8 @@ export default {
       this.$router.push({ 
         name: 'explorer', 
         params: { dirId, path }
-      }).then(() => this.toggleAside(false));
+      });
+      this.toggleAside(false);
     },
 
     handleRandom() {
@@ -174,7 +175,8 @@ export default {
       this.$router.push({ 
         name: 'explorer', 
         params: { dirId, path }
-      }).then(() => this.toggleAside(false));
+      });
+      this.toggleAside(false);
     },
 
     handleRefresh() {

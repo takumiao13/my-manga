@@ -7,19 +7,20 @@ import consts from '@/consts';
 export const NAMESPACE = 'manga';
 
 // Types Enum
-const FETCH = 'FETCH';
-const FETCH_VERSION = 'FETCH_VERSION';
 const FETCH_MANGAS = 'fetchMangas';
-const SHARE = 'SHARE';
+const FETCH_VERSION = 'fetchVersion';
+const SHARE = 'share';
 
-const ADD_VERSION = 'ADD_VERSION';
+const SET_MANGAS = 'setMangas';
+const ADD_VERSION = 'addVersion';
 const SET_VERSION = 'setVersion';
 
 const statusHelper = createRequestStatus('status');
 
 export const types = createTypesWithNamespace([ 
-  FETCH, SHARE,
-  FETCH_VERSION 
+  FETCH_MANGAS,
+  FETCH_VERSION,
+  SHARE
 ], NAMESPACE);
 
 export const cacheStack = {
@@ -27,7 +28,6 @@ export const cacheStack = {
 
   push(item) {
     this._value.push(item);
-    //console.log('--->', item, this._value);
   },
 
   replace(item) {
@@ -86,6 +86,9 @@ const initialState = {
 
   cover: '',
   banner: '',
+  placeholder: 1,
+  width: undefined,
+  height: undefined,
   
   birthtime: '',
   metadata: null,
@@ -108,6 +111,8 @@ const initialState = {
 
   ...statusHelper.state()
 };
+
+let abortController = null;
 
 const createModule = (state = { ...initialState }) => ({
   namespaced: true,
@@ -142,27 +147,38 @@ const createModule = (state = { ...initialState }) => ({
   },
 
   actions: {
-    [FETCH]({ commit }, payload = {}) {
+    [FETCH_MANGAS]({ commit, getters }, payload = {}) {
+      // cancel it if prev fetch is not done
+      if (getters.pending && abortController) {
+        abortController.abort();
+        abortController = null; // clear prev abort controller
+      }
+
       let index = -1;
       const { dirId, path, isBack, search, keyword, clear, ver, uptime } = payload;
       if (isBack) index = cacheStack.find(dirId, path, keyword, ver, uptime);
-      // console.log(isBack, index, path);
+
       // hack no flashing when random manga
       statusHelper.pending(commit);
 
+      // TODO: lose back active path
       if (path === consts.LATEST_PATH) {
-        commit(FETCH, { 
+        commit(SET_MANGAS, { 
           ...initialState,
           name: 'Latest',
           path,
         });
         return statusHelper.success(commit);
       }
-      
+ 
       // if cannot find cache or clear cache
       if (index === -1 || clear) {
-        const method = search ? 'search' : 'list';
         const params = { dirId, path };
+        const options = {};
+        const method = search ? 'search' : 'list';
+      
+        abortController = new AbortController();
+        options.signal = abortController.signal;
         
         if (search) {
           params.keyword = keyword;
@@ -174,7 +190,7 @@ const createModule = (state = { ...initialState }) => ({
           params._t = +new Date;
         }
 
-        return mangaAPI[method](params)
+        return mangaAPI[method](params, options)
           .then(res => {
             cacheStack[!clear ? 'push' : 'replace'](Object.assign(res, {
               _prevPath: path, // store the prev path
@@ -183,18 +199,22 @@ const createModule = (state = { ...initialState }) => ({
               _ver: ver
             }));
 
-            commit(FETCH, res);
-
+            abortController = null;
+            commit(SET_MANGAS, res);
             return statusHelper.success(commit);
           })
           .catch(error => {
-            statusHelper.error(commit, error);
+            // skip abort error
+            if (error.name !== 'AbortError') {
+              abortController = null; 
+              statusHelper.error(commit, error);
+            }
           });
 
       // get result from cache
       } else {
         const result = cacheStack.pop(index);
-        commit(FETCH, result);
+        commit(SET_MANGAS, result);
         return statusHelper.success(commit);
       }
     },
@@ -230,12 +250,15 @@ const createModule = (state = { ...initialState }) => ({
   },
   
   mutations: {
-    [FETCH](state, payload) {
+    [SET_MANGAS](state, payload) {
       state.inited || (state.inited = true);
       safeAssign(state, {
         activeVer: '',
         cover: '',
         banner: '',
+        placeholder: 1,
+        width: '', // TODO: remove safeAssign
+        height: '', // TODO:
         fileType: '',
         error: null,
         shortId: false,

@@ -38,12 +38,12 @@
       >
         <div v-show="viewMode == 'grid'" class="area-item-inner">
           <div>
-            <icon :name="icon(item)" size="64" style="color: #bbb;" />
+            <icon :name="icon(item)" style="color: #bbb;" />
           </div>
         </div>
         
         <div v-show="viewMode == 'grid'" class="caption">
-          <div>{{ item.name }}</div>
+          {{ item.name }}
         </div>
 
         <div v-show="viewMode == 'list'" class="text-truncate">
@@ -87,6 +87,7 @@ export default {
   //   }
   // }
 
+  // like fake cover
   .area-item-inner {
     display: block;
     position: relative;
@@ -101,6 +102,11 @@ export default {
       flex-direction: column;
       align-items: center;
       justify-content: center;
+
+      .svg-icon {
+        width: auto;
+        height: 35%;
+      }
     }
   }
 }

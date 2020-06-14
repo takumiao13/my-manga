@@ -152,19 +152,6 @@ export default {
         .slice(0, 3);
     },
 
-    handleAddRepo(event, paths) {
-      const path = paths[0];
-      const scope = 'user';
-      const index = this.repos.length;
-      const payload = { key: `repos[${index}]`, value: path };
-
-      // sync to settings
-      this.$store.dispatch(types[scope].SET, payload)
-        .then(() => {
-          // create done
-        })
-    },
-
     handleSelectRepo() {
       isElectron && ipc.send('open-file-dialog');
     },
@@ -193,6 +180,19 @@ export default {
     
       // we should reset store to change repo 
       EventEmitter.$emit('store.reset', repo);
+    },
+
+    handleAddRepo(event, paths) {
+      const path = paths[0];
+      const scope = 'user';
+      const index = this.repos.length;
+      const payload = { key: `repos[${index}]`, value: path };
+
+      // sync to settings
+      this.$store.dispatch(types[scope].SET, payload)
+        .then(() => {
+          // create done
+        })
     },
 
     handleRemoveRepo($event, repo) {

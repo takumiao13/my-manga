@@ -61,11 +61,11 @@ export function resetStore() {
 }
 
 export const loadSettingsState = (scope) => {
-  // first we should check the scope is valid or not
+  // we should check the scope is valid or not first
   const repos = store.getters[`${SETTINGS_NAMESPACE}/user/repos`];
-  const isExists = repos ? repos.map(repo => repo.dirId).indexOf(scope) > -1 : true;
+  const accessed = repos ? repos.map(repo => repo.dirId).indexOf(scope) > -1 : true;
   
-  if (!isExists) {
+  if (!accessed) {
     const code = ERR_CODE.REPO_UNACCESSED;
     const error = errorCodeMap[code];
     store.commit(appTypes.setRepoId, '');
@@ -76,6 +76,6 @@ export const loadSettingsState = (scope) => {
   const settingsState = createSettings(scope);
   settingTypes[scope] = createTypes(scope);
   store.registerModule(['settings', scope], settingsState);
-  return store.dispatch(settingTypes[scope].INIT)
+  return store.dispatch(settingTypes[scope].init)
     .then(() => store.commit(appTypes.setRepoId, scope))
 }

@@ -233,6 +233,7 @@ class MangaService extends Service {
 
     this._indexedDB.set(dirId, dbOptions);
     
+    // TODO: put code in middleware ??
     return new Promise((resolve, reject) => {
       // each repo dir add db.json to store indexing info.
       const db = new loki(filepath, {

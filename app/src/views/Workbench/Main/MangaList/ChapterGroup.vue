@@ -9,20 +9,29 @@
         CHAPTERS
         <div class="actions float-right">
           <a @click="sort">
-            <icon :name="`sort-by-no-${desc ? 'desc' : 'asc'}`" size="18" />
+            <Icon :name="`sort-by-no-${desc ? 'desc' : 'asc'}`" size="18" />
           </a>
         </div>
       </div>
     </div>
 
     <div v-if="showCover" class="row">
-      <manga-item 
+      <div 
+        :class="{  
+          'col-4 col-sm-3 col-xl-2': item.placeholder == 1,
+          'col-12 col-sm-6 col-xl-4': item.placeholder == 2,
+          'area-item': true,
+          active: item.name === activeName,
+        }"
         v-for="item in sortedList"
         :key="item.path"
         :active-path="activeName"
-        :item="item"
-        @click.native="$emit('item-click', item)"
-      />
+      >
+        <MangaItem 
+          :item="item"
+          @click.native="$emit('item-click', item)"
+        />
+      </div>
     </div>
 
     <div v-else class="list-group">

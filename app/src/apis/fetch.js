@@ -46,16 +46,20 @@ function fetch$(input, options) {
     })
     // catch server error
     .catch(err => {
-      err = Object.assign({
-        name: 'SERVER ERROR',
-        code: 500,
-        message: 'Unknown Error Occured. Server response not received.'
-      }, err);
+      if (err.name == 'AbortError') {
+        //
+      } else {
+        err = Object.assign({
+          name: 'SERVER ERROR',
+          code: 500,
+          message: 'Unknown Error Occured. Server response not received.'
+        }, err);
 
-      const { code } = err;
+        const { code } = err;
 
-      if (code === 500 || (code >= 10000 && code < 20000)) {
-        store.commit(appTypes.setError, err);
+        if (code === 500 || (code >= 10000 && code < 20000)) {
+          store.commit(appTypes.setError, err);
+        }
       }
 
       throw err;

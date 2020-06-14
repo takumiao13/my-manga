@@ -87,7 +87,7 @@ import { isDef, get } from '@/helpers/utils';
 import { getScrollTop } from '@/helpers/dom';
 import qs from '@/helpers/querystring';
 import { types as mangaTypes } from '@/store/modules/manga';
-import { mapState, mapGetters, mapMutations } from 'vuex';
+import { mapState, mapGetters, mapActions, mapMutations } from 'vuex';
 
 // Components
 import Topbar from './Topbar';
@@ -205,21 +205,10 @@ export default {
     }
   },
 
-  activated() {
-    if (
-      this.appError || // error
-      this.$router._reset || // reset store
-      (this.$route.meta.isBack && this.inited) // back
-    ) {
-      return;
-    }
-
-    this.refreshData(this.$route);
-    this.fetchMangas(this.$route);
-  },
-
   methods: {
-    ...mapMutations('viewer', 'setManga'),
+    ...mapActions('manga', [ 'fetchMangas', 'fetchVersion' ]),
+
+    ...mapMutations('viewer', [ 'setManga' ]),
 
     refreshData(route) {
       this.sharing = false;
@@ -241,15 +230,13 @@ export default {
       }
     },
 
-    // TODO: put code in store
-    fetchMangas(route, { isBack = false, clear = false } = {}) {
+    fetchMangasWithVersion(route, { isBack = false, clear = false } = {}) {
       const { 
         params: { path }, 
         query: { kw, search, ver, uptime } 
       } = route;
       const { dirId } = this.repo;
-      let safepath = qs.decode(path);
-
+      const safepath = qs.decode(path);
       let promise = Promise.resolve();
       
       // - toggle version
@@ -257,25 +244,22 @@ export default {
       // - @random
       // - toggle activity
       if (path === '@random' || path !== this.path || search) {
-        promise = promise.then(() => 
-          this.$store.dispatch(mangaTypes.FETCH, { 
-            isBack, dirId, ver, search, clear,
-            path: safepath,
-            keyword: kw,
-            uptime: uptime
-          })
-        );
+        promise = promise
+          .then(() => this.fetchMangas({ 
+              isBack, dirId, ver, search, clear,
+              path: safepath,
+              keyword: kw,
+              uptime: uptime
+            })
+          );
       }
 
       // TODO: search type use another name replace `ver`
       // when not search type
       // attach version handle multi versions
       if (!search && ver) {
-        promise = promise.then(() => 
-          this.$store.dispatch(mangaTypes.FETCH_VERSION, {
-            dirId, ver
-          })
-        );
+        promise = promise
+          .then(() => this.fetchVersion({ dirId, ver }));
       }
 
       return promise;
@@ -377,7 +361,7 @@ export default {
     },
 
     toggleTopTitle(scrollTop) {
-      const metaHeight = this.$refs.metadata.$refs.root.clientHeight - 16;
+      const metaHeight = (this.$refs.metadata.$refs.root.clientHeight/2) - 16;
       this.showTitle = metaHeight > 0 && (scrollTop >= metaHeight);
     },
 
@@ -436,6 +420,19 @@ export default {
     }
   },
 
+  activated() {
+    if (
+      this.appError || // error
+      this.$router._reset || // reset store
+      (this.$route.meta.isBack && this.inited) // back
+    ) {
+      return;
+    }
+
+    this.refreshData(this.$route);
+    this.fetchMangasWithVersion(this.$route);
+  },
+
   beforeRouteUpdate(to, from, next) {
     if (this.appError) return next();
 
@@ -451,8 +448,9 @@ export default {
 
     // reset data and fetch mangas
     this.refreshData(to);
-    to.meta.resolver = this.fetchMangas(to, { isBack: to.meta.isBack });
-    next();
+    const resolver = this.fetchMangasWithVersion(to, { isBack: to.meta.isBack });
+    resolver.then(next); // TODO: handle error
+    to.meta.resolver = resolver
   },
 
   created() {
@@ -503,7 +501,7 @@ export default {
   margin-left: -15px;
   margin-right: -15px;
   
-  @include media-breakpoint-up(md) {
+  @include media-breakpoint-up(sm) {
     padding-left: 15px;
     padding-right: 15px;
   }
@@ -517,7 +515,7 @@ export default {
 
     padding: .5rem 15px;
 
-    @include media-breakpoint-up(md) {
+    @include media-breakpoint-up(sm) {
       padding: .5rem 0;
     }
     
@@ -556,7 +554,7 @@ export default {
       border-width: .5px 0;
       cursor: pointer;
 
-      @include media-breakpoint-up(md) {
+      @include media-breakpoint-up(sm) {
         border-width: .5px;
       }
     }
@@ -565,7 +563,7 @@ export default {
       border-top-width: 0px;
     }
 
-    @include media-breakpoint-up(md) {
+    @include media-breakpoint-up(sm) {
       margin-left: 0;
       margin-right: 0;
     }

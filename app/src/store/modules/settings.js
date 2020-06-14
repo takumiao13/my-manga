@@ -11,9 +11,9 @@ const user = 'user';
 const repo = 'repo';
 
 // Types Enum
-const INIT  = 'INIT';
-const SET   = 'SET';
-const UNSET = 'UNSET';
+const INIT  = 'init';
+const SET   = 'set';
+const UNSET = 'unset';
 
 export const createTypes = (scope) => 
   createTypesWithNamespace([ INIT, SET, UNSET ], `${NAMESPACE}/${scope}`);
@@ -57,6 +57,7 @@ export const createSettings = (scope) => ({
         .then(res => commit(INIT, res.data));
     },
 
+    // TODO: electron use...
     [SET]({ commit }, payload = {}) {
       const { key } = payload;
       const body = safeAssign({ scope }, payload);

@@ -33,12 +33,26 @@
     <div class="metadata-main metadata-inner" v-show="!sharing">
       
       <!-- only hide in sm sreen when banner exists -->
-      <div class="metadata-info" 
-        :class="{ 'with-banner': banner }"
-      >
-        <img v-if="cover" :src="$service.image.makeSrc(cover)" />
-        <div>
+      <div :class="['metadata-info', { 'with-banner': banner }]">
+        <!-- cover -->
+        <div 
+          :class="[
+            'metadata-cover',
+            `cover-size-${placeholder}`
+          ]"
+        >
+          <MangaItem 
+            :item="$store.state.manga" 
+            :caption="false"
+            :tags="false"
+          />
+        </div>
+
+        <!-- detail -->
+        <div class="metadata-detail">
           <p class="title">{{ title }}</p>
+
+          <!-- versions -->
           <div v-if="versions.length" class="text-muted">
             Versions: 
             <select v-model="activeVer">
@@ -51,16 +65,20 @@
               </option>
             </select>
           </div>
+
+          <!-- status -->
           <div v-if="metadata && metadata.status" class="text-muted">
             Status:
             <span v-if="completed" class="manga-status">Completed</span>
-            <span v-if="status && !completed">
-              # {{ status }}
-            </span>
+            <span v-if="status && !completed"># {{ status }}</span>
           </div>
+
+          <!-- type -->
           <div v-else-if="fileType" class="text-muted">Type: {{ fileType }}</div>
           <div v-else-if="chapters.length" class="text-muted">Chapters: {{ chapters.length }}</div>
           <div v-else class="text-muted">Pages: <span>{{ images.length }}</span></div>
+
+          <!-- update time -->
           <div class="text-muted">Updated at: <small>{{ birthtime | dateFormat('yyyy-mm-dd') }}</small></div>        
         </div>
       </div>
@@ -78,8 +96,14 @@
 <script>
 import { mapState, mapGetters } from 'vuex';
 import qs from '@/helpers/querystring';
+import MangaItem from './MangaItem';
 
 export default {
+
+  components: {
+    MangaItem
+  },
+
   props: {
     title: String,
     sharing: Boolean
@@ -89,7 +113,7 @@ export default {
     ...mapGetters('app', [ 'repo' ]),
 
     ...mapState('manga', [ 
-      'path', 'versions', 'metadata', 'shortId', 'fileType',
+      'path', 'versions', 'metadata', 'shortId', 'fileType', 'placeholder',
       'cover', 'banner', 'birthtime', 'files', 'chapters', 'images',
     ]),
 
@@ -231,24 +255,20 @@ export default {
 
   .metadata-info {
     display: flex;
-    height: 220px;
     align-items: center;
     border-bottom: .5px solid #dedede;
-    padding-left: 15px;
-    padding-right: 15px;
+    padding: 15px;
     font-size: 14px;
     background: #fff;
 
-    img {
-      width: auto !important;
-      height: auto !important;
+    > .metadata-cover {
+      width: 40%;
+      min-width: 120px;
       max-width: 50%;
-      max-height: 180px;
-      margin-right: 1rem;
+      margin-right: 1.2rem;
     }
 
-    > div {
-      flex: 1;
+    > .metadata-detail {
 
       .title {
         font-size: 1.2rem;
@@ -260,14 +280,21 @@ export default {
     }
 
     @include media-breakpoint-up(sm) {
-      height: 280px;
+      padding-top: 20px;
+      padding-bottom: 20px;
 
-      img {
-        max-height: 240px;
+      > .metadata-cover {
+        width: 25%;
+        max-width: 25%;
         margin-right: 1.5rem;
+
+        &.cover-size-2 {
+          width: 35%;
+          max-width: 35%;
+        }
       }
 
-      > div {
+      > .metadata-detail {
 
         .title {
           font-size: 1.4rem;
@@ -281,14 +308,23 @@ export default {
 
     @include media-breakpoint-up(md) {
       background: none;
-      height: 320px;
+      padding-top: 30px;
+      padding-bottom: 30px;
+      padding-left: 0;
+      padding-right: 0;
 
-      img {
-        max-height: 280px;
+      > .metadata-cover {
+        width: 25%;
+        max-width: 25%;
         margin-right: 1.5rem;
+
+        &.cover-size-2 {
+          width: 35%;
+          max-width: 35%;
+        }
       }
 
-      > div {
+      > .metadata-detail {
 
         .title {
           font-size: 1.4rem;
@@ -301,14 +337,21 @@ export default {
     }
 
     @include media-breakpoint-up(lg) {
-      height: 340px;
+      padding-top: 40px;
+      padding-bottom: 40px;
 
-      img {
-        max-height: 280px;
+      > .metadata-cover {
+        width: 16.6%;
+        max-width: 16.6%;
         margin-right: 2rem;
+
+        &.cover-size-2 {
+          width: 25%;
+          max-width: 25%;
+        }
       }
 
-      > div {
+      > .metadata-detail {
         .title {
           font-size: 1.6rem;
         }

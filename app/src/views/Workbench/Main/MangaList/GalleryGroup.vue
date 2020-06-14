@@ -18,9 +18,7 @@
           <img v-lazy="$service.image.makeSrc(item.path)" />
         </div>
 
-        <div class="caption">
-          <div>{{ item.name }}</div>
-        </div>
+        <div class="caption">{{ item.name }}</div>
       </div>
     </div>
   </div>

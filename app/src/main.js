@@ -170,8 +170,8 @@ function bootstrapApp() {
   store.dispatch(appTypes.checkUser)
     // try to get user settings
     .then(() => Promise.all([
-        store.dispatch(settingTypes.user.INIT),
-        store.dispatch(settingTypes.repo.INIT)  
+        store.dispatch(settingTypes.user.init),
+        store.dispatch(settingTypes.repo.init)  
       ])
     )
     .then(checkCurrentRepo)

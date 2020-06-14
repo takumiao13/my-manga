@@ -9,8 +9,14 @@
       :fullscreen="fullscreen"
       :settings="settings"
       @back="handleBack"
-      @fullscreen="setFullscreen"
       @settings="handleSettings"
+      @fullscreen="setFullscreen"
+    />
+
+    <div 
+      v-show="!locking"
+      class="viewer-topbar-placeholder" 
+      @mouseenter="setLocking"
     />
 
     <!-- VIEWPORT -->

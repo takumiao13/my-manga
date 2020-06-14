@@ -87,8 +87,8 @@ export default {
         $form.submitted = true;
         this.login(this.form)
           .then(() => Promise.all([
-            this.$store.dispatch(settingTypes.user.INIT),
-            this.$store.dispatch(settingTypes.repo.INIT)
+            this.$store.dispatch(settingTypes.user.init),
+            this.$store.dispatch(settingTypes.repo.init)
           ]))
           .then(() => {
             this.setError(null);
