@@ -23,7 +23,11 @@
         class="img-inner"
         :style="$service.image.style(item)"
       >
-        <img v-lazy="$service.image.makeSrc(item.path)" />
+        <img v-lazy="$service.image.makeSrc({
+          path: item.path,
+          width: item.width,
+          height: item.height
+        })" />
       </div>
     </div>
     <!-- /GALLERY -->

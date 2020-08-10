@@ -6,5 +6,6 @@ const md5 = (data) => {
 }
 
 module.exports = {
+  ...crypto,
   md5
 }

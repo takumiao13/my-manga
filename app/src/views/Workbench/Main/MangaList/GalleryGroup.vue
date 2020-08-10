@@ -15,7 +15,12 @@
         <div class="cover"
           :style="$service.image.style(item, 240)"
           @click="$emit('item-click', item, index)">
-          <img v-lazy="$service.image.makeSrc(item.path)" />
+          <img v-lazy="$service.image.makeSrc({
+            path: item.path,
+            width: item.width,
+            height: item.height,
+            thumb: true
+          })" />
         </div>
 
         <div class="caption">{{ item.name }}</div>

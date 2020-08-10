@@ -40,6 +40,7 @@ const SettingsService = require('./services/settings');
 const RepoService     = require('./services/repo');
 const ShareService    = require('./services/share');
 const AuthService     = require('./services/auth');
+const ImageService    = require('./services/image');
 
 class Application extends EventEmitter {
 
@@ -139,6 +140,7 @@ class Application extends EventEmitter {
       share: new ShareService(options),
       repo: new RepoService(options),
       auth: new AuthService(options),
+      image: new ImageService(options)
     });
 
     const keys = Object.keys(service)

@@ -21,7 +21,16 @@
       </div>
 
       <div class="cover-inner" :class="{ loading: item.cover }">
-        <img v-if="item.cover" class="cover-image" v-lazy="$service.image.makeSrc(item.cover)" />
+        <img 
+          v-if="item.cover" 
+          class="cover-image" 
+          v-lazy="$service.image.makeSrc({
+            path: item.cover,
+            width: item.width,
+            height: item.height,
+            thumb: true
+          })"
+        />
         <div v-else class="cover-placeholder">
           <Icon :name="`file-${item.fileType || 'image'}`" />
         </div>

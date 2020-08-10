@@ -146,9 +146,13 @@ export default {
       const { latest, dirId } = repo;
       return latest
         .filter(item => item.cover)
-        .map(item => {
-          return this.$service.image.makeSrc(item.cover, false, dirId)
-        })
+        .map(item => this.$service.image.makeSrc({
+          path: item.cover, 
+          dirId,
+          width: item.width,
+          height: item.height,
+          thumb: true
+        }))
         .slice(0, 3);
     },
 

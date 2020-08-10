@@ -8,13 +8,13 @@ module.exports = (app) => {
     appenders: {
       out: { type: 'console' },
       app: {
-        type: process.env.NODE_ENV === 'dev' ? 'console' : 'dateFile',
+        type: process.env.NODE_ENV === 'development' ? 'console' : 'dateFile',
         filename: pathFn.join(dataDir, 'logs/app'),
         pattern: 'yyyy-MM-dd.log',
         alwaysIncludePattern: true,
       },
       access: {
-        type: process.env.NODE_ENV === 'dev' ? 'console' : 'dateFile',
+        type: process.env.NODE_ENV === 'development' ? 'console' : 'dateFile',
         filename: pathFn.join(dataDir, 'logs/access'),
         pattern: 'yyyy-MM-dd.log',
         alwaysIncludePattern: true,

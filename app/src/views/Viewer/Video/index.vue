@@ -43,7 +43,10 @@ export default {
     options() {
       return this.inited ? {
         sources: [ this.$service.video.makeSrc(this.path, true) ],
-        poster: this.$service.image.makeSrc(this.cover, true),
+        poster: this.$service.image.makeSrc({
+          path: this.cover,
+          escape: true
+        }),
         controls: true,
         autoplay: false,
         preload: 'auto',

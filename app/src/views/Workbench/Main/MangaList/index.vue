@@ -394,10 +394,7 @@ export default {
     },
 
     handleRefresh() {
-      // TODO:
-      // refresh file list
-      // const scrollTop = getScrollTop();
-      this.fetchMangas(this.$route, { clear: true })
+      this.fetchMangasWithVersion(this.$route, { clear: true })
         .then(() => {
           window.setTimeout(() => window.scrollTo(0, 0));
         });
