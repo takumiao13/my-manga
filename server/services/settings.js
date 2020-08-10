@@ -30,7 +30,7 @@ class SettingsService extends Service {
 
   async initialize() {
     const { 
-      settings, 
+      settingsPath: settings, 
       baseDir, 
       appinfo: { version, startAt }
     } = this.config();

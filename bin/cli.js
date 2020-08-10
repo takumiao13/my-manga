@@ -8,14 +8,17 @@ program
   .usage('<command> [options]');
 
 program
+  .command('init')
+  .description('create my manga app')
+  .action(cmd => require('../lib/init')(cmd));
+
+program
   .command('start')
-  .description('start my manga server')
+  .description('start my manga app')
   .option('-o, --open', 'open browser after starting the server')
   .option('-p, --port <port>', 'port to use (default: 3000)')
   .option('-d, --dir <dir>', 'specify dir')
-  .option('-s, --settings <settings>', 'settings file')
-  .option('--datadir', '<datadir>', 'specify data dir')
-  .option('--cachedir', '<cachedir>', 'specify cache dir')
+  .option('--app-data <appData>', 'specify data dir')
   .option('--index', 'rebuild index')
   .action(cmd => require('../lib/start')(cmd));
 

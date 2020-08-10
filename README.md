@@ -11,20 +11,48 @@ npm install my-manga -g --production
 
 ## Usage
 
+1. **Create my-magna app**
+
 ```bash
-cd your/manga/dir
-my-manga start
-
-# or
-
-my-manga start --dir your/manga/dir
-
-# or
-
-my-manga start --settings settings.json
+mmg create your-app
 ```
 
-### Options
+2. **Edit `settings.json`**
+
+```js
+{
+  "name": "Zoo",
+  "repos": [
+    "C:\\repo-a",
+    "D:/repo-b"
+    "/volume1/repo-c"
+  ],
+  "server": {
+    "port": 3033,
+    "ssl": true,
+    "cert": "cert.pem",
+    "key": "key.pem",
+  }
+}
+```
+- name: `string` _optional_ - as `$APP_NAME`
+- repos: `strng[]` - Multiple repos
+- server: `Object` _optional_
+  - port: `number` - Server port
+  - ssl: `boolean` - Enable https
+  - cert: `string` - Path to ssl cert file
+  - key: `string` - Path to ssl key file
+
+3. **Start app**
+```bash
+cd your-app
+mmg start
+
+#or
+mmg start --app-data=/dir/you-app
+```
+
+## Options
 
 ```bash
 Usage: start [options]
@@ -33,32 +61,9 @@ start my manga server
 
 Options:
   -o, --open .................. open browser after starting the server
-  -p, --port .................. port to use (default: 3033)  
-  -d, --dir ................... specify dir as manga repo
-  -s, --settings .............. settings file
-  --datadir ................... specify data dir
-  --cachedir .................. specify cache dir
+  -p, --port .................. port to use (default: 3033)
+  --app-data .................. specify app data dir
   -h, --help .................. output usage information
-```
-
-### Settings
-
-```js
-{
-  "repos": [ // multiple repos support
-    "C:\\repo-a",
-    "D:/repo-b"
-    "/volume1/repo-c"
-  ],
-  "server": {
-    "port": 3033, // Server port
-    "ssl": true, // Enable https
-    "cert": "cert.pem", // Path to ssl cert file
-    "key": "key.pem", // Path to ssl key file
-  },
-  "cachedir": "/usr/mymanga/cache",
-  "datadir": "/usr/mymanga/config"
-}
 ```
 
 ## Comic Naming

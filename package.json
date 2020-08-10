@@ -3,12 +3,14 @@
   "version": "0.14.0-2",
   "description": "A Free Comics Management.",
   "scripts": {
-    "serve": "cross-env NODE_ENV=dev ./node_modules/.bin/nodemon ./bin/my-manga.js start",
+    "serve": "cross-env NODE_ENV=development APP_MODE=dev ./node_modules/.bin/nodemon ./bin/my-manga.js start",
+    "serve:test": "cross-env NODE_ENV=development APP_MODE=test ./node_modules/.bin/nodemon ./bin/my-manga.js start",
+    "serve:rc": "cross-env NODE_ENV=development APP_MODE=rc ./node_modules/.bin/nodemon ./bin/my-manga.js start",
     "serve:pord": "./node_modules/.bin/nodemon ./bin/my-manga.js start"
   },
   "bin": {
-    "my-manga": "./bin/my-manga.js",
-    "mmg": "./bin/my-manga.js"
+    "my-manga": "./bin/cli.js",
+    "mmg": "./bin/cli.js"
   },
   "files": [
     "dist",
