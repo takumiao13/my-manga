@@ -33,7 +33,7 @@
 }
 
 // reset some style
-.list-group-item+.list-group-item {
+.list-group-item + .list-group-item {
   border-top-width: 0;
 }
 

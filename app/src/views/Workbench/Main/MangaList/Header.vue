@@ -1,6 +1,6 @@
 <template>
-  <div class="topbar">
-    <navbar
+  <div class="header topbar">
+    <Navbar
       :title="title"
       :class="{'no-shadow': needAddress }" 
       :left-btns="leftBtns"
@@ -8,7 +8,7 @@
       @click.native="handleBackToTop"
     />
     
-    <addressbar
+    <Addressbar
       v-if="needAddress"
       :navs="navs"
       @back="handleNavigateBack"
@@ -172,9 +172,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-// Topbar
+// Header
 // ==
-.topbar {
+.header {
   height: 3rem;
 
   .manga-title-shown {

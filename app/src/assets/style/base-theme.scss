@@ -1,53 +1,103 @@
-#app,
-#app-error {
+// App
+// ==
+[id="app"],
+[id="app-error"] {
   background: $app-bg !important;
   color: $app-color !important;
 }
 
-.topbar > .navbar {
-  background: $app-main !important;
-  //border-bottom: .5px solid $app-border-color;
-  box-shadow: 0 1px 2px rgba($black, .1);
-  z-index: 1030;
-
-  &.no-shadow {
-    box-shadow: none;
-  }
-
-  & + .addressbar {
-    box-shadow: 0 1px 2px rgba($black, .1);
-    z-index: 1020;
-  }
-}
-
-#aside {
+// ## workbench.aside
+[id="workbench.aside"] {
   background: $app-sidebar-bg !important;
 
   .topbar > .navbar {
     background: $app-sidebar-bg !important;
-    //box-shadow: none;
+    box-shadow: 0 1px 2px rgba($black, .1);
+    z-index: 1030;
   }
 
   .a2hs-logo {
     box-shadow: 0 1px 1px rgba($black, .4);
   }
+
+  .aside-open & {
+    @include media-breakpoint-down(sm) {
+      box-shadow: 3px 0 3px rgba($black, .1);
+    }
+  }  
 }
 
-.aside-open #aside {
-  @include media-breakpoint-down(sm) {
-    box-shadow: 3px 0 3px rgba($black, .1);
+// ## workbench.aside.sidebar.explorer
+[id="workbench.aside.sidebar.explorer"] {
+  .explorer-repo-name {
+    background: $app-lighter-bg;
+    box-shadow: 0 1px 2px rgba($black, .1);
+
+    > span:hover {
+      font-size: bold;
+      color: $app-primary;
+    }
+  }
+
+  .explorer-latest,
+  .explorer-rand,
+  .list-nested .list-group .list-group-item  {
+    &.active {
+      background: $app-lighter-bg;
+      color: $app-color;
+    }
+
+    &:hover {
+      background: $app-bg;
+    }
+
+    &.active:hover {
+      background: darken($app-lighter-bg, 5%);
+    }
+  }
+
+  .list-nested .manga-group-item {
+    .list-group .list-group-item {
+      background: $white;
+      border-bottom: .5px solid $app-border-color;
+
+      &:hover {
+        background: $app-item-hover-bg;
+      }
+    }
+
+    .manga-group-btn {
+      border: .5px solid $app-muted-color;
+    }
   }
 }
 
-.list-group .list-group-item {
-  border-color: $app-border-color;
-
-  &.disabled {
-    background: $app-light-bg;
+// ## workbench.aside.menubar
+[id="workbench.aside.menubar"] {
+  .menubar-btn.active {
+    &::after {
+      background: $app-primary !important;
+    }
   }
 }
 
-.main-explorer {
+// ## workbench.main.manga
+[id="workbench.main.manga"] {
+  .header > .navbar {
+    background: $app-main !important;
+    box-shadow: 0 1px 2px rgba($black, .1);
+    z-index: 1030;
+
+    &.no-shadow {
+      box-shadow: none;
+    }
+
+    & + .addressbar {
+      box-shadow: 0 1px 2px rgba($black, .1);
+      z-index: 1020;
+    }
+  }
+
   .area-container {
     background: $app-bg !important;
   }
@@ -199,122 +249,51 @@
       }
     }
   }
+
+  .addressbar {
+    background: $app-main;
+  
+    .address-item:not(.muted) {
+      &:hover {
+        background: $app-border-color;
+      }
+      
+      // &:last-child,
+      // &.muted {
+      //   color: $app-muted-color;
+      
+      //   &:hover {
+      //     background: none;
+      //   }
+      // }
+    }
+    
+    .address-separator {
+      color: $app-color;
+    }
+  }
 }
 
 // Common
-//==
-::placeholder {
-  color: $light-400 !important;
-  font-size: .85em;
-}
-
-// Addressbar
-//==
-.addressbar {
-  background: $app-main;
-}
-
-.address-item:not(.muted) {
-  &:hover {
-    background: $app-border-color;
-  }
-  
-  // &:last-child,
-  // &.muted {
-  //   color: $app-muted-color;
-  
-  //   &:hover {
-  //     background: none;
-  //   }
-  // }
-}
-
-.address-separator {
-  color: $app-color;
-}
-
-
-// Sidebar.Explorer
-//==
-.explorer-repo-name {
-  background: $app-lighter-bg;
-  box-shadow: 0 1px 2px rgba($black, .1);
-
-  > span:hover {
-    font-size: bold;
-    color: $app-primary;
-  }
-}
-
-.menubar-btn.active {
-  &::after {
-    background: $app-primary !important;
-  }
-}
-
-.explorer-latest,
-.explorer-rand,
-.list-nested .list-group .list-group-item  {
-  &.active {
-    background: $app-lighter-bg;
-    color: $app-color;
-  }
-
-  &:hover {
-    background: $app-bg;
-  }
-
-  &.active:hover {
-    background: darken($app-lighter-bg, 5%);
-  }
-}
-
-.list-nested .manga-group-item {
-  .list-group .list-group-item {
-    background: $white;
-    border-bottom: .5px solid $app-border-color;
-
-    &:hover {
-      background: $app-item-hover-bg;
-    }
-  }
-
-  .manga-group-btn {
-    border: .5px solid $app-muted-color;
-  }
-}
-
-// Global
 // ==
+.list-group .list-group-item {
+  border-color: $app-border-color;
+
+  &.disabled {
+    background: $app-light-bg;
+  }
+}
 
 .text-muted {
   color: $app-muted-color !important
 }
 
-// Metadata
-// ==
-.dark #metadata {
-  color: #fff;
+// ## common.placeholder.color
+::placeholder {
+  color: $light-400 !important;
+  font-size: .85em;
 }
 
-.dark .manga-title-hidden {
-  color: #fff;
-}
-
-#metadata {
-
-  .metadata-share .modal {
-    color: $app-color !important;
-  }
-  
-  .description {
-    color: $app-muted-color;
-  }
-}
-
-
-// Scrollbar
-// ==
 ::-webkit-scrollbar-track {
   background-color: $app-scrollbar-track;
 }
@@ -332,14 +311,12 @@ body::-webkit-scrollbar-thumb {
 }
 
 
-// Viewer
+// Viewer (support themes later)
 // ==
-// may be needn't support themes
 
 $viewer-bg: $black;
 $viewer-color: #eee;
 $viewer-toolbar-bg: #333;
-
 
 body.viewer-active,
 .viewer-active #app {
@@ -355,7 +332,6 @@ body.viewer-active {
     background-color: #666 !important;
   }
 }
-
 
 #viewer {
   background: $viewer-bg !important;

@@ -1,6 +1,6 @@
 <template>
-  <div class="explorer">
-    <div class="topbar">
+  <div class="explorer" id="workbench.aside.sidebar.explorer">
+    <div class="explorer-header topbar">
       <Navbar :title="title" :right-btns="rightBtns" />
       <div class="explorer-repo-name">
         <div class="float-right">
@@ -16,7 +16,7 @@
     </div>
     
     <DataView 
-      class="explorer-container"
+      class="explorer-body"
       :loading="pending" 
       :empty="empty"
     >
@@ -223,7 +223,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.explorer-container {
+.explorer-header {
+
+}
+
+.explorer-body {
+  padding: 0;
   min-height: calc(100vh - 5rem);
 }
 

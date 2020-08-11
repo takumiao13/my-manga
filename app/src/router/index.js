@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import routes from './routes';
 import AppRouter from './app-router';
-import { eq } from '@/helpers/utils';
 
 // Middleware
 import titleMw from './middleware/title';

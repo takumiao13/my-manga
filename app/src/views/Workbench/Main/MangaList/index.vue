@@ -1,11 +1,12 @@
 <template>
-  <div 
-    class="main-explorer" 
+  <div
+    id="workbench.main.manga"
+    class="manga-content" 
     :class="{ 
       'addressbar-collapsed': !showAddress || !needAddress
     }"
   >
-    <Topbar
+    <Header
       :title="topbarTitle"
       :view-type="viewType"
       :navs="navs"
@@ -13,8 +14,8 @@
       @refresh="handleRefresh"
     />
     
-    <DataView 
-      class="main-explorer-container"
+    <DataView
+      class="manga-body"
       :class="{ 'has-addressbar' : needAddress }"
       :loading="pending"
       :empty="empty"
@@ -90,7 +91,7 @@ import { types as mangaTypes } from '@/store/modules/manga';
 import { mapState, mapGetters, mapActions, mapMutations } from 'vuex';
 
 // Components
-import Topbar from './Topbar';
+import Header from './Header';
 import Metadata from './Metadata';
 import LatestGroup from './LatestGroup';
 import FileGroup from './FileGroup';
@@ -100,7 +101,7 @@ import GalleryGroup from './GalleryGroup';
 
 export default {
   components: {
-    Topbar,
+    Header,
     Metadata,
     LatestGroup,
     FileGroup,
@@ -283,7 +284,10 @@ export default {
 
         this.$router.push({
           name: 'explorer', 
-          params: { dirId, path: qs.encode(path) }, // hanle path with % char
+          params: { 
+            dirId,
+            path: qs.encode(path) // hanle path with % char
+          },
           query
         });
 
@@ -296,7 +300,11 @@ export default {
 
         this.$router.push({
           name: 'viewer',
-          params: { type: 'video', dirId, path: qs.encode(this.path) },
+          params: {
+            type: 'video', 
+            dirId, 
+            path: qs.encode(this.path)
+          },
           query
         });
       } else if (fileType === 'pdf') {
@@ -445,9 +453,10 @@ export default {
 
     // reset data and fetch mangas
     this.refreshData(to);
-    const resolver = this.fetchMangasWithVersion(to, { isBack: to.meta.isBack });
-    resolver.then(next); // TODO: handle error
-    to.meta.resolver = resolver
+    to.meta.resolver = this.fetchMangasWithVersion(to, { isBack: to.meta.isBack });
+    // we should `next()` immediately etherwise lose pageOffset
+    // when back can remember scroller position
+    next();
   },
 
   created() {
@@ -464,10 +473,10 @@ export default {
 <style lang="scss">
 @import '../../../../assets/style/base';
 
-.main-explorer-container {
+.manga-body {
   min-height: calc(100vh - 5rem);
-  padding-left: 0;
-  padding-right: 0;
+  padding-left: 15px;
+  padding-right: 15px;
 
   @include media-breakpoint-up(xl) {
     max-width: 1140px;

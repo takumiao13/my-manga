@@ -1,5 +1,5 @@
 <template>
-  <div class="mobile">
+  <div class="mobile" id="workbench.aside.sidebar.watchOnMobile">
     <div class="topbar">
       <Navbar :title="title" />
     </div>

@@ -1,17 +1,17 @@
 <template>
-  <div id="workbench">
+  <div id="workbench" class="workbench">
     <div class="container-fluid">
       <div class="row flex-nowrap">
         <!-- Aside Part -->
-        <Aside class="col-12" />
+        <Aside id="workbench.aside" />
         
         <!-- Main Part -->
-        <div id="main" class="col-12">
+        <div id="workbench.main" class="main">
           <router-view />
         </div>
 
         <!-- Backdrop -->
-        <div class="backdrop" @click="toggleAside(false)"></div>
+        <div id="workbench.backdrop" class="backdrop" @click="toggleAside(false)"></div>
       </div>
     </div>
   </div>
@@ -62,20 +62,13 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '../../assets/style/base';
 
-#main {
-  //@include media-breakpoint-up(xl) {
-    flex: 0 1 100%;
-    max-width: 100%;
-    min-width: 0; // fix `white-space: nowrap` breaks flexbox layout when use `text-truncate`
-  //}
-
-  .topbar {
-    margin-left: -15px;
-    margin-right: -15px;
-  }
+.main {
+  flex: 0 1 100%;
+  max-width: 100%;
+  min-width: 0; // fix `white-space: nowrap` breaks flexbox layout when use `text-truncate`
 }
 
 .backdrop {
@@ -88,6 +81,10 @@ export default {
 
   @include transition(opacity .3s);
 }
+</style>
+
+<style lang="scss">
+@import '../../assets/style/base';
 
 .aside-open {
   overflow-y: hidden !important; // hide body scroll
@@ -95,7 +92,7 @@ export default {
   height: 100%;
   position: relative; // fixed will lost `scrollTop`
 
-  #aside {
+  .workbench .aside {
     transform: translateX(0);
   }
 
@@ -103,6 +100,18 @@ export default {
     opacity: .3;
     width: 100vw;
     height: 100vh;
+  }
+}
+
+.sidebar-collapsed:not(.aside-open) {
+  @include media-breakpoint-up(md) {
+    .workbench .aside {
+      max-width: 48px;
+    }
+
+    .workbench .aside .sidebar {
+      display: none;
+    }
   }
 }
 </style>
