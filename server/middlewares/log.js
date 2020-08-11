@@ -49,7 +49,7 @@ module.exports = (app) => {
       },
       app: { 
         appenders: ['app'], 
-        level: process.env.NODE_ENV === 'dev' ? 'info' : 'warn' 
+        level: process.env.NODE_ENV === 'development' ? 'info' : 'warn' 
       },
       visit: {
         appenders: ['app'], 
@@ -61,7 +61,7 @@ module.exports = (app) => {
       },
       access: { 
         appenders: ['access'], 
-        level: process.env.NODE_ENV === 'dev' ? 'debug' : 'info' 
+        level: process.env.NODE_ENV === 'development' ? 'debug' : 'info' 
       }
     }
   });

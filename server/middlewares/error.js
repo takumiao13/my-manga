@@ -24,7 +24,8 @@ module.exports = () => async (ctx, next) => {
     } else {
       ctx.status = err.status || 500;
       ctx.body = err.message;
-      ctx.logger('app').error(`${ctx.status} ${err}`);
+      ctx.logger('app').error(err);
+      console.log(err);
     }
   }
 }
