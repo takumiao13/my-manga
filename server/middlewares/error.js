@@ -12,7 +12,7 @@ module.exports = () => async (ctx, next) => {
         ...error.value()
       };
       ctx.status = 401;
-      ctx.logger('app').warn(err);
+      ctx.logger('app').warn(err.message);
       
     // biz error
     } else if (err instanceof CustomError) {
