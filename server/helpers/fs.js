@@ -64,14 +64,21 @@ const filenameComparator = (a, b, fixedTop = []) => {
 
     if (aIsNum && bIsNum) {
       return ca - cb;
-    } else if (!aIsNum && !bIsNum) {
-      // replace chinese with digit.
+
+    // handle string and number compare by charCode
+    } else {
+      ca = String(ca);
+      cb = String(cb);
+      
+      // special chars always first
+      if ('.-_~#@[({'.indexOf(ca) > -1) return -1;
+      if ('.-_~#@[({'.indexOf(cb) > -1) return 1;
+
+      // replace chinese number with digit.
       if (ca in chineseNumberMap) ca = chineseNumberMap[ca];
       if (cb in chineseNumberMap) cb = chineseNumberMap[cb];
-      return [-1, 1][+(ca > cb)];
-    } else {
-      if (!aIsNum) return '.-_'.indexOf(ca) > -1 ? -1 : 1;
-      if (!bIsNum) return '.-_'.indexOf(cb) > -1 ? 1 : -1;
+
+      return [-1, 1][Number(ca > cb)];
     }
   }
 };

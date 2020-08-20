@@ -9,7 +9,7 @@ program
 
 program
   .command('init')
-  .description('create my manga app')
+  .description('init my manga app')
   .action(cmd => require('../lib/init')(cmd));
 
 program

@@ -11,13 +11,13 @@ npm install my-manga -g --production
 
 ## Usage
 
-1. **Create my-magna app**
+1. **Init my-magna app**
 
 ```bash
-mmg create your-app
+mmg init your-app
 ```
 
-2. **Edit `settings.json`**
+2. **Edit `/your-app/settings.json`**
 
 ```js
 {
@@ -30,11 +30,12 @@ mmg create your-app
   "server": {
     "port": 3033,
     "ssl": true,
-    "cert": "cert.pem",
-    "key": "key.pem",
+    "cert": "/your/path/cert.pem",
+    "key": "/your/path/key.pem",
   }
 }
 ```
+
 - name: `string` _optional_ - as `$APP_NAME`
 - repos: `strng[]` - Multiple repos
 - server: `Object` _optional_
@@ -114,6 +115,7 @@ Versions should be placed between brackets with the same result as seen below.
 
 ## Browsers support
 - Chrome (last 2 versions)
+- Safari (last 2 verions)
 
 
 ## License
