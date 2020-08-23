@@ -1,5 +1,11 @@
 <template>
-  <div id="viewer" :class="`viewer-${settings.handMode}-hand`">
+  <div 
+    id="viewer" 
+    :class="[
+      `viewer-${settings.hand}-hand`,
+      `viewer-${settings.mode}-mode`
+    ]"
+  >
     <!-- HEADER -->
     <Header 
       :title="title"
@@ -18,30 +24,38 @@
       class="viewer-topbar-placeholder" 
       @mouseenter="setLocking"
     />
+    <!-- /HEADER -->
+
+    <div class="viewer-backdrop" @click.stop="handleBackdropClick"></div>
 
     <!-- VIEWPORT -->
     <Viewport
-      :hand="settings.handMode"
       :locking="locking"
       :auto-scrolling="autoScrolling"
+      :hand="settings.hand"
       @click="setLocking"
       @prev="prevPage"
       @next="nextPage"
     >
-      <!-- TODO: may be support more mode later -->
-      <ScrollMode
-        :gallery="images"
-        :chapters="chapters"
-        :page="page"
-        :chIndex="chIndex"
-        :settings="settings"
-        :fullscreen="fullscreen"
-        :auto-scrolling="autoScrolling"
-        :locking="locking"
-        :speed="speed"
-        @pageChange="gotoPage"
-        @chapterChange="gotoChapter"
-        @scrollEnd="autoScroll(false)"
+      <ScrollMode 
+        v-if="settings.mode === $consts.VIEWER_MODE.SCROLL"
+        v-bind="viewerModeProps"
+        v-on="{
+          pageChange: gotoPage,
+          chapterChange: gotoChapter,
+          autoPlayEnd: handleAutoPlayEnd
+        }"
+      />   
+      <SwiperMode 
+        v-else
+        v-bind="viewerModeProps"
+        v-on="{
+          pageChange: gotoPage,
+          chapterChange: gotoChapter,
+          prev: prevPage,
+          next: nextPage,
+          autoPlayEnd: handleAutoPlayEnd
+        }"
       />
     </Viewport>
     <!-- /VIEWPORT -->
@@ -51,26 +65,36 @@
     </div>
 
     <HelpOverlay
-      v-show="helpOpen"
-      :hand="settings.handMode"
-      @click.native="helpOpen = false"
+      v-show="helpVisible"
+      :hand="settings.hand"
+      @click.native="helpVisible = false"
+    />
+
+    <!-- re-create settingsMenu when read mode changed -->
+    <SettingsMenu
+      :key="settings.mode" 
+      :visible="settingsVisible" 
+      :settings="settings"
+      @finish="handleSettings"
     />
 
     <div
       class="viewer-toolbar fixed-bottom" 
       :class="{ open: locking }"
     >
-      <Seekbar :value="page" :max="count" @end="gotoPage" />
-      <Controlbar
-        :speed="speed"
-        @auto-scroll="autoScroll"
-        @speed="setSpeed"
-      />
+      <div class="viewer-toolbar-container">
+        <Seekbar :value="page" :max="count" @end="gotoPage" />
+        <Controlbar
+          :auto-scrolling="autoScrolling"
+          @autoPlayChange="handleAutoPlayChange"
+          @settings="handleSettingsVisible"
+        />
+      </div>
     </div>
 
     <div 
-      v-show="settings.pagerInfo" 
-      class="viewer-page-indicator py-1 px-2 d-md-none"
+      v-show="settings.pagerInfo && !locking" 
+      class="viewer-page-indicator p-2"
     >
       {{ page }} / {{ images.length }}
     </div>
@@ -87,36 +111,51 @@ import animateScrollTo from 'animate-scroll-to.js';
 import Header from './Header';
 import Viewport from './Viewport';
 import ScrollMode from './ScrollMode';
+import SwiperMode from './SwiperMode';
 import Seekbar from './Seekbar';
 import Controlbar from './Controlbar';
 import HelpOverlay from './HelpOverlay';
+import SettingsMenu from './SettingsMenu';
 
 export default {
   components: {
     Header,
     Viewport,
     ScrollMode,
+    SwiperMode,
     Seekbar,
     Controlbar,
-    HelpOverlay
+    HelpOverlay,
+    SettingsMenu,
   },
 
   data() {
     return {
-      helpOpen: false
+      helpVisible: false,
+      settingsVisible: false,
+      backdropVisible: false
     }
   },
 
   watch: {
     fullscreen(val) {
       screenfull[val ? 'request' : 'exit']();
+    },
+
+    settingsVisible(val) {
+      // detect settings open or not
+      this.backdropVisible = !!val;
+    },
+
+    backdropVisible(val) {
+      window.document.body.classList[val ? 'add' : 'remove']('backdrop-open');
     }
   },
   
   computed: {
     ...mapState('viewer', [ 
       'name', 'path', 'page', 'ch', 'chName', 'images', 'chapters',
-      'settings', 'autoScrolling', 'fullscreen', 'locking', 'speed'
+      'settings', 'autoScrolling', 'fullscreen', 'locking',
     ]),
 
     ...mapState('app', { appError: 'error', appSize: 'size' }),
@@ -140,35 +179,68 @@ export default {
 
     pager() {
       return this.page + ' / ' + this.count;
+    },
+
+    viewerModeProps() {
+      return {
+        gallery: this.images,
+        page: this.page,
+        chIndex: this.chIndex,
+        chCount: this.chCount,
+        settings: this.settings,
+        fullscreen: this.fullscreen,
+        autoScrolling: this.autoScrolling,
+        locking: this.locking,
+        appSize: this.appSize
+      }
     }
   },
 
   methods: {
     ...mapActions('viewer', [
       'gotoPage',
-      'prevPage',
-      'nextPage',
-      'fetchManga',
-      'autoScroll'
+      'fetchManga'
     ]),
+
+    ...mapActions('viewer', {
+      nextPage(action) {
+        if (this.page === this.count) {
+          this.$notify({
+            group: 'viewer',
+            title: 'Already the last page'
+          });
+        }
+        action('nextPage');
+      },
+      prevPage(action) {
+        if (this.page === 1) {
+          this.$notify({
+            group: 'viewer',
+            title: 'Already the first page'
+          });
+        }
+        action('prevPage');
+      }
+    }),
 
     ...mapMutations('viewer', [
       'setSettings',
-      'setSpeed',
+      'setAutoScrolling',
       'setLocking',
       'setFullscreen'
     ]),
 
     // private
     _$effects(val) {
+      document.body.classList[val ? 'add' : 'remove']('viewer-active');
       window[val ? 'addEventListener' : 'removeEventListener']('keydown', this.handleKeydown);
       window[val ? 'addEventListener' : 'removeEventListener']('scroll', this.handleScroll);
     },
 
     gotoChapter(chIndex) {
       if (chIndex < 1 || chIndex > this.chCount) return;
-      const chapter = this.chapters[chIndex-1];
 
+      const chapter = this.chapters[chIndex-1];
       const params = {
         type: 'manga',
         dirId: this.repo.dirId,
@@ -194,19 +266,34 @@ export default {
 
     handleSettings(payload) {
       this.setSettings(payload);
-      if (payload.handMode) this.helpOpen = true;
+      this.settingsVisible = false;
     },
 
     handleScroll() {
       if (window._ignoreScrollEvent || this.autoScrolling) return;
-      this.setLocking(false);
-      this.helpOpen = false;
+      if (this.locking) this.setLocking(false);
+      this.helpVisible = false;
+    },
+
+    handleAutoPlayChange() {
+      if (this.autoScrolling) {
+        this.setAutoScrolling(false);
+        this.setLocking(true);
+      } else if (this.page < this.count) {
+        this.setAutoScrolling(true);
+        this.setLocking(false);
+      }
+    },
+
+    handleAutoPlayEnd() {
+      this.setAutoScrolling(false);
+      this.setLocking(true);
     },
 
     handleKeydown($event) {
       $event.stopPropagation();
       const keyCode = $event.keyCode;
-      const action = this.$consts.KEYBOARD_ACTION[this.settings.handMode];
+      const action = this.$consts.KEYBOARD_ACTION[this.settings.hand];
 
       if (keyCode == action.lock) {
          $event.preventDefault();
@@ -226,7 +313,7 @@ export default {
       switch (keyCode) {
         case action.help:
           $event.preventDefault();
-          this.helpOpen = !this.helpOpen;
+          this.helpVisible = !this.helpVisible;
           break;
         case action.prev:
           $event.preventDefault();
@@ -235,16 +322,27 @@ export default {
         case action.next:
           $event.preventDefault();
           this.nextPage();
-          break;  
+          break;
+        // TODO: scroll mode only  
         case action.up:
+          if (this.settings.mode !== 'scroll') return;
           $event.preventDefault();
           animateScrollTo('-=100', { animate: false });
           break;
         case action.down:
+          if (this.settings.mode !== 'scroll') return;
           $event.preventDefault();
           animateScrollTo('+=100', { animate: false });
           break;
       }
+    },
+
+    handleSettingsVisible() {
+      this.settingsVisible = true;
+    },
+
+    handleBackdropClick() {
+      this.settingsVisible = false;
     }
   },
 
@@ -253,16 +351,16 @@ export default {
   destroyed() { this._$effects(false) },
 
   mounted() {
-    if (this.appError) return
+    if (this.appError) return;
 
     this.$on('leave', () => {
-      // when manga or chapter changed this function will be invoked
+      // when manga or chapter changed this callback will be invoked
       // we should stop scrolling and lock viewer to show title info.
-      this.autoScroll(false);
+      this.setAutoScrolling(false);
+      // prevent locked when scroll.
+      this.setLocking(true);
       this.setFullscreen(false);
       
-     // prevent locked when scroll.
-      this.setLocking(true);
       window._ignoreScrollEvent = true;
     });
 
@@ -281,7 +379,11 @@ export default {
 </script>
 
 <style lang="scss">
-@import '../../../assets/style/base';
+@import '@/assets/style/base';
+
+#viewer {
+  user-select: none;
+}
 
 .viewer-topbar-placeholder {
   height: 3rem;
@@ -298,6 +400,11 @@ export default {
 
   &.open {
     transform: translateY(0);
+  }
+
+  .viewer-toolbar-container {
+    max-width: 1000px;
+    margin: 0 auto;
   }
 }
 
@@ -324,7 +431,6 @@ export default {
 }
 
 // change left and right position
-
 .viewer-back {
   display: none;
 }
@@ -353,6 +459,31 @@ export default {
         right: auto;
       }
     }
+  }
+}
+
+// common backdrop
+.viewer-backdrop {
+  opacity: 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1040;
+  background: $black;
+
+  @include transition(opacity .3s);
+}
+
+.backdrop-open {
+  overflow-y: hidden !important; // hide body scroll
+  width: 100%;
+  height: 100%;
+  position: relative; // fixed will lost `scrollTop`
+  
+  .viewer-backdrop {
+    opacity: .3;
+    width: 100vw;
+    height: 100vh;
   }
 }
 </style>

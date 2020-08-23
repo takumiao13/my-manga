@@ -27,8 +27,8 @@
     >
       <div 
         :class="{  
-          'col-4 col-sm-3 col-xl-2': viewMode == 'grid' && item.placeholder == 1,
-          'col-12 col-sm-6 col-xl-4': viewMode == 'grid' && item.placeholder == 2,
+          'col-4 col-sm-3 col-lg-2': viewMode == 'grid' && item.placeholder == 1,
+          'col-12 col-sm-6 col-lg-4': viewMode == 'grid' && item.placeholder == 2,
           'list-group-item list-group-item-action': viewMode == 'list',
           'area-item': viewMode == 'grid',
           active: item.path === activePath,
@@ -64,9 +64,19 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/assets/style/base';
+
 .row {
   margin-left: -.5rem;
   margin-right: -.5rem;
   align-items: flex-end;
+}
+
+// 1/8
+.area-item {    
+  @include media-breakpoint-up(xl) {
+    flex: 0 0 12.5%;
+    max-width: 12.5%;
+  }
 }
 </style>

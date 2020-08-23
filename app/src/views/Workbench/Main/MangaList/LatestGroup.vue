@@ -31,8 +31,8 @@
       >
         <div 
           :class="{  
-            'col-4 col-sm-3 col-xl-2': item.placeholder == 1,
-            'col-8 col-sm-6 col-xl-4': item.placeholder == 2,
+            'col-4 col-sm-3 col-lg-2': item.placeholder == 1,
+            'col-8 col-sm-6 col-lg-4': item.placeholder == 2,
             'area-item': true,
             active: item.path === activePath,
           }"
@@ -123,6 +123,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/assets/style/base';
+
 .latest-container {
   padding: 0 12px;
   margin: 0 -12px;
@@ -134,5 +136,13 @@ export default {
   margin-right: -.5rem;
   align-items: flex-end;
   transition: transform .8s linear;
+}
+
+// 1/8
+.area-item {    
+  @include media-breakpoint-up(xl) {
+    flex: 0 0 12.5%;
+    max-width: 12.5%;
+  }
 }
 </style>

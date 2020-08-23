@@ -142,7 +142,7 @@ export default {
     /**
      * 
      * @param {*} state 
-     * @param {'sm | md | lg'} payload 
+     * @param {'sm | md | lg | xl'} payload 
      */
     [SET_SIZE](state, payload = 'lg') {
       state.size = payload;

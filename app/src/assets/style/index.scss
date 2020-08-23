@@ -59,6 +59,9 @@ input {
 }
 
 .app-toast {
+  top: 3.25rem !important;
+  pointer-events: none;
+
   .vue-notification {
     padding: .75rem 1rem;
     font-size: .9rem;
@@ -74,7 +77,6 @@ input {
       max-width: none;
       margin: .5rem;
       font-size: 1rem;
-      text-align: left;
     }
     
     &.warn {
@@ -91,6 +93,10 @@ input {
       background: #68CD86;
       border-left-color: #42A85F;
     }
+  }
+
+  &.app-toast-group-viewer {
+    top: 10% !important;
   }
 }
 

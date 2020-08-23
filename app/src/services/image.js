@@ -22,6 +22,7 @@ class ImageService extends Service {
    * @param {string} dirId 
    */
   makeSrc({ dirId, path, escape, thumb, width, height }) {
+    const appSize = this.$store.state.app.size;
     dirId = dirId || this.$store.getters[`${APP_NAMESPACE}/repo`].dirId
     path = isArray(path) ? path.join('/') : path;
 
@@ -42,8 +43,25 @@ class ImageService extends Service {
       } else {
         params.push('w=240');
       }
-    } else if (width && width > 800) {
-      params.push('w=800')
+    } else if (width) {
+      switch (appSize) {
+        case 'sm':
+          if (width && width > 600) {
+            params.push('w=600');
+          }
+          break;
+        case 'md':
+        case 'lg':
+          if (width && width > 800) {
+            params.push('w=800');
+          }
+          break;
+        case 'xl':
+          if (width && width > 1000) {
+            params.push('w=1000');
+          }
+          break;
+      }
     }
   
     // add jwt token for auth

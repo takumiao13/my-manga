@@ -4,7 +4,8 @@ const RANDOM_PATH = '@random';
 const MANGA_GRID_SIZE = { 
   sm: 3,
   md: 4,
-  lg: 6 
+  lg: 6,
+  xl: 8
 };
 
 const KEY_CODE = {
@@ -39,6 +40,11 @@ const KEYBOARD_ACTION = {
     help: KEY_CODE.F1,
     lock: KEY_CODE.SPACE
   }
+};
+
+const VIEWER_MODE = {
+  SCROLL: 'scroll',
+  SWIPE: 'swipe',
 }
 
 const consts = {
@@ -46,7 +52,8 @@ const consts = {
   RANDOM_PATH,
   MANGA_GRID_SIZE,
   KEY_CODE,
-  KEYBOARD_ACTION
+  KEYBOARD_ACTION,
+  VIEWER_MODE
 }
 
 export default consts;

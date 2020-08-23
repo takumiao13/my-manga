@@ -95,9 +95,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../../../assets/style/base';
-.chapter-area {
+@import '@/assets/style/base';
 
+.chapter-area {
   .row {
     margin-left: -.5rem;
     margin-right: -.5rem;

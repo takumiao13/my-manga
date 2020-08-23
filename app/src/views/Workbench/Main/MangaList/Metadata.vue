@@ -200,7 +200,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../../../assets/style/base';
+@import '@/assets/style/base';
 
 #metadata {
   margin-left: -15px;

@@ -39,7 +39,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../../../assets/style/base';
+@import '@/assets/style/base';
 
 .gallery-area {
   .row {
@@ -72,6 +72,14 @@ export default {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+  }
+
+  // 1/8
+  .area-item {    
+    @include media-breakpoint-up(xl) {
+      flex: 0 0 12.5%;
+      max-width: 12.5%;
+    }
   }
 }
 </style>

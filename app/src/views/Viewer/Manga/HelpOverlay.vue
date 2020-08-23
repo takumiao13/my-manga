@@ -102,7 +102,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import '../../../assets/style/base';
+@import '@/assets/style/base';
 
 .viewer-help {
   position: fixed;
