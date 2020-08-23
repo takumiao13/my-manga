@@ -1,8 +1,5 @@
 <template>
-  <div
-    ref="mode"
-    class="viewer-mode"
-  >
+  <div ref="mode" class="viewer-mode">
     <div class="prev-chapter"
       v-if="chIndex && chIndex > 1"
       @click.stop="$emit('chapterChange', chIndex - 1)">
@@ -23,11 +20,13 @@
         class="img-inner"
         :style="$service.image.style(item)"
       >
-        <img v-lazy="$service.image.makeSrc({
-          path: item.path,
-          width: item.width,
-          height: item.height
-        })" />
+        <img 
+          v-lazy="$service.image.makeSrc({
+            path: item.path,
+            width: item.width,
+            height: item.height
+          })" 
+        />
       </div>
     </div>
     <!-- /GALLERY -->
@@ -46,14 +45,21 @@ import { debounce } from '@/helpers/utils';
 import { getScrollTop, getScrollHeight, getOffsetHeight } from '@/helpers/dom';
 import animateScrollTo from 'animate-scroll-to.js';
 
+const SCROLL_SPEED_ADAPTER = {
+  sm: 1.2,
+  md: 1,
+  lg: .8,
+  xl: .6
+};
+
 export default {
   name: 'ScrollMode',
 
   props: {
     gallery: Array,
-    chapters: Array,
     page: [ Number, String ],
     chIndex: Number,
+    chCount: Number,
     settings: Object,
     zoom: {
       type: [ String, Number ],
@@ -62,18 +68,12 @@ export default {
     fullscreen: Boolean,
     autoScrolling: Boolean,
     locking: Boolean,
-    speed: Number
+    appSize: String
   },
 
   data() {
     return {
       page_: this.page, // internal page valu
-    }
-  },
-
-  computed: {
-    chCount() {
-      return this.chapters.length;
     }
   },
 
@@ -111,6 +111,10 @@ export default {
           this.scrollToCurrPage(); 
         });
       }
+
+      if (newVal.scrollSpeed !== oldVal.scrollSpeed) {
+        this.changeScrollSpeed(newVal.scrollSpeed);
+      }
     },
 
     autoScrolling(val) {
@@ -120,13 +124,9 @@ export default {
 
     locking(val) {
       if (this.autoScrolling) {
-        this[val ? 'pauseScroll' : 'resumeScroll']();
+        this[val ? 'pauseScroll' : 'startScroll']();
         this._$preventScroll(!val);
       } 
-    },
-
-    speed(val) {
-      this.changeScrollSpeed(val);
     }
   },
 
@@ -158,7 +158,6 @@ export default {
     },
 
     _$effects(val) {
-      document.body.classList[val ? 'add' : 'remove']('viewer-active');
       window[val ? 'addEventListener' : 'removeEventListener']('scroll', this.handleScroll);
       window[val ? 'addEventListener' : 'removeEventListener']('resize', this.handleResize);
     },
@@ -221,10 +220,10 @@ export default {
 
     // handle auto scrolling
     startScroll() {
-      console.log('start');
+      console.log('[scroll] start');
       if (!this._scroller) {
         this._scroller = animateScrollTo('bottom', {
-          speed: this.speed
+          speed: this.settings.scrollSpeed
         }, () => {
           this.stopScroll();
         });
@@ -235,26 +234,24 @@ export default {
 
     stopScroll() {
       if (this.autoScrolling) {
-        console.log('stop');
+        console.log('[scroll] stop');
         this._scroller.pause();
-        this.$emit('scrollEnd');
+        this.$emit('autoPlayEnd');
       }
     },
 
     changeScrollSpeed(value) {
+      // adjust scroll spped by current app size
+      value = (SCROLL_SPEED_ADAPTER[this.appSize] || 1) * value;
+      
       if (this._scroller) {
         this._scroller.speed(value);
       }
     },
 
     pauseScroll() {
-      console.log('pause');
+      console.log('[scroll] pause');
       this._scroller.pause();
-    },
-
-    resumeScroll() {
-      console.log('resume');
-      this._scroller.resume();
     },
 
     // events
@@ -296,6 +293,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '@/assets/style/base';
+
 .prev-chapter, .next-chapter {
   height: 3rem;
   line-height: 3rem;
@@ -316,5 +315,47 @@ export default {
   flex: 1;
   justify-content: center;
   align-items: center;
+}
+
+.img-wrapper {
+  position: relative;
+  margin: 0 auto; // .25rem
+  background: #3c4043;
+  overflow:  hidden;
+  max-width: 100%;
+
+  &.gaps {
+    margin: .25rem auto;
+  }
+
+  > .img-loading {
+    color: #666;
+    font-size: 6rem;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: 300;
+
+    @include media-breakpoint-up(md) {
+      font-size: 8rem;
+    }
+
+    @include media-breakpoint-up(lg) {
+      font-size: 10rem;
+    }
+
+    @include media-breakpoint-up(xl) {
+      font-size: 12rem;
+    }
+  }
+
+  > .img-inner img {
+    position: absolute;
+    max-width: 100%;
+    max-height: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
 </style>

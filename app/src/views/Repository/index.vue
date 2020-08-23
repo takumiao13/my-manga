@@ -221,7 +221,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../assets/style/base';
+@import '@/assets/style/base';
 
 .page-header {
   margin: 3rem 0 2rem 0;

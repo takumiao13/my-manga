@@ -40,7 +40,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import '../../assets/style/base';
+@import '@/assets/style/base';
 
 .viewer-title {
   max-width: 50vw;

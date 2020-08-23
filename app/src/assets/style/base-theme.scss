@@ -337,14 +337,10 @@ body.viewer-active {
   background: $viewer-bg !important;
   color: $viewer-color !important;
 
-  .viewer-topbar > .navbar,
-  .viewer-toolbar > .navbar {
+  .viewer-topbar .navbar,
+  .viewer-toolbar .navbar {
     background: $viewer-toolbar-bg !important;
     box-shadow: 0px 1px 2px 0px rgba($black, 0.3);
-  }
-
-  .viewer-topbar.viewer-autoscrolling > .navbar {
-    background: $app-primary !important;
   }
 
   .viewer-loading {
@@ -374,5 +370,14 @@ body.viewer-active {
     .dropdown-item:hover {
       background: rgba($white, .1);      
     }
+  }
+
+  .viewer-settings {
+    background: $viewer-toolbar-bg !important;
+    color: #ccc !important;
+    border-color: #ccc !important;
+    box-shadow: 0 2px 4px -1px rgba($black, 0.2), 
+                0 4px 5px 0 rgba($black, 0.14), 
+                0 1px 10px 0 rgba($black, 0.12);
   }
 }

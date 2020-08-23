@@ -22,7 +22,8 @@
         >
           <icon 
             v-if="btn.icon"
-            :name="btn.icon" 
+            :name="btn.icon"
+            :size="btn.iconSize || 16"
             :class="{ 'mr-2': btn.title }"
           />
           <span v-html="btn.title"></span>
@@ -60,7 +61,8 @@
         >
           <icon 
             v-if="btn.icon"
-            :name="btn.icon" 
+            :name="btn.icon"
+            :size="btn.iconSize || 16"
             :class="{ 'mr-2': btn.title }"
           />
           <span v-html="btn.title"></span>

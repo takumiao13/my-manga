@@ -471,21 +471,32 @@ export default {
 </script>
 
 <style lang="scss">
-@import '../../../../assets/style/base';
+@import '@/assets/style/base';
 
 .manga-body {
   min-height: calc(100vh - 5rem);
   padding-left: 15px;
   padding-right: 15px;
-
-  @include media-breakpoint-up(xl) {
-    max-width: 1140px;
-    margin-right: auto;
-    margin-left: auto;
-  }
-
+  margin-right: auto;
+  margin-left: auto;
+  
   &.has-addressbar {
     margin-top: 2rem;
+  }
+
+  // 768
+  @include media-breakpoint-up(md) {
+    max-width: 668px;
+  }
+
+  // 992
+  @include media-breakpoint-up(lg) {
+    max-width: 1140px;
+  }
+
+  // 1540
+  @include media-breakpoint-up(xl) {
+    max-width: 1440px;
   }
 }
 

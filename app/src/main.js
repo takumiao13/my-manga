@@ -31,11 +31,15 @@ import Addressbar from '@/components/Addressbar';
 import Dropdown from '@/components/Dropdown';
 import VideoPlayer from '@/components/VideoPlayer';
 import Modal from '@/components/Modal';
+import Switcher from '@/components/Switcher';
 
 // Third part components
 import VueLazyload from 'vue-lazyload';
 import VueQriously from 'vue-qriously';
-import VueNotifications from 'vue-notification'
+import VueNotifications from 'vue-notification';
+import { Swiper, EffectFade, Lazy } from 'swiper';
+import VueAwesomeSwiper from 'vue-awesome-swiper';
+import 'swiper/swiper-bundle.css'; // If you use Swiper 6.0.0 or higher
 
 // Directives
 import loadingDirective from '@/directives/loading';
@@ -59,6 +63,7 @@ Vue.component('Addressbar', Addressbar);
 Vue.component('Dropdown', Dropdown);
 Vue.component('VideoPlayer', VideoPlayer);
 Vue.component('Modal', Modal);
+Vue.component('Switcher', Switcher);
 
 Vue.directive('loading', loadingDirective);
 Vue.directive('click-out-side', clickOutSideDirective);
@@ -68,11 +73,11 @@ Vue.filter('dateFormat', dateFormatFilter);
 
 Vue.use(VueQriously);
 Vue.use(VueLazyload, {
-  preLoad: 1.5,
-  attempt: 1,
+  preLoad: 1,
+  attempt: 2,
   observer: true, // when image in slot observer is need.
   adapter: {
-    loaded ({ el, bindType, naturalHeight, naturalWidth, $parent, src, loading, error, Init }) {
+    loaded({ el }) {
       // handle manga cover loaded
       if (el.classList.contains('cover-image')) {        
         el.parentNode.classList.remove('loading');
@@ -82,6 +87,10 @@ Vue.use(VueLazyload, {
   }
 });
 Vue.use(VueNotifications);
+Vue.use(VueAwesomeSwiper);
+
+Swiper.use([EffectFade, Lazy]);
+Vue.use(VueAwesomeSwiper);
 
 Vue.use($Service, { router, store });
 Vue.prototype.$platform = platform;

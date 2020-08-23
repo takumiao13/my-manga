@@ -28,7 +28,7 @@
       <div 
         :class="{ 
           active: item.path === activePath, 
-          'col-4 col-sm-3 col-xl-2 area-item': viewMode == 'grid',
+          'col-4 col-sm-3 col-lg-2 area-item': viewMode == 'grid',
           'list-group-item list-group-item-action': viewMode == 'list'
         }"
 
@@ -72,7 +72,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../../../assets/style/base';
+@import '@/assets/style/base';
+
 .file-area {
   .row {
     margin-left: -.5rem;
@@ -80,12 +81,12 @@ export default {
   }
   
   // 1/8
-  // .area-item {    
-  //   @include media-breakpoint-up(xl) {
-  //     flex: 0 0 12.5%;
-  //     max-width: 12.5%;
-  //   }
-  // }
+  .area-item {    
+    @include media-breakpoint-up(xl) {
+      flex: 0 0 12.5%;
+      max-width: 12.5%;
+    }
+  }
 
   // like fake cover
   .area-item-inner {

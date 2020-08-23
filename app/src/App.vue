@@ -1,8 +1,15 @@
 <template>
   <div id="app">
     <notifications 
-      class="app-toast" 
-      :position="toastPosition"  
+      class="app-toast"
+      :duration="500"
+      :position="toastPosition"
+    />
+    <notifications 
+      class="app-toast app-toast-group-viewer"
+      group="viewer"
+      :duration="300"
+      position="top center"  
     />
     <keep-alive include="Workbench">
       <router-view />
@@ -11,7 +18,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState, mapMutations } from 'vuex';
 
 export default {
   name: 'App',
@@ -22,6 +29,20 @@ export default {
     toastPosition() {
       return this.size === 'sm' ? 'bottom center' : 'top right';
     }
+  },
+
+  methods: {
+    ...mapMutations('app', ['setSize'])
+  },
+
+  created() {
+    this._removeListener = this.$service.media.addListener(evt => {
+      this.setSize(evt.$active);
+    });
+  },
+
+  destroyed() {
+    this._removeListener();
   }
 }
 </script>

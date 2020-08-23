@@ -57,7 +57,7 @@ export default {
     },
 
     rightBtns() {
-      const { handMode, zoom, gaps, pagerInfo } = this.settings;
+      // const { hand, zoom, gaps, pagerInfo } = this.settings;
 
       const leftHandBack = {
         icon: 'arrow-left',
@@ -66,18 +66,18 @@ export default {
         className: 'viewer-back'
       }
 
-      const menu = [{
-        zoom: 'width',
-        text: 'Fit to width'
-      }, {
-        zoom: 'screen',
-        text: 'Fit to screen'
-      }].map(item => ({
-        ...item,
-        click: () => this.$emit('settings', { zoom: item.zoom })
-      }));
+      // const menu = [{
+      //   zoom: 'width',
+      //   text: 'Fit to width'
+      // }, {
+      //   zoom: 'screen',
+      //   text: 'Fit to screen'
+      // }].map(item => ({
+      //   ...item,
+      //   click: () => this.$emit('settings', { zoom: item.zoom })
+      // }));
 
-      const selected = menu.map(item => item.zoom).indexOf(zoom);
+      // const selected = menu.map(item => item.zoom).indexOf(zoom);
 
       return [
         leftHandBack,
@@ -86,48 +86,48 @@ export default {
           tip: 'Fullscreen',
           click: () => this.$emit('fullscreen')
         }, 
-        {
-          icon: 'page-alt',
-          tip: 'Page Display',
-          dropdown: {
-            props: {
-              menu: [{
-                html: `
-                  Hand Mode : 
-                  <strong class="text-primary">
-                    ${handMode.toUpperCase()}
-                  </strong>
-                `,
-                click: () => {
-                  this.$emit('settings', { 
-                    handMode: { left: 'right', right: 'left' }[handMode]
-                  });
-                }
-              }, {
-                type: 'check',
-                checked: gaps,
-                text: 'Show Gaps Between Pages',
-                click: () => this.$emit('settings', { gaps: !gaps })
-              }, {
-                type: 'check',
-                checked: pagerInfo,
-                text: 'Show Pager Info',
-                click: () => this.$emit('settings', { pagerInfo: !pagerInfo })
-              }]
-            }
-          }
-        }, 
-        {
-          icon: 'search-plus',
-          tip: 'Zoom',
-          dropdown: {
-            props: {
-              type: 'select',
-              selected,
-              menu
-            }
-          }
-        }
+        // {
+        //   icon: 'page-alt',
+        //   tip: 'Page Display',
+        //   dropdown: {
+        //     props: {
+        //       menu: [{
+        //         html: `
+        //           Hand Mode : 
+        //           <strong class="text-primary">
+        //             ${hand.toUpperCase()}
+        //           </strong>
+        //         `,
+        //         click: () => {
+        //           this.$emit('settings', { 
+        //             hand: { left: 'right', right: 'left' }[hand]
+        //           });
+        //         }
+        //       }, {
+        //         type: 'check',
+        //         checked: gaps,
+        //         text: 'Show Gaps Between Pages',
+        //         click: () => this.$emit('settings', { gaps: !gaps })
+        //       }, {
+        //         type: 'check',
+        //         checked: pagerInfo,
+        //         text: 'Show Pager Info',
+        //         click: () => this.$emit('settings', { pagerInfo: !pagerInfo })
+        //       }]
+        //     }
+        //   }
+        // }, 
+        // {
+        //   icon: 'search-plus',
+        //   tip: 'Zoom',
+        //   dropdown: {
+        //     props: {
+        //       type: 'select',
+        //       selected,
+        //       menu
+        //     }
+        //   }
+        // }
       ];
     }
   }

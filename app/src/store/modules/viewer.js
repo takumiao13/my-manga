@@ -1,8 +1,10 @@
 import Vue from 'vue';
+import * as minimatch from 'minimatch';
 import { safeAssign, isDef, find } from '@/helpers/utils';
+import mangaAPI from '@/apis/manga';
+import consts from '@/consts';
 import { createRequestStatus } from '../helpers';
 import { NAMESPACE as APP_NAMESPACE } from './app'
-import mangaAPI from '@/apis/manga';
 
 // Namespace
 export const NAMESPACE = 'viewer';
@@ -13,7 +15,6 @@ const SET_PAGE = 'setPage';
 const SET_SETTINGS = 'setSettings';
 const SET_LOCKING = 'setLocking';
 const SET_FULLSCREEN = 'setFullscreen';
-const SET_SPEED = 'setSpeed';
 const SET_AUTO_SCROLLING = 'setAutoScrolling';
 
 const statusHelper = createRequestStatus('status');
@@ -38,17 +39,21 @@ const initialState = {
   locking: true,
 
   // mode state
-  mode: 'scroll',
-  autoScrolling: false, // replace later
-  speed: 100,
+  autoScrolling: false, // use `autoPlaying` replace later
 
   // settings state
   settings: {
     zoom: 'width',
-    gaps: true,
     pagerInfo: true,
-    handMode: 'right',
+    hand: 'right',
+    // scroll only
+    gaps: true,
+    scrollSpeed: 100,
+    // swipe only
+    effect: 'slide',
+    playInterval: 2000
   },
+
   ...statusHelper.state()
 };
 
@@ -75,29 +80,28 @@ const createModule = (state = { ...initialState }) => ({
     },
 
     settings(state, getters, allState, allGetters) {
-      let { gaps } = state.settings;
       const { path } = state;
-      const repoState = allGetters[`${APP_NAMESPACE}/repo`];  // find nested state
-      const obj = repoState.viewer || {};
+      const repoState = allGetters[`${APP_NAMESPACE}/repo`]; // find nested state
+      const viewerSettings = repoState.viewer || {};
+      const mergedSettings = { ...viewerSettings.options || {}, ...state.settings };
 
-      // handle settings gaps
-      if (obj.gaps) {
-        let rest;
-        gaps = obj.gaps['*'] || gaps;
+      // not change override settings.json default mode
+      if (!mergedSettings.mode) {
+        mergedSettings.mode = consts.VIEWER_MODE.SCROLL;
+      }
 
-        // match gaps path
-        Object.keys(obj.gaps).forEach(p => {
-          if (path.indexOf(p) === 0) {
-            let r = path.slice(p).length;
-            if (!rest || r < rest) {
-              rest = r;
-              gaps = obj.gaps[p];
-            }
+      // override default settings
+      if (viewerSettings.overrides) {
+        viewerSettings.overrides.forEach(item => {
+          if (minimatch(item.path, path)) {
+            Object.assign(mergedSettings, item.options || {});
+            mergedSettings.force = true; // cannot changed mode
           }
         });
       }
 
-      return Object.assign({}, state.settings, { gaps })
+      // the final viewer settings
+      return mergedSettings;
     }
   },
 
@@ -217,11 +221,6 @@ const createModule = (state = { ...initialState }) => ({
 
     prevPage({ dispatch }) {
       return dispatch('gotoPage', { page: state.page - 1 });
-    },
-
-    autoScroll({ commit }, payload) {
-      commit(SET_LOCKING, false);
-      commit(SET_AUTO_SCROLLING, payload);
     }
   },
 
@@ -243,7 +242,7 @@ const createModule = (state = { ...initialState }) => ({
     },
 
     [SET_SETTINGS](state, payload) {
-      state.settings = safeAssign(state.settings, payload);
+      state.settings = { ...state.settings, ...payload };
     },
 
     [SET_AUTO_SCROLLING](state, payload) {
@@ -254,24 +253,10 @@ const createModule = (state = { ...initialState }) => ({
       state.autoScrolling = autoScrolling;
     },
 
-    [SET_SPEED](state, payload) {
-      const val = payload;
-      if (state.speed === 50 && val < 0) return;
-      if (state.speed === 200 && val > 0) return;
-
-      // reset speed
-      if (val === 0) {
-        state.speed = 100;
-      } else {
-        state.speed += val;
-      }
-    },
-
     [SET_LOCKING](state, payload) {
       const locking = isDef(payload) ?
         !!payload :
         !state.locking;
-
       state.locking = locking;
     },
 

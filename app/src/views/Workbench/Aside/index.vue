@@ -43,7 +43,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../../assets/style/base';
+@import '@/assets/style/base';
 
 .aside {
   width: 320px;

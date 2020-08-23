@@ -106,7 +106,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../assets/style/base';
+@import '@/assets/style/base';
 
 .login-container {
   position: fixed;

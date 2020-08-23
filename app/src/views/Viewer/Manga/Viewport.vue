@@ -1,11 +1,11 @@
 <template>
   <div class="viewer-container">
-    <div class="viewer-viewport-left" @click.stop="handleLeft"/>
+    <div class="viewer-viewport-left" @click.stop="handleLeft" />
     <div 
       :class="['viewer-viewport', { 'viewer-locking': shouldLock }]"
       @click.stop="$emit('click')"
     >
-      <slot /> 
+      <slot class="viewer-mode" /> 
     </div>
     <div class="viewer-viewport-right" @click.stop="handleRight" />
   </div>
@@ -22,25 +22,26 @@ export default {
       // TODO:
       // lock viewport disable prev and next ??
       // use css to implement ??
-      return (this.autoScrolling && !this.locking) || 
-             (!this.autoScrolling && this.locking);
+      return (this.autoScrolling && !this.locking) || (!this.autoScrolling && this.locking);
     }
   },
 
   methods: {
     handleLeft() {
+      if (this.shouldLock) return;
       this.$emit(this.hand === 'right' ? 'prev' : 'next');
     },
 
     handleRight() {
+      if (this.shouldLock) return;
       this.$emit(this.hand === 'right' ? 'next' : 'prev');
     }
   }
 }
 </script>
 
-<style lang="scss">
-@import '../../../assets/style/base';
+<style lang="scss" scoped>
+@import '@/assets/style/base';
 
 .viewer-viewport.viewer-locking {
   &::after {
@@ -56,6 +57,7 @@ export default {
   padding-bottom: 3rem;
   user-select: none;
 
+  // locked
   &:after {
     content: none;
     display: block;
@@ -64,57 +66,19 @@ export default {
     top: 0;
     width: 100%;
     height: 100%;
-    z-index: 2;
-  }
-
-  .viewer-mode {
-    width: 100%;
-    margin: 0 auto;
-    border: 1px solid transparent; // for BFC
-    display: flex;
-    flex-direction: column;
-    min-height: calc(100vh - 6rem);
-    flex: 1;
-  }
-
-  .img-wrapper {
-    max-width: 100%;
-    position: relative;
-    margin: 0 auto; // .25rem
-    background: #3c4043;
-    overflow:  hidden;
-
-    &.gaps {
-      margin: .25rem auto;
-    }
-
-    > .img-loading {
-      color: #666;
-      font-size: 6rem;
-      position: absolute;
-      top: 0;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      font-weight: 300;
-    }
-
-    > .img-inner img {
-      position: absolute;
-      width: 100%;
-      max-height: 100%;
-    }
+    z-index: 4;
   }
 }
 
 .viewer-viewport-left,
 .viewer-viewport-right {
-  width: 33.3%;
+  width: 25%;
   opacity: .5;
   position: fixed;
   top: 3rem;
   bottom: 3rem;
   z-index: 3; // over viewer-viewport
+  cursor: pointer;
 }
 
 .viewer-viewport-left {
@@ -125,31 +89,23 @@ export default {
   right: 0;
 }
 
-.viewer-left-hand {
-  .viewer-viewport-left {
-    cursor: url('../../../assets/right_arrow.cur'), auto;
-  }
-
-  .viewer-viewport-right {
-    cursor: url('../../../assets/left_arrow.cur'), auto;
-  }
-}
-
-.viewer-right-hand {
-  .viewer-viewport-left {
-    cursor: url('../../../assets/left_arrow.cur'), auto;
-  }
-
-  .viewer-viewport-right {
-    cursor: url('../../../assets/right_arrow.cur'), auto;
-  }
-}
-
 @include media-breakpoint-up(md) {
   .viewer-mode { max-width: 600px }
   .viewer-viewport-left,
   .viewer-viewport-right {
     width: calc(50% -  300px);
+
+    background-size: 300px 100px;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
+  .viewer-viewport-left:hover {
+    background-image: url('../../../assets/chevron-left.svg?inline');
+  }
+
+  .viewer-viewport-right:hover {
+    background-image: url('../../..//assets/chevron-right.svg?inline');
   }
 }
 
@@ -158,6 +114,47 @@ export default {
   .viewer-viewport-left,
   .viewer-viewport-right {
     width: calc(50% -  400px);
+  }
+}
+
+@include media-breakpoint-up(xl) {
+  .viewer-mode { max-width: 1000px }
+  .viewer-viewport-left,
+  .viewer-viewport-right {
+    width: calc(50% -  500px);
+  }
+}
+
+</style>
+
+<style lang="scss">
+@import '@/assets/style/base';
+
+.viewer-mode {
+  width: 100%;
+  margin: 0 auto;
+  // border: 1px solid transparent; // for BFC
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.viewer-scroll-mode {
+  .viewer-mode {
+    min-height: calc(100vh - 6rem);
+  }
+}
+
+.viewer-swipe-mode {
+  .viewer-mode {
+    height: calc(100vh - 6rem);
+  }
+
+  @include media-breakpoint-down(sm) {
+    .viewer-viewport-left,
+    .viewer-viewport-right {
+      display: none;
+    }
   }
 }
 </style>

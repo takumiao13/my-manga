@@ -136,7 +136,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../../../assets/style/base';
+@import '@/assets/style/base';
   // flex-grow: 1;
 
   // // should extend later
@@ -189,9 +189,6 @@ export default {
       }
     }
   }
-
-
-
 
   // ...
   .cover {
