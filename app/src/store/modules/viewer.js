@@ -157,7 +157,6 @@ const createModule = (state = { ...initialState }) => ({
             verNames = res1.verNames;
           }
   
- 
           images = res2.images;
         }
   
@@ -207,11 +206,8 @@ const createModule = (state = { ...initialState }) => ({
       
       if (page < 1 || (!ch && page > getters.count)) return;
   
-      // TODO:
       // check chapter size ??
       if (ch && page > getters.chCount) return;
-      
-      // should empty ch
       commit(SET_PAGE, payload);
     },
 
@@ -238,9 +234,12 @@ const createModule = (state = { ...initialState }) => ({
     },
 
     [SET_PAGE](state, { page, ch }) {
-      // should empty ch
       state.page = page;
-      state.ch = ch;
+
+      // chapters ignore ch
+      if (isDef(ch)) {
+        state.ch = ch;
+      }
     },
 
     [SET_SETTINGS](state, payload) {

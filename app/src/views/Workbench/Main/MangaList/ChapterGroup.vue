@@ -6,7 +6,7 @@
   >
     <div class="area-header">
       <div class="area-header-inner">
-        CHAPTERS
+        CHAPTERS - {{ list.length }} <!-- max 50 group support later -->
         <div class="actions float-right">
           <a @click="sort">
             <Icon :name="`sort-by-no-${desc ? 'desc' : 'asc'}`" size="18" />
@@ -74,9 +74,9 @@ export default {
   computed: {
     showCover() {
       const m = this.metadata;
-      return m && 
-             typeof m.chapters === 'object' && 
-             m.chapters.cover
+      return m 
+        && typeof m.chapters === 'object'
+        && m.chapters.cover
     },
 
     sortedList() {

@@ -62,7 +62,8 @@ class ImageService extends Service {
         gm(path)
           .resize(width, height)
           .quality(80)
-          .strip()
+          .strip() // removes any profiles or comments. Work with pure data
+          .interlace('Line') // progressive image
           .stream()
           .pipe(ws);
 

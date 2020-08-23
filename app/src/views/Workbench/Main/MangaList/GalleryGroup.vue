@@ -23,7 +23,7 @@
           })" />
         </div>
 
-        <div class="caption">{{ item.name }}</div>
+        <div class="caption" :title="item.name">{{ item.name }}</div>
       </div>
     </div>
   </div>
@@ -65,6 +65,13 @@ export default {
   .caption {
     top: 100%;
     text-align: center;
+    overflow: hidden;
+    word-break: break-all;
+    word-wrap: break-word;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
   }
 }
 </style>
