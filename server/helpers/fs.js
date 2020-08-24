@@ -14,17 +14,17 @@ const accessSync = (path) => {
 
 const chineseNumberMap = {
   '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
-  '六': 6, '七': 7, '八': 8, '九': 9, '十': 10
+  '六': 6, '七': 7, '八': 8, '九': 9, '十': 10,
+  '上': 1, '中': 2, '下': 3
 };
 
-const lastChars = ['最終', '最终'];
+const filenameComparator = (a, b, fixedTop = [], lastChars = []) => {
 
-const filenameComparator = (a, b, fixedTop = []) => {
   // first check a or b whether contains other.
   if (a.indexOf(b) === 0 && b.indexOf(a) === -1) return 1;
   if (b.indexOf(a) === 0 && a.indexOf(b) === -1) return -1;
 
-  if (fixedTop) {
+  if (fixedTop.length) {
     // handle some fixedTop ['banner', 'cover']
     const fixedAIndex = fixedTop.indexOf(a);
     const fixedBIndex = fixedTop.indexOf(b);
@@ -34,8 +34,8 @@ const filenameComparator = (a, b, fixedTop = []) => {
     } else if (fixedAIndex > -1 && fixedBIndex > -1) {
       return fixedAIndex - fixedBIndex;
     } else {
-      if (fixedAIndex === -1) return 1;
-      if (fixedBIndex === -1) return 1;
+      if (fixedAIndex > -1) return -1;
+      if (fixedBIndex > -1) return 1;
     }
   }
 
@@ -46,8 +46,10 @@ const filenameComparator = (a, b, fixedTop = []) => {
     let ca = a.substr(m++),
         cb = b.substr(n++);
 
-    if (lastChars.indexOf(ca.substr(0,2)) > -1) return 1;
-    if (lastChars.indexOf(cb.substr(0,2)) > -1) return -1;
+    if (lastChars.length) {
+      if (lastChars.indexOf(ca.substr(0,2)) > -1) return 1;
+      if (lastChars.indexOf(cb.substr(0,2)) > -1) return -1;
+    }
 
     let na = parseInt(ca, 10),
         nb = parseInt(cb, 10);

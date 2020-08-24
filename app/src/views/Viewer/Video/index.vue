@@ -184,6 +184,10 @@ export default {
   .vjs-tech {
     top: 3.25rem !important;
     height: calc(100% - 6.5rem) !important;
+
+    &:focus {
+      outline: none;
+    }
   }
 
   .vjs-time-control {

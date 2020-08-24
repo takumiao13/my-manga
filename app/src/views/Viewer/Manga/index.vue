@@ -23,7 +23,7 @@
     <Viewport
       :hand="settings.handMode"
       :locking="locking"
-      :auto-scrolling="autoScroll"
+      :auto-scrolling="autoScrolling"
       @click="setLocking"
       @prev="prevPage"
       @next="nextPage"
@@ -230,11 +230,11 @@ export default {
           break;
         case action.prev:
           $event.preventDefault();
-          this.prev();
+          this.prevPage();
           break;
         case action.next:
           $event.preventDefault();
-          this.next();
+          this.nextPage();
           break;  
         case action.up:
           $event.preventDefault();

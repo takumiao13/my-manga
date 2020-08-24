@@ -437,12 +437,14 @@ async function traverse({
 
     // sort files
     const fixedTopNames = ['banner', 'cover'];
-    _chapterFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames));
-    _chapterWithCoverFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames));
+    const lastChars = ['最終', '最终'];
+    _chapterFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames, lastChars));
+    _chapterWithCoverFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames, lastChars));
     _filterdFiles.sort((a, b) => fs.filenameComparator(
-      pathFn.basename(a.path), 
-      pathFn.basename(b.path),
-      fixedTopNames
+      pathFn.parse(a.path).name, 
+      pathFn.parse(b.path).name,
+      fixedTopNames,
+      lastChars
     ));
 
 
