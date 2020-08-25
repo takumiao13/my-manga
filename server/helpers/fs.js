@@ -26,16 +26,17 @@ const filenameComparator = (a, b, fixedTop = [], lastChars = []) => {
 
   if (fixedTop.length) {
     // handle some fixedTop ['banner', 'cover']
-    const fixedAIndex = fixedTop.indexOf(a);
-    const fixedBIndex = fixedTop.indexOf(b);
+    // a -> cover.jpg
+    const fixedAIndex = fixedTop.some(top => a.startsWith(top));
+    const fixedBIndex = fixedTop.some(top => b.startsWith(top));
     
-    if (fixedAIndex == -1 && fixedBIndex == -1) {
+    if (!fixedAIndex && !fixedBIndex) {
       // skip
-    } else if (fixedAIndex > -1 && fixedBIndex > -1) {
-      return fixedAIndex - fixedBIndex;
+    } else if (fixedAIndex  && fixedBIndex) {
+      return a - b;
     } else {
-      if (fixedAIndex > -1) return -1;
-      if (fixedBIndex > -1) return 1;
+      if (fixedAIndex) return -1;
+      if (fixedBIndex) return 1;
     }
   }
 
@@ -72,7 +73,7 @@ const filenameComparator = (a, b, fixedTop = [], lastChars = []) => {
       ca = String(ca);
       cb = String(cb);
       
-      // special chars always first
+      // special chars always first (includes whitespace)
       if ('.-_~#@[({'.indexOf(ca) > -1) return -1;
       if ('.-_~#@[({'.indexOf(cb) > -1) return 1;
 

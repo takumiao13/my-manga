@@ -66,7 +66,12 @@
           </small>
 
           <!-- manga name -->
-          {{ item.name | stripVer }}
+          <span v-if="item.verNames">
+            {{ item.name | stripVer }}
+          </span>
+          <span v-else>
+            {{ item.name }}
+          </span>
         </div>
         <div class="manga-time text-muted">
           {{ item.birthtime | dateFormat }}
@@ -123,7 +128,7 @@ export default {
 
   filters: {
     stripVer(value) {
-      const striped = value.replace(/(?:\s\[[^\]]*?\]){0,}/g, '');
+      const striped = value.replace(/(?:\s\[[^\]]*?\]){0,}$/g, '');
       return striped
     }
   }

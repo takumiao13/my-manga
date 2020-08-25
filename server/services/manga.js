@@ -441,12 +441,11 @@ async function traverse({
     _chapterFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames, lastChars));
     _chapterWithCoverFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames, lastChars));
     _filterdFiles.sort((a, b) => fs.filenameComparator(
-      pathFn.parse(a.path).name, 
-      pathFn.parse(b.path).name,
+      pathFn.basename(a.path), // protect such as No.1000 (.1000 is not extname)
+      pathFn.basename(b.path),
       fixedTopNames,
       lastChars
     ));
-
 
     // speical sort for chapters
     const spConfig = get(metadata, 'chapters.sort');
