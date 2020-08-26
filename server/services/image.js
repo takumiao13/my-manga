@@ -1,8 +1,8 @@
 const Service = require('./_base');
 const fs = require('../helpers/fs');
 const pathFn = require('../helpers/path');
-const { randomStr } = require('../helpers/utils');
 const LRU = require('lru-cache');
+const nanoid = require('nanoid');
 
 
 const DUMP_FILENAME = 'dump.json'
@@ -18,10 +18,10 @@ class ImageService extends Service {
     this._keyChangedCount = 0;
 
     const lruOptions = { 
-      max: 100000, 
+      max: 10000000, 
       dispose: (key, n) => {
         const cachePath = pathFn.join(this.cacheDir, n);
-        this.ctx.logger().info('cache dispose', key, cachePath);
+        this.ctx.logger('compress').info(`dispose ${key} ${cachePath}}`);
         fs.unlink(cachePath); // remove compressed image when dispose
       },
       maxAge: 1000 * 60 * 60
@@ -44,7 +44,7 @@ class ImageService extends Service {
 
   compress(path, { width = null, height = null }) {
     const outputDir = this.makeDir();
-    const basename = randomStr(16);
+    const basename = nanoid(16);
     const cachePath = pathFn.join(outputDir, basename);
 
     return new Promise((resolve, reject) => {
@@ -78,11 +78,11 @@ class ImageService extends Service {
     });
   }
 
-  get(url) {
+  getCache(url) {
     return this.lruCache.get(url);
   }
 
-  set(url, value) {
+  setCache(url, value) {
     const now = +new Date;
     const diff = now - this._cacheStart;
 

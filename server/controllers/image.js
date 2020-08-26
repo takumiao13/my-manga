@@ -12,9 +12,9 @@ class ImageController extends Controller {
     const { baseDir } = this.service.repo.get(dirId);
     const { image: { compression } } = this.config();
  
-    // make absolute image filepath
+    // make absolute image filepath    
     const cacheDir = this.service.image.cacheDir;
-    const cachedPath = this.service.image.get(ctx.url);
+    const cachedPath = this.service.image.getCache(ctx.url);
 
     // if get cache just send it
     if (cachedPath) {
@@ -31,9 +31,9 @@ class ImageController extends Controller {
           height: h
         }));
 
-        // compress fail
-        if (err) {
-          ctx.logger().info(err.message);
+        // compress fail or no cachedPath
+        if (err || !cachePath) {
+          ctx.logger('compress').warn(`failed ${ctx.url} ${cachedPath} ${err.message}`);
           await this.send(ctx, { 
             root: baseDir, 
             path
@@ -42,7 +42,7 @@ class ImageController extends Controller {
         // compress done
         } else {
           // cache it
-          this.service.image.set(ctx.url, cachePath);
+          this.service.image.setCache(ctx.url, cachePath);
           await this.send(ctx, {
             root: cacheDir,
             path: cachePath

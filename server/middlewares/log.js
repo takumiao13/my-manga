@@ -59,6 +59,10 @@ module.exports = (app) => {
         appenders: ['app'], 
         level: 'warn'
       },
+      compress: {
+        appenders: ['app'],
+        level: process.env.NODE_ENV === 'development' ? 'debug' : 'info'
+      },
       access: { 
         appenders: ['access'], 
         level: process.env.NODE_ENV === 'development' ? 'debug' : 'info' 

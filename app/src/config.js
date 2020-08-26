@@ -14,7 +14,7 @@ if (process.env.APP_PLATFORM === 'web') {
   if (process.env.NODE_ENV === 'production') {
     api.BASE_URL = '/';
   } else {
-    let url = api.HOST;
+    let url = `${protocol}//${api.HOST}`;
     if (api.PORT) url += `:${api.PORT}`;
     url += '/'
     api.BASE_URL = url;
