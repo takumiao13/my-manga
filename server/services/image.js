@@ -49,7 +49,8 @@ class ImageService extends Service {
 
     return new Promise((resolve, reject) => {
       // make output dir
-      if (fs.ensureDirSync(pathFn.join(this.cacheDir, outputDir))) {
+      try {
+        fs.ensureDirSync(pathFn.join(this.cacheDir, outputDir));
         // save compressed image
         const outputPath = pathFn.join(this.cacheDir, cachePath);
         const ws = fs.createWriteStream(outputPath);
@@ -67,13 +68,13 @@ class ImageService extends Service {
           .stream()
           .pipe(ws);
 
-        ws.on('finish', () => resolve(cachePath));
-        ws.on('error', (err) => {
-          console.log('image cache error', err);
-          reject(err);
+        ws.on('finish', () => {
+          this.ctx.logger().debug(`${cachePath} | ${outputDir} ${basename}`)
+          resolve(cachePath) 
         });
-      } else {
-        reject();
+        ws.on('error', reject); 
+      } catch (err) {
+        reject(err);
       }
     });
   }

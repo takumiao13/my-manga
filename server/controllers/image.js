@@ -33,7 +33,7 @@ class ImageController extends Controller {
 
         // compress fail or no cachedPath
         if (err || !cachePath) {
-          ctx.logger('compress').warn(`failed ${ctx.url} ${cachedPath} ${err.message}`);
+          ctx.logger('compress').warn(`failed ${ctx.url} ${cachedPath} ${err && err.message}`);
           await this.send(ctx, { 
             root: baseDir, 
             path
