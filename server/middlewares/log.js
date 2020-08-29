@@ -2,7 +2,7 @@ const log4js = require('log4js');
 const pathFn = require('../helpers/path');
 
 module.exports = (app) => {
-  const { dataDir } = app.config();
+  const { dataDir, auth: needAuth } = app.config();
 
   log4js.configure({
     appenders: {
@@ -23,16 +23,19 @@ module.exports = (app) => {
           pattern: '%[[%x{user}] %d [%p%]] %c %x{data}',
           tokens: {
             user(logEvent) {
-              const { ip, state: { auth } } = logEvent.data[0];
+              const { ip, state } = logEvent.data[0];
               
-              // TODO: handle needAuth false
-              if (!auth) {
+              if (!needAuth) {
+                return ip;
+              }
+
+              if (needAuth && !state.auth) {
                 const err = new Error();
                 err.message = `unknown user access [${ip}]`;
                 throw err;
               }
 
-              return auth.name;
+              return state.auth.name;
             },
             data(logEvent) {
               const { method, url, status } = logEvent.data[0];
