@@ -1,6 +1,6 @@
 {
   "name": "my-manga",
-  "version": "0.15.0-alpha.6",
+  "version": "0.15.0",
   "description": "A Free Comics Management.",
   "scripts": {
     "serve": "cross-env NODE_ENV=development APP_MODE=dev ./node_modules/.bin/nodemon ./bin/cli.js start",
