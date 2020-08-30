@@ -7,16 +7,20 @@ import consts from '@/consts';
 export const NAMESPACE = 'manga';
 
 // Types Enum
-const FETCH = 'FETCH';
-const SHARE = 'SHARE';
-const ADD_VERSION = 'ADD_VERSION';
-const TOGGLE_VERSION = 'TOGGLE_VERSION';
+const FETCH_MANGAS = 'fetchMangas';
+const FETCH_VERSION = 'fetchVersion';
+const SHARE = 'share';
+
+const SET_MANGAS = 'setMangas';
+const ADD_VERSION = 'addVersion';
+const SET_VERSION = 'setVersion';
 
 const statusHelper = createRequestStatus('status');
 
 export const types = createTypesWithNamespace([ 
-  FETCH, SHARE, 
-  ADD_VERSION, TOGGLE_VERSION 
+  FETCH_MANGAS,
+  FETCH_VERSION,
+  SHARE
 ], NAMESPACE);
 
 export const cacheStack = {
@@ -24,7 +28,6 @@ export const cacheStack = {
 
   push(item) {
     this._value.push(item);
-    //console.log('--->', item, this._value);
   },
 
   replace(item) {
@@ -54,7 +57,7 @@ export const cacheStack = {
    * @param {*} path current path
    * @param {*} kw keyword
    */
-  find(dirId, path = '', kw) {
+  find(dirId, path = '', kw, ver) {
     const index = this._value
       .map(item => item.path)
       .lastIndexOf(path);
@@ -62,7 +65,7 @@ export const cacheStack = {
     //console.log('--->', index, dirId, kw);
     if (~index) {
       const target = this._value[index];
-      if (target._dirId === dirId && target._kw === kw) {
+      if (target._dirId === dirId && target._kw === kw && target._ver === ver) {
         return index;
       } else {
         return -1
@@ -75,27 +78,41 @@ export const cacheStack = {
 
 const initialState = {
   inited: false,
-  cover: '',
-  type: '',
   name: '',
   path: '',
+
+  type: '',
+  fileType: '',
+
+  cover: '',
+  banner: '',
+  placeholder: 1,
+  width: undefined,
+  height: undefined,
+  
+  birthtime: '',
   metadata: null,
+  shortId: false,
+
+  // children
   list: [], // <-- all children
   files: [], // Manga[]
   mangas: [], // Manga[]
   chapters: [], // Manga[]
-  versions: [], // Manga[]
-  verNames: null, // String[]
   images: [], // Manga[]
 
-  // TODO: need optimize and pretty
+  versions: [], // Manga[]
+  verNames: null, // String[]
+  
+  // active item TODO: need optimize and pretty
   activePath: '', // acitve path of `state.list`
   activeVer: '', // active ver of `state.versions`
   activeVerPath: '', // active path of `state.versions`
-  shortId: false,
 
   ...statusHelper.state()
 };
+
+let abortController = null;
 
 const createModule = (state = { ...initialState }) => ({
   namespaced: true,
@@ -130,72 +147,79 @@ const createModule = (state = { ...initialState }) => ({
   },
 
   actions: {
-    [FETCH]({ commit }, payload = {}) {
+    [FETCH_MANGAS]({ commit, getters }, payload = {}) {
+      // cancel it if prev fetch is not done
+      if (getters.pending && abortController) {
+        abortController.abort();
+        abortController = null; // clear prev abort controller
+      }
+
       let index = -1;
-      const { dirId, path, isBack, search, keyword, clear } = payload;
-      if (isBack) index = cacheStack.find(dirId, path, keyword);
-      // console.log(isBack, index, path);
+      const { dirId, path, isBack, search, keyword, clear, ver, uptime } = payload;
+      if (isBack) index = cacheStack.find(dirId, path, keyword, ver, uptime);
 
       // hack no flashing when random manga
       statusHelper.pending(commit);
 
+      // TODO: lose back active path
       if (path === consts.LATEST_PATH) {
-        commit(FETCH, {
+        commit(SET_MANGAS, { 
+          ...initialState,
           name: 'Latest',
           path,
-          metadata: null,
-          activePath: '',
-          activeVer: '',
-          activeVerPath: '',
-          shortId: false,
-          list: [],
-          files: [], 
-          mangas: [],
-          chapters: [],
-          versions: [],
-          images: [],
         });
         return statusHelper.success(commit);
       }
-      
+ 
       // if cannot find cache or clear cache
       if (index === -1 || clear) {
-        const method = search ? 'search' : 'list';
         const params = { dirId, path };
+        const options = {};
+        const method = search ? 'search' : 'list';
+      
+        abortController = new AbortController();
+        options.signal = abortController.signal;
         
         if (search) {
           params.keyword = keyword;
+          params.ver = ver;
+          params.uptime = uptime;
         }
 
         if (clear) {
           params._t = +new Date;
         }
 
-        return mangaAPI[method](params)
+        return mangaAPI[method](params, options)
           .then(res => {
             cacheStack[!clear ? 'push' : 'replace'](Object.assign(res, {
               _prevPath: path, // store the prev path
               _dirId: dirId,
-              _kw: keyword
+              _kw: keyword,
+              _ver: ver
             }));
 
-            commit(FETCH, res);
-
+            abortController = null;
+            commit(SET_MANGAS, res);
             return statusHelper.success(commit);
           })
           .catch(error => {
-            statusHelper.error(commit, error);
+            // skip abort error
+            if (error.name !== 'AbortError') {
+              abortController = null; 
+              statusHelper.error(commit, error);
+            }
           });
 
       // get result from cache
       } else {
         const result = cacheStack.pop(index);
-        commit(FETCH, result);
+        commit(SET_MANGAS, result);
         return statusHelper.success(commit);
       }
     },
 
-    [TOGGLE_VERSION]({ commit, state }, payload = {}) {
+    [FETCH_VERSION]({ commit, state }, payload = {}) {
       const { activeVer, versions } = state;
       const { dirId, ver } = payload;
       
@@ -203,16 +227,16 @@ const createModule = (state = { ...initialState }) => ({
 
       const currVer = find(versions, { ver });
 
-      // check version has loaded
+      // check version has been loaded
       if (currVer && currVer.inited) {
-        commit(TOGGLE_VERSION, { ver, res: currVer });
+        commit(SET_VERSION, { ver, res: currVer });
       } else {
         const { path } = currVer;
         // get version data first
         mangaAPI.list({ dirId, path })
           .then(res => {
             commit(ADD_VERSION, { ver, res });
-            commit(TOGGLE_VERSION, { ver, res }) 
+            commit(SET_VERSION, { ver, res }) 
           });
       }
     },
@@ -226,23 +250,30 @@ const createModule = (state = { ...initialState }) => ({
   },
   
   mutations: {
-    [FETCH](state, payload) {
+    [SET_MANGAS](state, payload) {
       state.inited || (state.inited = true);
       safeAssign(state, {
         activeVer: '',
+        cover: '',
+        banner: '',
+        placeholder: 1,
+        width: '', // TODO: remove safeAssign
+        height: '', // TODO:
+        fileType: '',
         error: null,
         shortId: false,
         metadata: null // fixed when list no-metadata cannot overwrite prev metadata
       }, payload);
     },
 
+    // TODO:
     [ADD_VERSION](state, payload) {
       const { ver, res } = payload;
       const version = find(state.versions, { ver });
       safeAssign(version, { ...res, inited: true }); // add version data
     },
 
-    [TOGGLE_VERSION](state, payload) {
+    [SET_VERSION](state, payload) {
       const { ver, res } = payload;
       // also change parent path
       const obj = pick(res, ['list', 'files', 'mangas', 'chapters', 'images']);
@@ -250,6 +281,7 @@ const createModule = (state = { ...initialState }) => ({
       // use version date replace current data
       state.activeVer = ver;
       state.activeVerPath = res.path;
+      state.fileType = res.fileType || '';
       safeAssign(state, obj);
     },
 

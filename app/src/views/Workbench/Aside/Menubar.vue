@@ -3,18 +3,18 @@
     <a
       class="menubar-btn" 
       :title="asideOpen ? 'Close Aside' : 'Toggle Sidebar'"
-      @click="toggleSidebar"
+      @click="handleBarClick"
     >
-      <icon :name="asideOpen ? 'times' : 'bars'" />
+      <Icon :name="asideOpen ? 'times' : 'bars'" />
     </a>
 
     <a
       v-if="canChangeRepos"
       class="menubar-btn"
       title="Repository"
-      @click="gotoRepos"
+      @click="handleGotoRepos"
     >
-      <icon name="warehouse" />
+      <Icon name="warehouse" />
     </a>
 
     <a
@@ -22,7 +22,7 @@
       :class="['menubar-btn', { active: isActive('explorer') }]" 
       @click="toggleActivity('explorer')"
     >
-      <icon name="folders" />
+      <Icon name="folders" />
     </a>
 
     <a
@@ -30,7 +30,7 @@
       :class="['menubar-btn', { active: isActive('search') }]" 
       @click="toggleActivity('search')"
     >
-      <icon name="search" />
+      <Icon name="search" />
     </a>
 
     <a
@@ -38,7 +38,7 @@
       :class="['menubar-btn', { active: isActive('mobile') }]"
       @click="toggleActivity('mobile')"
     >
-      <icon name="mobile" />
+      <Icon name="mobile" />
     </a>
 
     <!-- support later
@@ -49,13 +49,12 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
-import { types } from '@/store/modules/app';
+import { mapState, mapMutations } from 'vuex';
 import { pick } from '@/helpers/utils';
 
 export default {
   computed: {
-    ...mapState('app', [ 'asideOpen', 'activity' ]),
+    ...mapState('app', ['asideOpen', 'activity']),
 
     ...mapState('settings/user', {
       canChangeRepos: (state) => !!state.data
@@ -63,17 +62,10 @@ export default {
   },
   
   methods: {
-    toggleSidebar() {
-      // when is small screen
-      if (this.asideOpen) {
-        this.$store.commit(types.TOGGLE_ASIDE, { open: false });
-      } else {
-        this.$store.commit(types.TOGGLE_SIDEBAR);
-      }
-    },
+    ...mapMutations('app', ['toggleAside', 'toggleSidebar', 'setActivity']),
 
-    gotoRepos() {
-      this.$router.push({ name: 'repos' });
+    isActive(activity) {
+      return activity === this.activity
     },
 
     toggleActivity(activity) {
@@ -83,12 +75,21 @@ export default {
       to.query = { ...to.query, activity };
       this.$router.replace(to);
 
-      this.$store.commit(types.TOGGLE_SIDEBAR, { open: true });
-      this.$store.commit(types.TOGGLE_ACTIVITY, { activity });
+      this.toggleSidebar(true);
+      this.setActivity(activity)
     },
 
-    isActive(activity) {
-      return activity === this.activity
+    handleBarClick() {
+      // when is small screen
+      if (this.asideOpen) {
+        this.toggleAside(false);
+      } else {
+        this.toggleSidebar();
+      }
+    },
+
+    handleGotoRepos() {
+      this.$router.push({ name: 'repos' });
     }
   }  
 }
@@ -103,11 +104,21 @@ export default {
   height: 100vh;
 
   .menubar-btn {
+    position: relative;
     width: 100%;
     height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
+
+    &::after {
+      width: 3px;
+      height: 100%;
+      background: transparent;
+      position: absolute;
+      left: 0;
+      content: '';
+    }
     
     .svg-icon {
       width: 18px;
@@ -116,11 +127,6 @@ export default {
 
     &:not(.active) {
       cursor: pointer;
-    }
-
-    &:hover,
-    &.active {
-      background: #ccc;
     }
 
     &.bottom {

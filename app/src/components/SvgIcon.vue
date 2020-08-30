@@ -1,5 +1,7 @@
 <template>
-  <svg class="svg-icon" version="1.1" 
+  <svg 
+    class="svg-icon"
+    version="1.1"
     :width="currentSize.width" 
     :height="currentSize.height" 
     :viewBox="box"

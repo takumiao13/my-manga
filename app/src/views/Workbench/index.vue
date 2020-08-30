@@ -1,25 +1,24 @@
 <template>
-  <div id="workbench">
+  <div id="workbench" class="workbench">
     <div class="container-fluid">
       <div class="row flex-nowrap">
         <!-- Aside Part -->
-        <Aside class="col-12" />
+        <Aside id="workbench.aside" />
         
         <!-- Main Part -->
-        <div id="main" class="col-12">
+        <div id="workbench.main" class="main">
           <router-view />
         </div>
 
         <!-- Backdrop -->
-        <div class="backdrop" @click="closeAside"></div>
+        <div id="workbench.backdrop" class="backdrop" @click="toggleAside(false)"></div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { mapState } from 'vuex';
-import { types } from '@/store/modules/app';
+import { mapState, mapMutations } from 'vuex';
 import Aside from './Aside';
 
 export default {
@@ -30,57 +29,46 @@ export default {
   },
 
   computed: {
-    ...mapState('app', [ 'asideOpen' ]),
+    ...mapState('app', ['asideOpen']),
 
     ...mapState('settings/user', {
       canChangeRepos: (state) => !!state.data
     }),
   },
 
+  methods: {
+    ...mapMutations('app', ['toggleAside', 'setSize', 'setActivity'])
+  },
+
   // when route change should show correct activity
   activated() {
-    const { activity } = this.$route.query;
-    this.$store.commit(types.TOGGLE_ACTIVITY, { activity });
+    this.setActivity(this.$route.query.activity);
   },
 
   beforeRouteUpdate(to, from, next) {
-    const { activity } = to.query;
-    this.$store.commit(types.TOGGLE_ACTIVITY, { activity });
+    this.setActivity(to.query.activity);
     next();
   },
 
   created() {
     this._removeListener = this.$service.media.addListener(evt => {
-      this.$store.commit(types.TOGGLE_SIZE, { size: evt.$active });
+      this.setSize(evt.$active);
     });
   },
 
   destroyed() {
     this._removeListener();
-  },
-
-  methods: {
-    closeAside() {
-      this.$store.commit(types.TOGGLE_ASIDE, { open: false });
-    }
-  }  
+  } 
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '../../assets/style/base';
 
-#main {
-  //@include media-breakpoint-up(xl) {
-    flex: 0 1 100%;
-    max-width: 100%;
-    min-width: 0; // fix `white-space: nowrap` breaks flexbox layout when use `text-truncate`
-  //}
-
-  .topbar {
-    margin-left: -15px;
-    margin-right: -15px;
-  }
+.main {
+  flex: 0 1 100%;
+  max-width: 100%;
+  min-width: 0; // fix `white-space: nowrap` breaks flexbox layout when use `text-truncate`
 }
 
 .backdrop {
@@ -93,6 +81,10 @@ export default {
 
   @include transition(opacity .3s);
 }
+</style>
+
+<style lang="scss">
+@import '../../assets/style/base';
 
 .aside-open {
   overflow-y: hidden !important; // hide body scroll
@@ -100,7 +92,7 @@ export default {
   height: 100%;
   position: relative; // fixed will lost `scrollTop`
 
-  #aside {
+  .workbench .aside {
     transform: translateX(0);
   }
 
@@ -108,6 +100,18 @@ export default {
     opacity: .3;
     width: 100vw;
     height: 100vh;
+  }
+}
+
+.sidebar-collapsed:not(.aside-open) {
+  @include media-breakpoint-up(md) {
+    .workbench .aside {
+      max-width: 48px;
+    }
+
+    .workbench .aside .sidebar {
+      display: none;
+    }
   }
 }
 </style>

@@ -47,7 +47,7 @@ export default {
 
     handleChange($event) {
       this.tipShown = false;
-      this.$emit('end', $event.target.value);
+      this.$emit('end', Number($event.target.value));
     }
   }
 }
@@ -65,7 +65,7 @@ export default {
 
 .viewer-seekbar-container {
   max-width: 100%;
-  padding: .5rem;
+  padding: .5rem .5rem 1rem .5rem;
   margin: 0 auto;
 }
 </style>

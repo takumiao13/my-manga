@@ -10,6 +10,12 @@ class PDFService extends Service {
 
     let src = dirId && path && `${BASE_URL}pdf/${dirId}/${encodeURIComponent(path)}`;
   
+    // add jwt token for auth
+    const token = localStorage.getItem('Authorization');
+    if (src && token) {
+      src += `?access_token=${token}`;
+    }
+
     return src;
   }
 }

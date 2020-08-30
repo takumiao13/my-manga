@@ -7,6 +7,7 @@ const pathFn = require('./helpers/path');
 const { pick, get, merge } = require('./helpers/utils');
 const { CustomError } = require('./error');
 const EventEmitter = require('events');
+const nanoid = require('nanoid');
 
 // Load Config
 const config = require('./config');
@@ -15,26 +16,31 @@ const config = require('./config');
 const KoaRouter = require('koa-router');
 const registerRouter = require('./router');
 
-// Load Middlewares
+// Load Middlewares (TODO: auto load)
 const errorMw          = require('./middlewares/error');
+const logMw            = require('./middlewares/log');
+const jwtMw            = require('./middlewares/jwt');
 const clientCertAuthMw = require('./middlewares/client-cert-auth');
 const corsMw           = require('./middlewares/cors');
 const bodyParserMw     = require('./middlewares/body-parser');
 const staticMw         = require('./middlewares/static');
 
-// Load Controllers
+// Load Controllers (TODO: auto load)
 const IndexController    = require('./controllers/index');
 const ImageController    = require('./controllers/image');
 const VideoController    = require('./controllers/video');
 const PDFController      = require('./controllers/pdf');
 const MangaController    = require('./controllers/manga');
 const SettingsController = require('./controllers/settings');
+const AuthController     = require('./controllers/auth');
 
-// Load Services
+// Load Services (TODO: auto load)
 const MangaService    = require('./services/manga');
 const SettingsService = require('./services/settings');
 const RepoService     = require('./services/repo');
 const ShareService    = require('./services/share');
+const AuthService     = require('./services/auth');
+const ImageService    = require('./services/image');
 
 class Application extends EventEmitter {
 
@@ -55,17 +61,15 @@ class Application extends EventEmitter {
 
   /**
    * Ensure app options
-   * CLI args > .env > config
+   *  options (CLI args) > config => this.confg
    * @param {*} options 
    */
   _setOptions(options) {
-    let settings = {};
-    const settingsPath = options.settings || config.settings;
-
-    if (settingsPath && fs.accessSync(settingsPath)) {
-      settings = fs.readJsonSync(settingsPath) || {};
-    }
-
+    const { appinfo } = config;
+    const { settingsPath, dataDir, cacheDir } = options;
+    // TODO: handle settings parse error
+    const settings = fs.readJsonSync(settingsPath)
+      
     this.options = merge({}, config, settings, options);
 
     // always use http for development
@@ -77,28 +81,26 @@ class Application extends EventEmitter {
 
     if (serverConfig.ssl) {
       const { key, cert, ca, clientCert } = serverConfig;
-
+      const encoding = 'utf8';
       serverConfig.protocol = 'https';
-      if (key) serverConfig.key = fs.readFileSync(key, 'utf8').toString();
-      if (cert) serverConfig.cert = fs.readFileSync(cert, 'utf8').toString();
-      if (ca) serverConfig.ca = fs.readFileSync(ca, 'utf8').toString();
+
+      if (key) serverConfig.key = fs.readFileSync(key, encoding).toString();
+      if (cert) serverConfig.cert = fs.readFileSync(cert, encoding).toString();
+      if (ca) serverConfig.ca = fs.readFileSync(ca, encoding).toString();
       if (clientCert) {
         serverConfig.requestCert = true;
         serverConfig.rejectUnauthorized = false;
       }
     }
 
-
-    // fallback use options
+    // fallback use options (remove this.options later)
     this._config = this.options;
   }
 
   // readonly config
+  // TODO use `config` replace `options`
   config(path) {
-    if (!path) {
-      return this._config;
-    }
-
+    if (!path) return this._config;
     return get(this._config, path);
   }
 
@@ -107,19 +109,21 @@ class Application extends EventEmitter {
     // if not find datadir and cachedir try to make it
     fs.ensureDirSync(pathFn.join(dataDir, 'repos'));
     fs.ensureDirSync(pathFn.join(dataDir, 'users'));
-    fs.ensureDirSync(cacheDir);
+    fs.ensureDirSync(pathFn.join(dataDir, 'logs'));
+    fs.ensureDirSync(pathFn.join(cacheDir, 'images'));
   }
 
   _loadMiddlewares() {
-    const { ssl, clientCert } = this.config('server');
-    const middlewares = [ corsMw, ...staticMw, bodyParserMw ]
+    const { server } = this.config();
+    const { ssl, clientCert } = server;
+    const middlewares = [ logMw, jwtMw, ...staticMw, bodyParserMw ]
 
     // validate client cert if clientCert is true
     if (ssl && clientCert) middlewares.unshift(clientCertAuthMw);
 
+    middlewares.unshift(corsMw);
     // add errorMw to first
     middlewares.unshift(errorMw);
-
     // apply each mw to app
     middlewares.forEach(mw => {
       this.koa.use(mw(this));
@@ -128,16 +132,15 @@ class Application extends EventEmitter {
 
   async _loadServices() {
     const service = {};
-    const options = {
-      app: this,
-      service
-    };
+    const options = { app: this, service };
 
     Object.assign(service, {
       settings: new SettingsService(options),
       manga: new MangaService(options),
       share: new ShareService(options),
-      repo: new RepoService(options)
+      repo: new RepoService(options),
+      auth: new AuthService(options),
+      image: new ImageService(options)
     });
 
     const keys = Object.keys(service)
@@ -160,7 +163,8 @@ class Application extends EventEmitter {
       video: new VideoController(options),
       pdf: new PDFController(options),
       manga: new MangaController(options),
-      settings: new SettingsController(options)
+      settings: new SettingsController(options),
+      auth: new AuthController(options)
     };
   }
 

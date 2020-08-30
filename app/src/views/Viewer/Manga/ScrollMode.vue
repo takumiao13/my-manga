@@ -23,7 +23,11 @@
         class="img-inner"
         :style="$service.image.style(item)"
       >
-        <img v-lazy="$service.image.makeSrc(item.path)" />
+        <img v-lazy="$service.image.makeSrc({
+          path: item.path,
+          width: item.width,
+          height: item.height
+        })" />
       </div>
     </div>
     <!-- /GALLERY -->
@@ -40,7 +44,6 @@
 <script>
 import { debounce } from '@/helpers/utils';
 import { getScrollTop, getScrollHeight, getOffsetHeight } from '@/helpers/dom';
-import { types } from '@/store/modules/viewer';
 import animateScrollTo from 'animate-scroll-to.js';
 
 export default {
@@ -56,9 +59,10 @@ export default {
       type: [ String, Number ],
       default: 'width'
     },
-    isFullscreen: Boolean,
+    fullscreen: Boolean,
     autoScrolling: Boolean,
-    locking: Boolean
+    locking: Boolean,
+    speed: Number
   },
 
   data() {
@@ -78,7 +82,7 @@ export default {
       if (val) {
         this.$nextTick(() => {
           this.refresh('gallery');
-          this.scrollToCurrPage(true); 
+          this.scrollToCurrPage(); 
         });
       }
     },
@@ -92,17 +96,20 @@ export default {
       }
     },
 
-    zoom() {
-      this.refresh();
-    },
-
-    isFullscreen() {
+    fullscreen() {
       this.refresh();
     },
 
     settings(newVal, oldVal) {
-      if (newVal.gaps !== oldVal.gaps) {
-        this.refresh();
+      // when settings changed refresh
+      if (
+        newVal.gaps !== oldVal.gaps || 
+        newVal.zoom !== oldVal.zoom
+      ) {
+        this.$nextTick(() => {
+          this.refresh();
+          this.scrollToCurrPage(); 
+        });
       }
     },
 
@@ -116,6 +123,10 @@ export default {
         this[val ? 'pauseScroll' : 'resumeScroll']();
         this._$preventScroll(!val);
       } 
+    },
+
+    speed(val) {
+      this.changeScrollSpeed(val);
     }
   },
 
@@ -131,7 +142,7 @@ export default {
   mounted() {
     if (this.gallery.length) {
       this.refresh()
-      this.scrollToCurrPage(true);
+      this.scrollToCurrPage();
     }
   },
 
@@ -192,10 +203,18 @@ export default {
       console.log(this._offsets);
     },
 
-    scrollToCurrPage(margin) {
+    scrollToCurrPage() {
       let y = this._offsets[this.page - 1];
-      if (margin) y -= 48
-      console.log('scrollTo', this.page, y, margin);
+      // not covered image
+      if (this.locking) {
+        y -= 48;
+      }
+
+      if (this.settings.gaps) {
+        y -= 2;
+      }
+
+      // console.log('scrollTo', this.page, y, this.locking);
       window._ignoreScrollEvent = true;
       window.scrollTo(0, y);
     },
@@ -205,7 +224,7 @@ export default {
       console.log('start');
       if (!this._scroller) {
         this._scroller = animateScrollTo('bottom', {
-          speed: 50
+          speed: this.speed
         }, () => {
           this.stopScroll();
         });
@@ -218,7 +237,13 @@ export default {
       if (this.autoScrolling) {
         console.log('stop');
         this._scroller.pause();
-        this.$store.commit(types.TOGGLE_AUTO_SCROLLING, { autoScrolling: false });
+        this.$emit('scrollEnd');
+      }
+    },
+
+    changeScrollSpeed(value) {
+      if (this._scroller) {
+        this._scroller.speed(value);
       }
     },
 
@@ -279,6 +304,7 @@ export default {
   cursor: pointer;
   position: relative;
   z-index: 3; // over `viewer-viewport`
+  background: #666;
 
   &:hover {
     color: #fff;

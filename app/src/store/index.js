@@ -52,23 +52,23 @@ function registerModules() {
 export default store;
 
 export function resetStore() {
-  store.commit(appTypes.TOGGLE_ASIDE, { open: false });
-  store.commit(appTypes.TOGGLE_SIDEBAR, { open: true });
-  store.commit(appTypes.TOGGLE_ACTIVITY, { activity: '' });
+  store.commit(appTypes.toggleAside, false);
+  store.commit(appTypes.toggleSidebar, true);
+  store.commit(appTypes.setActivity);
   mangaCacheStack.clear();
   unregisterModules();
   registerModules();
 }
 
 export const loadSettingsState = (scope) => {
-  // first we should check the scope is valid
+  // we should check the scope is valid or not first
   const repos = store.getters[`${SETTINGS_NAMESPACE}/user/repos`];
-  const isExists = repos ? repos.map(repo => repo.dirId).indexOf(scope) > -1 : true;
+  const accessed = repos ? repos.map(repo => repo.dirId).indexOf(scope) > -1 : true;
   
-  if (!isExists) {
+  if (!accessed) {
     const code = ERR_CODE.REPO_UNACCESSED;
     const error = errorCodeMap[code];
-    store.commit(appTypes.TOGGLE_REPO, { repo: '' })
+    store.commit(appTypes.setRepoId, '');
     return Promise.reject(Object.assign(error, { code }))
   }
 
@@ -76,6 +76,6 @@ export const loadSettingsState = (scope) => {
   const settingsState = createSettings(scope);
   settingTypes[scope] = createTypes(scope);
   store.registerModule(['settings', scope], settingsState);
-  return store.dispatch(settingTypes[scope].INIT)
-    .then(() => store.commit(appTypes.TOGGLE_REPO, { repo: scope }))
+  return store.dispatch(settingTypes[scope].init)
+    .then(() => store.commit(appTypes.setRepoId, scope))
 }

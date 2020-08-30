@@ -1,4 +1,5 @@
 const LATEST_PATH = '@latest';
+const RANDOM_PATH = '@random';
 
 const MANGA_GRID_SIZE = { 
   sm: 3,
@@ -16,7 +17,8 @@ const KEY_CODE = {
   W: 87,
   S: 83,
   F1: 112,
-  F11: 122
+  F11: 122,
+  SPACE: 32
 };
 
 const KEYBOARD_ACTION = {
@@ -25,7 +27,8 @@ const KEYBOARD_ACTION = {
     next: KEY_CODE.D,
     up: KEY_CODE.W,
     down: KEY_CODE.S,
-    help: KEY_CODE.F1
+    help: KEY_CODE.F1,
+    lock: KEY_CODE.SPACE
   },
 
   right: {
@@ -33,12 +36,14 @@ const KEYBOARD_ACTION = {
     next: KEY_CODE.RIGHT,
     up: KEY_CODE.UP,
     down: KEY_CODE.DOWN,
-    help: KEY_CODE.F1
+    help: KEY_CODE.F1,
+    lock: KEY_CODE.SPACE
   }
 }
 
 const consts = {
   LATEST_PATH,
+  RANDOM_PATH,
   MANGA_GRID_SIZE,
   KEY_CODE,
   KEYBOARD_ACTION

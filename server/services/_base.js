@@ -1,7 +1,8 @@
 class Service {
 
-  constructor({ app, service }) {
+  constructor({ app, options, service }) {
     this.app = app;
+    this.options = options;
     this.service = service;
   }
 

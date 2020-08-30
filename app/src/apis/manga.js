@@ -22,40 +22,37 @@ function _transformResponse(res) {
     list,
     cover,
     files: group.FILE || [],
-    chapters: _attachPlaceholder(group.CHAPTER || []),
-    mangas: _attachPlaceholder(group.MANGA || []),
+    chapters: (group.CHAPTER || []).map(_attachPlaceholder),
+    mangas: (group.MANGA || []).map(_attachPlaceholder),
     images: group.IMAGE || [],
     versions
   });
 
-  return res;
+  return _attachPlaceholder(res);
 }
 
-function _attachPlaceholder(mangas) {
-  // add placeholder for manga to fill gutter 
-  // when some manga cover is to long
-  return mangas.map(item => {
-    item.placeholder = 1;
-    const ratio = (item.height / item.width) * 100;
-    if (!isNaN(ratio) && ratio < 85) {
-      item.placeholder++;
-    }
-    return item;
-  });
+function _attachPlaceholder(obj) {
+  obj.placeholder = 1;
+  const ratio = (obj.height / obj.width) * 100;
+  if (!isNaN(ratio) && ratio < 85) {
+    obj.placeholder++;
+  }
+
+  return obj;
 }
 
-function search({ dirId, path, keyword }) {
-  const url = `${_buildURL(dirId, path)}/search?keyword=${keyword}`;
+function search({ dirId, path, keyword, ver, uptime }) {
+  const url = `${_buildURL(dirId, path)}/search?keyword=${keyword}&ver=${ver}&uptime=${uptime}`;
   return fetch(url).then(res => {
     const obj = { path: '', children: res };
     return _transformResponse(obj);
   });
 }
 
-function list({ dirId, path, _t }) {
+function list({ dirId, path, _t }, options = {}) {
   let url = `${_buildURL(dirId, path)}/list`;
   if (_t) url += `?_t=` + _t;
-  return fetch(url).then(_transformResponse)
+  return fetch(url, options).then(_transformResponse)
 }
 
 function folder({ dirId, path }) {
@@ -94,7 +91,12 @@ function pick({ dirId, path }) {
 
 function latest({ dirId }) {
   const url = `${_buildURL(dirId)}/latest`;
-  return fetch(url).then(res => _attachPlaceholder(res));
+  return fetch(url).then(res => res.map(_attachPlaceholder));
+}
+
+function versions({ dirId }) {
+  const url = `${_buildURL(dirId)}/versions`;
+  return fetch(url);
 }
 
 function share(longUrl) {
@@ -114,5 +116,6 @@ export default {
   folder,
   pick,
   latest,
-  share
+  share,
+  versions
 }

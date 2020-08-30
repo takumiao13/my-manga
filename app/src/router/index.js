@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import routes from './routes';
 import AppRouter from './app-router';
-import { eq } from '@/helpers/utils';
 
 // Middleware
 import titleMw from './middleware/title';
@@ -10,6 +9,7 @@ import themeColorMw from './middleware/theme-color';
 import repoSettingsMw from './middleware/repo-setings';
 import logMw from './middleware/log';
 import errorMw from './middleware/error';
+import authMw from './middleware/auth';
 
 Vue.use(AppRouter);
 
@@ -20,7 +20,10 @@ const router = new AppRouter({
 	scrollBehavior (to, from, savedPosition) {
     const { name, isBack, resolver } = to.meta;
     
-    if (eq(to.params, from.params)) return null;
+    // when only querystring change not scroll
+    if (JSON.stringify(to.params) === JSON.stringify(from.params)) {
+      return null
+    }
 
     savedPosition || (savedPosition = { x: 0, y:0 });
 
@@ -38,15 +41,19 @@ const router = new AppRouter({
 });
 
 router
-	.use(errorMw)
-	.use(logMw)
-	.use(titleMw)
-	.use(historyMw)
-	.use(themeColorMw)
-	.use(repoSettingsMw);
+  .use(errorMw)
+  .use(authMw)
+  .use(logMw)
+  .use(titleMw)
+  .use(historyMw)
+  .use(themeColorMw)
+  .use(repoSettingsMw);
 
 router.beforeEach(function(to, from, next) {
-	router.handleBeforeEnter(to, from).then(next);
+  const ctx = { to, from };
+	router.handleBeforeEnter(ctx).then(() => {
+    next(ctx.redirect);
+  });
 });
 
 export default router;

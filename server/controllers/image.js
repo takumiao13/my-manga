@@ -1,34 +1,80 @@
 const Controller = require('./_base');
+const pathFn = require('../helpers/path');
 const to = require('await-to-js').default;
 
-const ONE_MONTH = 30*24*60;
+const MAX_IMAGE_CACHE_AGE = 30*24*60; // seconds
+
 class ImageController extends Controller {
 
   async show(ctx) {
-    const { app } = this;
     const { path, dirId } = ctx.params;
+    const { w, h } = ctx.query;
+    const { baseDir } = this.service.repo.get(dirId);
+    const { image: { compression } } = this.config();
+ 
+    // make absolute image filepath    
+    const cacheDir = this.service.image.cacheDir;
+    const cachedPath = this.service.image.getCache(ctx.url);
 
-    const repo = this.app.service.repo.get(dirId);
-    const root = repo.baseDir; // get real path;
-    
+    // if get cache just send it
+    if (cachedPath) {
+      await this.send(ctx, {
+        root: cacheDir,
+        path: cachedPath
+      });
+    } else {
+      if (compression && (w || h)) {
+        // compress image
+        const imagePath = pathFn.join(baseDir, path);
+        const [ err, cachePath ] = await to(this.service.image.compress(imagePath, {
+          width: w,
+          height: h
+        }));
+
+        // compress fail or no cachedPath
+        if (err || !cachePath) {
+          ctx.logger('compress').warn(`failed ${ctx.url} ${cachedPath} ${err && err.message}`);
+          await this.send(ctx, { 
+            root: baseDir, 
+            path
+          });
+
+        // compress done
+        } else {
+          // cache it
+          this.service.image.setCache(ctx.url, cachePath);
+          await this.send(ctx, {
+            root: cacheDir,
+            path: cachePath
+          });
+        }
+      } else {
+        await this.send(ctx, { 
+          root: baseDir, 
+          path
+        });
+      }
+    }
+  }
+
+  async send(ctx, { root, path }) {
+    const { app } = this;
+
     // path should re-encode when it contains `%` will throw 400 error.
-    const [ err, result ] = await to(app.send(ctx, encodeURIComponent(path), { 
-      root,
+    const [ err ] = await to(app.send(ctx, encodeURIComponent(path), { 
+      root, // get real path
       hidden: true,
       setHeaders: (res) => {
-        res.setHeader('Cache-Control', `max-age=${ONE_MONTH}`)
+        res.setHeader('Cache-Control', `max-age=${MAX_IMAGE_CACHE_AGE}`)
       }
     }));
-  
+
+    // hidden real image path
     if (err) {
-      // hidden real image path
       err.message = 'cannot find image';
       throw err;
     }
-  
-    return result;
   }
-
 }
 
 ImageController.actions = [ 'show' ];

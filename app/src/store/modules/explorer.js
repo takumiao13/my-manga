@@ -1,21 +1,25 @@
 import mangaAPI from '@/apis/manga';
 import { find } from '@/helpers/utils';
-import { createTypesWithNamespace, createRequestStatus } from '../helpers';
+import { createRequestStatus } from '../helpers';
 
 // Namespace
 export const NAMESPACE = 'explorer';
 
 // Types Enum
-const FETCH = 'FETCH';
-const LATEST = 'LATEST';
+const FETCH_FOLDERS = 'fetchFolders';
+const FETCH_LATEST = 'fetchLatest';
+const FETCH_VERSION = 'fetchVersions';
+
+const SET_FOLDERS = 'setFolders';
+const SET_LATEST = 'setLatest';
+const SET_VERSIONS = 'setVersions';
 
 const statusHelper = createRequestStatus('status');
-
-export const types = createTypesWithNamespace([ FETCH, LATEST ], NAMESPACE);
 
 const initialState = {
   folders: null,
   latest: [],
+  versions: [],
   ...statusHelper.state()
 };
 
@@ -43,14 +47,14 @@ const createModule = (state = { ...initialState }) => ({
   },
 
   actions: {
-    [FETCH]({ commit }, payload = {}) {
+    [FETCH_FOLDERS]({ commit }, payload = {}) {
       const { path, dirId } = payload;
       const global = !path;
       if (global) statusHelper.pending(commit);
 
       return mangaAPI.folder({ path, dirId })
         .then(({ list }) => {
-          commit(FETCH, { path, list });
+          commit(SET_FOLDERS, { path, list });
 
           if (global) {
             return statusHelper.success(commit)
@@ -62,17 +66,25 @@ const createModule = (state = { ...initialState }) => ({
         });
     },
 
-    [LATEST]({ commit }, payload = {}) {
+    [FETCH_LATEST]({ commit }, payload = {}) {
       const { dirId } = payload;
       return mangaAPI.latest({ dirId })
         .then((latest) => {
-          commit(LATEST, { latest });
+          commit(SET_LATEST, latest);
+        })
+    },
+
+    [FETCH_VERSION]({ commit }, payload = {}) {
+      const { dirId } = payload;
+      return mangaAPI.versions({ dirId })
+        .then(versions => {
+          commit(SET_VERSIONS, versions);
         })
     }
   },
 
   mutations: {
-    [FETCH](state, payload) {
+    [SET_FOLDERS](state, payload) {
       const { path, list } = payload;
       let folders;
 
@@ -99,9 +111,12 @@ const createModule = (state = { ...initialState }) => ({
       }
     },
 
-    [LATEST](state, payload) {
-      const { latest } = payload;
-      state.latest = latest;
+    [SET_LATEST](state, payload) {
+      state.latest = payload;
+    },
+
+    [SET_VERSIONS](state, payload) {
+      state.versions = payload;
     },
 
     ...statusHelper.mutation()

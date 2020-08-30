@@ -20,8 +20,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
-import { types } from '@/store/modules/viewer';
+import { mapState, mapActions } from 'vuex';
 import qs from '@/helpers/querystring';
 import screenfull from 'screenfull';
 
@@ -44,7 +43,10 @@ export default {
     options() {
       return this.inited ? {
         sources: [ this.$service.video.makeSrc(this.path, true) ],
-        poster: this.$service.image.makeSrc(this.cover, true),
+        poster: this.$service.image.makeSrc({
+          path: this.cover,
+          escape: true
+        }),
         controls: true,
         autoplay: false,
         preload: 'auto',
@@ -77,6 +79,8 @@ export default {
   },
 
   methods: {
+    ...mapActions('viewer', ['fetchVideo']),
+
     fullscreenToggle() {
       screenfull.toggle();
       this.isFullscreen = !this.isFullscreen;
@@ -125,7 +129,7 @@ export default {
     this.$on('update', (route) => {
       const { dirId, path } = route.params;
       const { ver, name } = route.query;
-      this.$store.dispatch(types.VIEW_VIDEO, { dirId, path: qs.decode(path), ver, name })
+      this.fetchVideo({ dirId, path: qs.decode(path), ver, name })
         .then(() => {
           // TODO: tmp use inited to support async init videojs
           this.inited = true;
@@ -180,6 +184,10 @@ export default {
   .vjs-tech {
     top: 3.25rem !important;
     height: calc(100% - 6.5rem) !important;
+
+    &:focus {
+      outline: none;
+    }
   }
 
   .vjs-time-control {

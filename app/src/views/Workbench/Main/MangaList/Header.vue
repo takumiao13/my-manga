@@ -1,6 +1,6 @@
 <template>
-  <div class="topbar">
-    <navbar
+  <div class="header topbar">
+    <Navbar
       :title="title"
       :class="{'no-shadow': needAddress }" 
       :left-btns="leftBtns"
@@ -8,7 +8,7 @@
       @click.native="handleBackToTop"
     />
     
-    <addressbar
+    <Addressbar
       v-if="needAddress"
       :navs="navs"
       @back="handleNavigateBack"
@@ -18,8 +18,7 @@
 </template>
 
 <script>
-import { types as appTypes } from '@/store/modules/app';
-import { mapState, mapGetters } from 'vuex';
+import { mapState, mapGetters, mapMutations } from 'vuex';
 import qs from '@/helpers/querystring';
 import animateScrollTo from 'animate-scroll-to.js';
 
@@ -42,19 +41,33 @@ export default {
     ...mapGetters('app', [ 'repo' ]),
 
     leftBtns() {
-      return (this.viewType === 'file') ? [{
+
+      const fileBtns = [{
         icon: 'bars',
         className: 'd-inline-block d-md-none',
         click: this.handleToggleSidebar
-      }] : [{
+      }];
+
+      const mangaBtns = [{
         icon: 'arrow-left',
         tip: 'Back',
         click: this.handleBack
-      }, {
-        icon: 'bars',
-        className: 'd-inline-block d-md-none',
-        click: this.handleToggleSidebar
+      }];
+
+      const searchBtns = [{
+        icon: 'arrow-left',
+        tip: 'Back',
+        click: this.handleBack
       }]
+
+      const buttonMap = {
+        manga: mangaBtns,
+        search: searchBtns,
+        random: fileBtns,
+        file: fileBtns
+      };
+
+      return buttonMap[this.viewType];
     },
 
     rightBtns() {
@@ -71,7 +84,13 @@ export default {
         click: () => this.handleToggleSidebar('search')
       }];
 
-      // support later
+      const randomBtns = [{
+        icon: 'refresh',
+        tip: 'Refresh',
+        click: () => this.$emit('refresh')
+      }];
+
+      // TODO:
       // when refresh latest mangas will cause problem
       const fileBtns = [{
         icon: 'refresh',
@@ -82,6 +101,7 @@ export default {
       const buttonMap = {
         manga: mangaBtns,
         search: searchBtns,
+        random: randomBtns,
         file: null, // fileBtns
       };
 
@@ -98,6 +118,8 @@ export default {
   },
 
   methods: {
+    ...mapMutations('app', ['toggleAside', 'setActivity']),
+
     handleBack() {
      if (this.$router._routerHistory.length === 1) {
         const { dirId } = this.$router.history.current.params;
@@ -124,9 +146,9 @@ export default {
     },
 
     handleToggleSidebar(activity) {
-      this.$store.commit(appTypes.TOGGLE_ASIDE);
+      this.toggleAside();
       if (activity) {
-        this.$store.commit(appTypes.TOGGLE_ACTIVITY, { activity });
+        this.setActivity(activity);
       }
     },
 
@@ -150,9 +172,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-// Topbar
+// Header
 // ==
-.topbar {
+.header {
   height: 3rem;
 
   .manga-title-shown {

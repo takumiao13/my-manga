@@ -25,12 +25,13 @@
       </div>
 
       <p class="my-3 text-muted" style="font-size: 80%;">
-        REPOS - {{ repos.length }} items
+        REPOS ({{ repos.length }})
       </p>
 
-      <!-- old repo list
+      
       <div class="list-group">
-        <div 
+        <div
+          :title="!repo.accessed ? 'Repo is unaccessed' : repo.name"
           :class="['list-group-item', 'text-truncate', { disabled: !repo.accessed }]"
           v-for="(repo, index) in repos"
           :key="index"
@@ -50,16 +51,24 @@
             name="check"
             class="mr-3"
           />
+          <icon 
+            v-else-if="!repo.accessed"
+            name="ban"
+            class="mr-3"
+          />
           <div 
             v-else
             class="svg-icon mr-3 icon-placeholder"
           />
 
-          <strong>{{ repo.name }}</strong>&nbsp;
+          <strong>
+            {{ repo.name }}
+          </strong>
+          &nbsp;
         </div>
       </div>
-      -->
-
+      
+      <!--
       <div class="row">
         <div 
           class="col-12 col-md-6 mb-3"
@@ -83,6 +92,7 @@
           </div>
         </div>
       </div>
+      -->
     </div>
   </div>
 </template>
@@ -136,23 +146,14 @@ export default {
       const { latest, dirId } = repo;
       return latest
         .filter(item => item.cover)
-        .map(item => {
-          return this.$service.image.makeSrc(item.cover, false, dirId)
-        })
+        .map(item => this.$service.image.makeSrc({
+          path: item.cover, 
+          dirId,
+          width: item.width,
+          height: item.height,
+          thumb: true
+        }))
         .slice(0, 3);
-    },
-
-    handleAddRepo(event, paths) {
-      const path = paths[0];
-      const scope = 'user';
-      const index = this.repos.length;
-      const payload = { key: `repos[${index}]`, value: path };
-
-      // sync to settings
-      this.$store.dispatch(types[scope].SET, payload)
-        .then(() => {
-          // create done
-        })
     },
 
     handleSelectRepo() {
@@ -166,13 +167,36 @@ export default {
       // 2.repo is not changed 
       // 3.can go back
       // then we just back it
-      if (repo.dirId === this.repoId && this.$router.canGoBack()) {
-        this.$router.go(-1);
-        return;
+      if (repo.dirId === this.repoId) {
+        // when come from repo click
+        if (this.$router.canGoBack()) {
+          console.log('repo back');
+          this.$router.go(-1);
+          return;
+
+        // when come from browser back
+        } else if (this.$router.delta()) {
+          console.log('repo forward');
+          this.$router.go(1);
+          return;
+        }
       }
     
       // we should reset store to change repo 
       EventEmitter.$emit('store.reset', repo);
+    },
+
+    handleAddRepo(event, paths) {
+      const path = paths[0];
+      const scope = 'user';
+      const index = this.repos.length;
+      const payload = { key: `repos[${index}]`, value: path };
+
+      // sync to settings
+      this.$store.dispatch(types[scope].SET, payload)
+        .then(() => {
+          // create done
+        })
     },
 
     handleRemoveRepo($event, repo) {

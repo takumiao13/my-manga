@@ -1,6 +1,6 @@
 const Service = require('./_base');
 const fs = require('../helpers/fs');
-const { take, escapeRegExp } = require('../helpers/utils'); 
+const { take, get, pickN, escapeRegExp } = require('../helpers/utils'); 
 const to = require('await-to-js').default;
 const sizeOf = require('image-size');
 const pathFn = require('path');
@@ -20,9 +20,12 @@ const FileTypes = {
   VERSION: 'VERSION'
 };
 
-const MAX_INDEX_COUNT = 100000;
+const LATEST_COUNT = 100;
+const RANDOM_COUNT = 50;
+
+const MAX_INDEX_COUNT = 50000;
 const LAST_LOOP_COUNT = 8;
-const COVER_FILENAME = 'cover.jpg';
+
 const METADATA_FILENAME = 'metadata.json';
 const imgRE = /\.(jpe?g|png|webp|gif|bmp)$/i;
 const fileRE = /\.(mp4|pdf|zip)$/i;
@@ -109,29 +112,74 @@ class MangaService extends Service {
     return result;
   }
 
+  async rand(dirId) {
+    const { db } = await this._indexedDB.get(dirId);
+    const mangaColl = db.getCollection('mangas');
+    const { data } = mangaColl;
+    const N = Math.min(data.length, RANDOM_COUNT);
+    const results = pickN(data, N);
+    return results
+  }
+
   async search(dirId, path = '', queryparams) {
     const { db } = await this._indexedDB.get(dirId);
     const mangaColl = db.getCollection('mangas');
-    let { keyword, version } =  queryparams;
+    let { keyword, ver, uptime } =  queryparams;
     const queryObject = {};
 
-    if (keyword) {
-      if (path) keyword = `${path}/${keyword}`;
-      queryObject.name = { $regex : new RegExp(keyword, 'i') };
-    }
-    
-    if (version) {
-      if (!isArray(version)) version = [version];
-      queryObject.version = { $contains : version };
+    if (!keyword && !ver && !uptime) {
+      return [];
     }
 
-    const results = mangaColl
-      .chain()
-      .find(queryObject)
-      .limit(200)
-      .data();
+    if (keyword) {
+      queryObject.name = { $regex: new RegExp(keyword, 'i') };
+
+      // search manga in path
+      if (path) {
+        queryObject.path = { $regex: new RegExp(path, 'i') };
+      }
+    }
     
-      return results;
+    if (ver) {
+      ver = ver.replace(/\s/g, '+');
+      if (!isArray(ver)) ver = [ver];
+      queryObject.verNames = { $contains : ver };
+    }
+
+    let results = mangaColl
+      .chain()
+      .find(queryObject);
+
+    // filter by update time
+    if (uptime) {
+      const now = new Date;
+      const yyyy = now.getFullYear();
+      const mm = now.getMonth();
+      const dd = now.getDate();
+
+      const today = +new Date(yyyy, mm, dd-1);
+      const thisMonth = +new Date(yyyy, mm-1, 1);
+      const thisHalfYear = +new Date(yyyy, mm-6, 1);
+      const thisYear = +new Date(yyyy-1, mm, dd);
+
+      results = results.where((manga) => {
+        const { birthtime } = manga;
+        switch (uptime) {
+          case '1': // today
+            return birthtime > today;
+          case '3': // this month
+            return birthtime <= today && birthtime > thisMonth;
+          // case '4': // this half year
+          //   return birthtime <= thisMonth && birthtime > thisHalfYear;
+          case '5': // this year
+            return birthtime <= thisMonth && birthtime > thisYear;
+        }
+      });
+    }
+  
+    results = results.limit(200).data();
+
+    return results;
   }
 
   /**
@@ -139,16 +187,22 @@ class MangaService extends Service {
    * 
    * @param {string} dirId 
    */
-  async version(dirId) {
+  async versions(dirId) {
     const { db } = await this._indexedDB.get(dirId);
     const mangaColl = db.getCollection('mangas');
     const results = mangaColl
       .chain()
-      .find({ version: { $exists: true }})
-      .extract('version') // ?? has problem ??
+      .find({ verNames: { $exists: true }})
       .data();
 
-    return results;
+
+    const versions = new Set();
+
+    results.forEach(manga => {
+      manga.verNames.forEach(v => versions.add(v));
+    });
+
+    return Array.from(versions).sort();
   }
 
   /**
@@ -156,7 +210,7 @@ class MangaService extends Service {
    * 
    * @param {string} dirId 
    */
-  async latest(dirId, count = 100) {
+  async latest(dirId, count = LATEST_COUNT) {
     const { db } = await this._indexedDB.get(dirId);
     const mangaColl = db.getCollection('mangas');
     const results = mangaColl
@@ -179,6 +233,7 @@ class MangaService extends Service {
 
     this._indexedDB.set(dirId, dbOptions);
     
+    // TODO: put code in middleware ??
     return new Promise((resolve, reject) => {
       // each repo dir add db.json to store indexing info.
       const db = new loki(filepath, {
@@ -213,6 +268,13 @@ class MangaService extends Service {
 
   async createIndex(baseDir, callback) {
     const dirId = this.service.repo.dirId(baseDir);
+    const repo = this.service.repo.get(dirId);
+
+    if (!repo.accessed) {
+      callback({ message: 'repo unaccessed' });
+      return;
+    }
+
     const options = this._indexedDB.get(dirId);
     const { db, filepath } = options;
     const mangasColl = db.getCollection('mangas');
@@ -316,8 +378,8 @@ async function traverse({
 
     let _filterdFiles = [];
     const _versionFiles = [];
-    const _chapterFiles = [];
-    const _chapterWithCoverFiles = [];
+    let _chapterFiles = [];
+    let _chapterWithCoverFiles = [];
 
     files
       .filter(ignorePathFilter)
@@ -373,16 +435,25 @@ async function traverse({
     // - else directory consider it as `FILE`
     _isManga = _versionFiles.length || _chapterFiles.length;
 
-    const fixedTopNames = ['banner', 'cover']
-    _chapterFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames));
-    _chapterWithCoverFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames));
+    // sort files
+    const fixedTopNames = ['banner', 'cover'];
+    const lastChars = ['最終', '最终'];
+    _chapterFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames, lastChars));
+    _chapterWithCoverFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames, lastChars));
     _filterdFiles.sort((a, b) => fs.filenameComparator(
-      pathFn.basename(a.path), 
+      pathFn.basename(a.path), // protect such as No.1000 (.1000 is not extname)
       pathFn.basename(b.path),
-      fixedTopNames
+      fixedTopNames,
+      lastChars
     ));
 
-    const filesLength = _filterdFiles.length;
+    // speical sort for chapters
+    const spConfig = get(metadata, 'chapters.sort');
+    if (spConfig) {
+      _chapterFiles = adjustChapters(_chapterFiles, spConfig);
+      _chapterWithCoverFiles = adjustChapters(_chapterWithCoverFiles, spConfig);
+    }
+
     if (maxDepth === 0) _filterdFiles = take(_filterdFiles, LAST_LOOP_COUNT);
     
     // build async traverse task
@@ -523,6 +594,11 @@ async function traverse({
     } catch (e) {}
   }
 
+  // use big cover as banner
+  if (cover && !banner && width && height && ((height / width) * 100 <= 72)) {
+    banner = cover;
+  }
+
   // Merge base info and extra info
   return { 
     isDir, path, name, birthtime, mtime, type, 
@@ -571,6 +647,46 @@ async function readMeta(path) {
   return metadata;
 }
 
+const adjustChapters = (chs, config) => {
+  const _chs = [];
+  const shouldAdjustChs = {};
+
+  Object.keys(config).forEach(key => {
+    config[key].forEach(ch => {
+      shouldAdjustChs[ch] = 1;
+    })
+  });
+
+  for (let i = 0; i < chs.length; i++) {
+    const ch = chs[i];
+    const { chapterName } = ch;
+
+    // if not match just put to results
+    if (!config[chapterName] && !shouldAdjustChs[chapterName]) {
+      _chs.push(ch);
+    } else if (config[chapterName]) {
+      // find after chapters
+      const afterChs = findAfterChs(chs, config[chapterName]);
+      _chs.push(ch, ...afterChs);
+    }
+  }
+
+  // handle first and last chapters
+  if (config.$1) {
+    _chs.unshift(...findAfterChs(chs, config.$1));
+  }
+
+  if (config.$$) {
+    _chs.push(...findAfterChs(chs, config.$$));
+  }
+
+  return _chs;
+
+  function findAfterChs(chs, names) {
+    return chs.filter(ch => names.includes(ch.chapterName));
+  }
+}
+
 const isChapter = (name, { parentName, metadata, filepath }) => {
   const regstr = `${parentName}\\s-\\s(.+)`;
   const chapterRE = new RegExp(regstr);
@@ -600,18 +716,27 @@ const isVersion = (name, { parentName } = {}) => {
   }
 
   const basename = parentName ? `^${parentName}` : '';
+  // filename like `foo [ver1] [ver2]`
   const baskets = '((?:\\s\\[[^\\]]*?\\]){0,})';
-	const suffix = '(?:\\.(mp4|pdf|zip))?';
+  // filetname list `foo.mp4` `foo.zip`
+  const suffix = '(?:\\.(mp4|pdf|zip))?';
+  
+  // make RegExp
 	const reStr = `${basename}${baskets}${suffix}$`;
   const versionRE = new RegExp(reStr);
   const matched = name.match(versionRE);
+
+  // when filename is contains versions
   if (matched) {
+    // a -> verNames
+    // b -> suffix
     let [ _, a, b ] = matched;
     // handle combined versions
     // [ver1] [ver2] -> [ver1+ver2];
     a = a.trim().replace(/\]\s\[/g, '+').replace(/\[|\]/g, '');
 
     if (a && b) {
+      // like `mp4.voice` both has ver and suffix
       return b + '.' + a;
     } else {
       return a || b;

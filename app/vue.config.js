@@ -7,7 +7,6 @@ require('dotenv-flow').config({
 });
 const pkg = require('../package.json');
 
-
 console.log('NODE_ENV:', env.NODE_ENV);
 console.log('APP_VERSION:', pkg.version);
 console.log('APP_MODE:', env.APP_MODE);

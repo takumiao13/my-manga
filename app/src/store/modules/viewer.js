@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import { safeAssign, isDef, find } from '@/helpers/utils';
-import { createTypesWithNamespace, createRequestStatus } from '../helpers';
+import { createRequestStatus } from '../helpers';
 import { NAMESPACE as APP_NAMESPACE } from './app'
 import mangaAPI from '@/apis/manga';
 
@@ -8,34 +8,41 @@ import mangaAPI from '@/apis/manga';
 export const NAMESPACE = 'viewer';
 
 // Types Enum
-const LOAD  = 'LOAD';
-const GO    = 'GO';
-const VIEW  = 'VIEW';
-const VIEW_VIDEO = 'VIEW_VIDEO';
-const SETTINGS = 'SETTINGS';
-const TOGGLE_AUTO_SCROLLING = 'TOGGLE_AUTO_SCROLLING';
-
+const SET_MANGA = 'setManga';
+const SET_PAGE = 'setPage';
+const SET_SETTINGS = 'setSettings';
+const SET_LOCKING = 'setLocking';
+const SET_FULLSCREEN = 'setFullscreen';
+const SET_SPEED = 'setSpeed';
+const SET_AUTO_SCROLLING = 'setAutoScrolling';
 
 const statusHelper = createRequestStatus('status');
 
-export const types = createTypesWithNamespace([ 
-  LOAD, GO, VIEW, VIEW_VIDEO, SETTINGS, TOGGLE_AUTO_SCROLLING
-], NAMESPACE);
-
 const initialState = {
-  mode: 'scroll',  
-  autoScrolling: false,
-  name: '',
-  path: '',
-  page: 1,
-  ch: '',
-  chName: '',
-  chIndex: 0,
-  cover: '',
+  name: '', // manga name
+  path: '', // manga path
+  cover: '', // cover path
   verNames: [],
-  activeVer: '',
   images: [],
   chapters: [],
+
+  ch: '', // original chapter name
+  chIndex: 0,
+  chName: '', // chapter name
+
+  // common state
+  page: 1, // curr page
+  
+  activeVer: '',
+  fullscreen: false,
+  locking: true,
+
+  // mode state
+  mode: 'scroll',
+  autoScrolling: false, // replace later
+  speed: 100,
+
+  // settings state
   settings: {
     zoom: 'width',
     gaps: true,
@@ -90,12 +97,12 @@ const createModule = (state = { ...initialState }) => ({
         });
       }
 
-      return Object.assign(state.settings, { gaps })
+      return Object.assign({}, state.settings, { gaps })
     }
   },
 
   actions: {
-    [VIEW]({ commit, state }, payload = {}) {
+    fetchManga({ commit, state }, payload = {}) {
       const { dirId, path, ch, page } = payload;
       const promiseArray = [];
       const pathResStub = () => {};
@@ -150,25 +157,20 @@ const createModule = (state = { ...initialState }) => ({
             verNames = res1.verNames;
           }
   
- 
           images = res2.images;
         }
   
         // try to remove name prefix
         const chName = ch.replace(`${name} - `, '');
-        
-        // TODO: replace `safeAssign`
-        // sometimes images chapters will be undefined
-        // so we should safeAssign it.
-        commit(LOAD, { name, path, cover, images, chapters, chName, verNames });
-        commit(GO, { page, ch });
+        commit(SET_MANGA, { name, path, cover, images, chapters, chName, verNames });
+        commit(SET_PAGE, { page, ch });
         Vue.nextTick(() => statusHelper.success(commit));
       }).catch(error => {
         statusHelper.error(commit, { error });
       });
     },
 
-    [VIEW_VIDEO]({ commit }, payload = {}) {
+    fetchVideo({ commit }, payload = {}) {
       const { dirId, path, ver } = payload;
 
       statusHelper.pending(commit);
@@ -180,7 +182,7 @@ const createModule = (state = { ...initialState }) => ({
         const findOptions = ver ? { ver } : { name: payload.name };
         const video = find(children, findOptions);
 
-        commit(LOAD, {
+        commit(SET_MANGA, {
           name, 
           verNames,
           path: video.path,
@@ -195,36 +197,90 @@ const createModule = (state = { ...initialState }) => ({
       })
     },
 
-    [GO]({ commit, getters }, payload = {}) {
+    gotoPage({ commit, getters }, payload) {
+      if (typeof payload === 'number') {
+        payload = { page: payload };
+      }
+
       const { page, ch } = payload;
       
-      if (page < 1) return;
+      if (page < 1 || (!ch && page > getters.count)) return;
+  
+      // check chapter size ??
       if (ch && page > getters.chCount) return;
-      if (!ch && page > getters.count) return;
-      
-      // should empty ch
-      commit(GO, payload);
+      commit(SET_PAGE, payload);
+    },
+
+    nextPage({ dispatch, state }) {
+      return dispatch('gotoPage', { page: state.page + 1 });
+    },
+
+    prevPage({ dispatch }) {
+      return dispatch('gotoPage', { page: state.page - 1 });
+    },
+
+    autoScroll({ commit }, payload) {
+      commit(SET_LOCKING, false);
+      commit(SET_AUTO_SCROLLING, payload);
     }
   },
 
   mutations: {
-    [LOAD](state, payload) {      
+    // TODO: replace `safeAssign`
+    // sometimes images chapters will be undefined
+    // so we should safeAssign it.
+    [SET_MANGA](state, payload) {      
       safeAssign(state, payload);
     },
 
-    [GO](state, payload) {
-      safeAssign(state, payload);
+    [SET_PAGE](state, { page, ch }) {
+      state.page = page;
+
+      // chapters ignore ch
+      if (isDef(ch)) {
+        state.ch = ch;
+      }
     },
 
-    [SETTINGS](state, payload) {
-      safeAssign(state.settings, payload);
+    [SET_SETTINGS](state, payload) {
+      state.settings = safeAssign(state.settings, payload);
     },
 
-    [TOGGLE_AUTO_SCROLLING](state, payload) {
-      const { autoScrolling } = payload;
-      state.autoScrolling = isDef(autoScrolling) ? 
-        !!autoScrolling :
+    [SET_AUTO_SCROLLING](state, payload) {
+      const autoScrolling = isDef(payload) ? 
+        !!payload :
         !state.autoScrolling;
+
+      state.autoScrolling = autoScrolling;
+    },
+
+    [SET_SPEED](state, payload) {
+      const val = payload;
+      if (state.speed === 50 && val < 0) return;
+      if (state.speed === 200 && val > 0) return;
+
+      // reset speed
+      if (val === 0) {
+        state.speed = 100;
+      } else {
+        state.speed += val;
+      }
+    },
+
+    [SET_LOCKING](state, payload) {
+      const locking = isDef(payload) ?
+        !!payload :
+        !state.locking;
+
+      state.locking = locking;
+    },
+
+    [SET_FULLSCREEN](state, payload) {
+      const fullscreen = isDef(payload) ?
+        !!payload :
+        !state.fullscreen;
+
+      state.fullscreen = fullscreen;
     },
 
     ...statusHelper.mutation()

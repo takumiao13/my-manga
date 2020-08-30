@@ -15,10 +15,28 @@ class MangaController extends Controller {
   
   async list(ctx) {
     const { service } = this;
-    await this._cache(ctx, async ({ baseDir, path, settings }) => {
-      const results = await service.manga.list(baseDir, path, settings); 
-      ctx.body = { ...results };
-    });
+    const { path = '', dirId } = ctx.params;
+
+    if (path === '@random') {
+      const results = await service.manga.rand(dirId, path);
+      ctx.body = {
+        hasSubfolder: true,
+        isDir: true,
+        name: 'Random',
+        path: '@random',
+        type: 'FILE',
+        children: results
+      }
+    } else {
+      await this._cache(ctx, async ({ baseDir, path, settings }) => {
+        const results = await service.manga.list(baseDir, path, settings);
+        const { metadata } = results;
+        if (metadata && metadata.$error) {
+          ctx.logger('metadata').warn($error);
+        }
+        ctx.body = { ...results };
+      });
+    }
   }
 
   async search(ctx) {
@@ -28,10 +46,10 @@ class MangaController extends Controller {
     ctx.body = data;
   }
 
-  async version(ctx) {
+  async versions(ctx) {
     const { service } = this;
     const { dirId } = ctx.params;
-    const data = await service.manga.version(dirId, ctx.query);
+    const data = await service.manga.versions(dirId);
     ctx.body = data;
   }
 
@@ -79,7 +97,7 @@ class MangaController extends Controller {
       const xAppVersionChanged = headers['x-app-version'] && headers['x-app-version'] !== appinfo.version;
       const lastModifiedChanged = !ifModifiedSince || lastModified - ifModifiedSince >= 1000;
       
-      if (xAppStartChanged || xAppVersionChanged || lastModifiedChanged) {
+      if (xAppStartChanged || xAppVersionChanged || !ctx.fresh || lastModifiedChanged) {
         // remove force cache for fetch list
         response.lastModified = lastModified;
         response.set({
@@ -91,12 +109,7 @@ class MangaController extends Controller {
         response.lastModified = ifModifiedSince;
       }
     } catch(err) {
-      switch (err.errno) {
-        case -4058: // no such file or directory
-          this.app.throwError(ERR_CODE.MANGA_NO_DIR);
-        default:
-          throw err;
-      }
+      this.app.throwError(ERR_CODE.MANGA_NO_DIR);
     }
   }
 
@@ -122,7 +135,7 @@ class MangaController extends Controller {
 
 MangaController.actions = [ 
   'folder', 'list', 'pick', 
-  'latest', 'search', 'version', 
+  'latest', 'search', 'versions', 
   'share', 'expand' 
 ];
 

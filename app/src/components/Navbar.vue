@@ -20,8 +20,11 @@
             } 
           }"
         >
-          <icon v-if="btn.icon" :name="btn.icon" />
-          <template v-if="btn.icon && btn.title">&nbsp;</template>
+          <icon 
+            v-if="btn.icon"
+            :name="btn.icon" 
+            :class="{ 'mr-2': btn.title }"
+          />
           <span v-html="btn.title"></span>
         </component>
       </component>
@@ -55,8 +58,11 @@
             } 
           }"
         >
-          <icon v-if="btn.icon" :name="btn.icon" />
-          <template v-if="btn.icon && btn.title">&nbsp;</template>
+          <icon 
+            v-if="btn.icon"
+            :name="btn.icon" 
+            :class="{ 'mr-2': btn.title }"
+          />
           <span v-html="btn.title"></span>
         </component>
       </component>
@@ -199,7 +205,7 @@ export default {
 
   .navbar-nav {
     &.navbar-nav-left .nav-item {
-      margin-right: .25rem;
+      // margin-right: .25rem;
 
       // increase gutter between last btn and title
       // &:last-child {
@@ -208,12 +214,12 @@ export default {
     }
 
     &.navbar-nav-right .nav-item {
-      margin-left: .25rem;
+      // margin-left: .25rem;
     }
   }
 
   .btn {
-    padding: .375rem;
+    padding: .375rem .5rem;
     min-width: 38px;
   }
 

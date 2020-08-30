@@ -4,7 +4,7 @@ const os = require('os');
 const env = process.env;
 
 require('dotenv-flow').config({
-  node_env: env.NODE_ENV || 'prod',
+  node_env: env.APP_MODE || 'prod',
   path: pathFn.join(__dirname, 'envs'),
   silent: true
 });
@@ -13,8 +13,8 @@ const pkgPath = pathFn.resolve(__dirname, '../package.json');
 let pkg = fs.readFileSync(pkgPath, { encode: 'utf8' });
 pkg = JSON.parse(pkg);
 
-const appName = env.NODE_ENV ? 
-  `${pkg.name}-${env.NODE_ENV}` :
+const appName = env.APP_MODE ? 
+  `${pkg.name}-${env.APP_MODE}` :
   pkg.name;
 
 const HOME = env.HOME || env.USERPROFILE || env.HOMEPATH;
@@ -32,8 +32,6 @@ const config = {
   },
   port: 3033,
   baseDir: process.cwd(),
-  dataDir: pathFn.join(HOME, `.${appName}`),
-  cacheDir: pathFn.join(TEMP, `.${appName}`),
   server: {
     protocol: 'http',
     ssl: false, // http default
@@ -45,12 +43,5 @@ const config = {
     imageMagick: false
   }
 };
-
-// use dot env to replace config
-if (env.PORT) config.port = env.PORT;
-if (env.DIR) config.baseDir = env.DIR;
-if (env.DATA_DIR) config.dataDir = env.DATA_DIR;
-if (env.CACHE_DIR) config.cacheDir = env.CACHE_DIR;
-if (env.SETTINGS) config.settings = env.SETTINGS;
 
 module.exports = config;

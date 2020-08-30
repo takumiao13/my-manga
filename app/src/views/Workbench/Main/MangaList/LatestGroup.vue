@@ -4,10 +4,10 @@
       <div class="area-header-inner">
         <div class="actions float-right" v-if="!$feature.touch">
           <a @click="prev" :class="{ 'hidden': prevBound }">
-            <icon name="chevron-left" size="18" />
+            <Icon name="chevron-left" size="18" />
           </a>
           <a @click="next" :class="{ 'hidden': nextBound }">
-            <icon name="chevron-right" size="18"/>
+            <Icon name="chevron-right" size="18"/>
           </a>
         </div>
 
@@ -29,14 +29,23 @@
         class="row" 
         :style="{ 'transform': `translate(${offsetX}%, 0px)`}"
       >
-        <manga-item
-          latest
+        <div 
+          :class="{  
+            'col-4 col-sm-3 col-xl-2': item.placeholder == 1,
+            'col-8 col-sm-6 col-xl-4': item.placeholder == 2,
+            'area-item': true,
+            active: item.path === activePath,
+          }"
           v-for="item in list"
           :key="item.path"
-          :active-path="activePath"
-          :item="item"
-          @click.native="$emit('item-click', item, 'manga')"
-        />
+        >
+          <MangaItem
+            latest  
+            :active-path="activePath"
+            :item="item"
+            @click.native="$emit('item-click', item, 'manga')"
+          />
+        </div>
       </div>
     </div>
   </div>

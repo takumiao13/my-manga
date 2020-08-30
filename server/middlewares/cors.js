@@ -15,7 +15,9 @@ module.exports = (app) => {
       allowHeaders: [
         'Range',
         'X-APP-VERSION',
-        'X-APP-STARTAT'
+        'X-APP-STARTAT',
+        'Content-Type',
+        'Authorization'
       ],
     });
   }

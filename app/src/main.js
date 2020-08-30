@@ -41,23 +41,30 @@ import VueNotifications from 'vue-notification'
 import loadingDirective from '@/directives/loading';
 import clickOutSideDirective from '@/directives/click-out-side';
 
+// Filters
+import verNameFilter from '@/filters/verName';
+import dateFormatFilter from '@/filters/dateFormat';
+
 // Services
 import $Service from '@/services';
 
-Vue.component('spinner', Spinner);
-Vue.component('navbar', Navbar);
-Vue.component('toolbar', Toolbar);
-Vue.component('icon', SvgIcon);
-Vue.component('nested-list', NestedList);
-Vue.component('side-toolbar', SideToolbar);
-Vue.component('data-view', DataView);
-Vue.component('addressbar', Addressbar);
-Vue.component('dropdown', Dropdown);
-Vue.component('video-player', VideoPlayer);
-Vue.component('modal', Modal);
+Vue.component('Spinner', Spinner);
+Vue.component('Navbar', Navbar);
+Vue.component('Toolbar', Toolbar);
+Vue.component('Icon', SvgIcon);
+Vue.component('NestedList', NestedList);
+Vue.component('SideToolbar', SideToolbar);
+Vue.component('DataView', DataView);
+Vue.component('Addressbar', Addressbar);
+Vue.component('Dropdown', Dropdown);
+Vue.component('VideoPlayer', VideoPlayer);
+Vue.component('Modal', Modal);
 
 Vue.directive('loading', loadingDirective);
 Vue.directive('click-out-side', clickOutSideDirective);
+
+Vue.filter('verName', verNameFilter);
+Vue.filter('dateFormat', dateFormatFilter);
 
 Vue.use(VueQriously);
 Vue.use(VueLazyload, {
@@ -65,7 +72,7 @@ Vue.use(VueLazyload, {
   attempt: 1,
   observer: true, // when image in slot observer is need.
   adapter: {
-    loaded ({ bindType, el, naturalHeight, naturalWidth, $parent, src, loading, error, Init }) {
+    loaded ({ el, bindType, naturalHeight, naturalWidth, $parent, src, loading, error, Init }) {
       // handle manga cover loaded
       if (el.classList.contains('cover-image')) {        
         el.parentNode.classList.remove('loading');
@@ -116,9 +123,7 @@ function bootstrapApp() {
     // Prevent Chrome 67 and earlier from automatically showing the prompt
     e.preventDefault();
     // Stash the event so it can be triggered later.
-    store.commit(appTypes.PWA_INSTALL_PROMPT, {
-      pwaInstallPrompt: e
-    });
+    store.commit(appTypes.setPwaInstallPrompt, e);
   });
 
   EventEmitter.$on('store.reset', (repo) => {
@@ -138,21 +143,37 @@ function bootstrapApp() {
 
     // reset history
     resetHistory(() => {
-      // goto new repo explorer
+      // after reset check current page is repos or not 
+      // (the first page is not `repos` from shared link)
+      if (router.history.current.name === 'repos') {
+        enterNewRepo(dirId);
+      } else {
+        // redirect to repos pages
+        router.replace({ name: 'repos' }, () => {
+          enterNewRepo(dirId);
+        })
+      }
+    });
+
+    function enterNewRepo(dirId) {
       router.push({ name: 'explorer', params: { dirId }});
       // delay 1000 ms wait fetch data to render view 
       delay(1000).then(() => {
         const hide = showSplashScreen();
         hide(); // hide self
       })
-    });
+    }
   });
 
-  // try to get user settings
-  Promise.all([
-    store.dispatch(settingTypes.user.INIT),
-    store.dispatch(settingTypes.repo.INIT)  
-  ])
+
+  // TODO: uppercase ??
+  store.dispatch(appTypes.checkUser)
+    // try to get user settings
+    .then(() => Promise.all([
+        store.dispatch(settingTypes.user.init),
+        store.dispatch(settingTypes.repo.init)  
+      ])
+    )
     .then(checkCurrentRepo)
     .then(() => {
       renderApp();
@@ -161,26 +182,26 @@ function bootstrapApp() {
     })
     .catch(error => {
       window.localStorage.removeItem(REPO_KEY);
-      renderApp({ error });
+      renderApp();
       hideSplashScreen();
-      console.error('setting error', error);
+      console.error('App Bootstrap Error', error);
     });
 }
 
 function checkCurrentRepo() {
-  const _REPO = window.localStorage.getItem(REPO_KEY);
-  // check is has current repo
-  if (_REPO) {
-    const scope = _REPO;
+  const REPO = window.localStorage.getItem(REPO_KEY);
+
+  // check is current repo
+  if (REPO) {
+    const scope = REPO;
     const repoSettings = store.state.settings[scope];
     // dynamic load repo settings
     if (!repoSettings) { return loadSettingsState(scope) }
   }
 }
 
-function renderApp({ error } = {}) {
+function renderApp() {
   new Vue({
-    data: { error },
     router,
     store,
     render: h => h(App),

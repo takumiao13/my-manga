@@ -1,7 +1,7 @@
 <template>
-  <div class="mobile">
+  <div class="mobile" id="workbench.aside.sidebar.watchOnMobile">
     <div class="topbar">
-      <navbar :title="title" />
+      <Navbar :title="title" />
     </div>
     <div>
       <div class="qrcode-wrapper mb-3 mt-5">
@@ -95,7 +95,7 @@ export default {
   .qrcode {
     background: #fff;
     padding: .5rem;
-    border: 1px solid #ddd;
+    border: .5px solid #ddd;
     height: 158px;
   }
 }

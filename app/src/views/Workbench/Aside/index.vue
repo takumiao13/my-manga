@@ -1,5 +1,5 @@
 <template>
-  <div id="aside">
+  <div class="aside">
     <Menubar />
     <div class="sidebar" id="workbench.aside.sidebar">
       <Explorer v-show="!activity || activity === ActivityTypes.EXPLORER" />
@@ -42,17 +42,15 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 @import '../../../assets/style/base';
 
-#aside {
+.aside {
   width: 320px;
   height: 100vh;
   position: fixed;
   z-index: 1050;
   transform: translateX(-100%);
-  overflow-y: auto;
-  overflow-y: overlay;
   padding: 0;
   display: flex;
 
@@ -78,19 +76,8 @@ export default {
 
   .sidebar {
     flex: 1;
-    overflow: auto;
-  }
-}
-
-.sidebar-collapsed:not(.aside-open) {
-  @include media-breakpoint-up(md) {
-    #aside {
-      max-width: 48px;
-    }
-
-    .sidebar {
-      display: none;
-    }
+    overflow-y: auto;
+    overflow-y: overlay;
   }
 }
 </style>

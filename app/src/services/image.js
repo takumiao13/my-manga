@@ -8,7 +8,7 @@ const Ratio = {
 }
 
 const Bounding = {
-  EDGE: 1,
+  EDGE: 2,
   MAX: (Ratio.V - 100)/2,
   MIN: (100 - Ratio.H)/2
 };
@@ -21,17 +21,41 @@ class ImageService extends Service {
    * @param {Boolean} escape escape `(` and `)`
    * @param {string} dirId 
    */
-  makeSrc(paths, escape, dirId) {
+  makeSrc({ dirId, path, escape, thumb, width, height }) {
     dirId = dirId || this.$store.getters[`${APP_NAMESPACE}/repo`].dirId
+    path = isArray(path) ? path.join('/') : path;
+
     const { BASE_URL } = this.$config.api;
-    const path = isArray(paths) ? paths.join('/') : paths;
     let src = dirId && path && `${BASE_URL}img/${dirId}/${encodeURIComponent(path)}`;
     
-    // escape () when in background-image
-    if (src && escape) {
+    if (!src) return src;
+
+    // escape `()` when in background-image (video poster)
+    if (escape) {
       src = src.replace(/(\(|\))/g, '\\$1');
     }
+    const params = [];
   
+    if (src && thumb) {
+      if (width > height) {
+        params.push('h=380');
+      } else {
+        params.push('w=240');
+      }
+    } else if (width && width > 800) {
+      params.push('w=800')
+    }
+  
+    // add jwt token for auth
+    const token = localStorage.getItem('Authorization');
+    if (src && token) {
+      params.push(`access_token=${token}`)
+    }
+
+    if (params.length) {
+      src += `?${params.join('&')}`
+    }
+
     return src;
   }
   
@@ -41,12 +65,11 @@ class ImageService extends Service {
 
     if (isNaN(ratio)) ratio = Ratio.V;
 
-    // ___|___|___ ratio ___|___|___
-    //   sec pri           pri sec
+    // _m____x_ (h) _x___ 100 ___x_ (v) _x____m_
     //
-    // - <= primary allow scale
-    // - <= secondary allow center
-    // - > secondary max 
+    // - ratio in [r-x ~ r+x] (scale)
+    // - ratio > max (fitW, fitH)
+    // - else center original size
 
     // should adjust v-ratio to scale image
     if (ratio > 100) {
@@ -83,7 +106,7 @@ class ImageService extends Service {
     }
   }
 
-  // when thumb should use maxRatio to prevent size too long
+  // when in gallery should use maxRatio to prevent size too long
   // when in viewer must no maxRation to show the origin size
   style({ width, height }, maxRatio) {
     let ratio = (height / width) * 100;

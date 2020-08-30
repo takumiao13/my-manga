@@ -1,7 +1,7 @@
 <template>
-  <div class="explorer">
-    <div class="topbar">
-      <navbar :title="title" :right-btns="rightBtns" />
+  <div class="explorer" id="workbench.aside.sidebar.explorer">
+    <div class="explorer-header topbar">
+      <Navbar :title="title" :right-btns="rightBtns" />
       <div class="explorer-repo-name">
         <div class="float-right">
           <a class="mr-2" @click="handleCollapse" title="Collapse all">
@@ -15,20 +15,28 @@
       </div>
     </div>
     
-    <data-view 
-      class="explorer-container"
+    <DataView 
+      class="explorer-body"
       :loading="pending" 
       :empty="empty"
     >
       <div 
         class="explorer-latest"
-        title="Latest manga"
+        title="Latest mangas"
         :class="{ active: activeItem && activeItem.path === $consts.LATEST_PATH }"
         @click="handleLatest"
       >
-        <icon name="rocket-launch" size="14" />Latest
+        <Icon name="rocket-launch" size="14" />Latest
       </div>
-      <nested-list
+      <div 
+        class="explorer-rand"
+        title="Random mangas"
+        :class="{ active: activeItem && activeItem.path === $consts.RANDOM_PATH }"
+        @click="handleRandom"
+      >
+        <Icon name="random" size="14" />Random (50)
+      </div>
+      <NestedList
         ref="nestedList"
         v-show="success"  
         :props="treeProps"
@@ -37,14 +45,12 @@
         @expanded="handleItemExpanded"
         @selected="handleItemSelected" 
       />
-    </data-view>
+    </DataView>
   </div>
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex';
-import { types as appTypes } from '@/store/modules/app';
-import { types } from '@/store/modules/explorer';
+import { mapState, mapGetters, mapActions, mapMutations } from 'vuex';
 import qs from '@/helpers/querystring';
 
 export default {
@@ -53,7 +59,7 @@ export default {
       title: {
         content: 'Explorer',
         className: 'navbar-brand-xs',
-        click: this.closeSidebar
+        click: () => this.toggleAside(false)
       },
 
       activeItem: null,
@@ -87,45 +93,16 @@ export default {
     }
   },
 
-  activated() {
-    if (
-      this.appError || // error
-      (this.$route.meta.isBack && this.folderTree) // has loaded 
-    ) {
-      return;
-    }
-
-    this.fetchFolders();
-    this.fetchLatest();
-  },
-
-  beforeRouteUpdate(to, from, next) {
-    if (
-      this.appError || 
-      to.params.dirId == from.params.dirId // the same route
-    ) {
-      return;
-    }
-
-    this.fetchFolders();
-    this.fetchLatest();
-
-    next();
-  },
-
   methods: {
-    fetchFolders() {
-      const { dirId } = this.repo;
-      return this.$store.dispatch(types.FETCH, { dirId });
-    },
+    ...mapMutations('app', [ 'toggleAside' ]),
 
-    fetchLatest() {
-      const { dirId } = this.repo;
-      return this.$store.dispatch(types.LATEST, { dirId });
-    },
+    ...mapActions('explorer', [ 'fetchFolders', 'fetchLatest', 'fetchVersions' ]),
 
-    closeSidebar() {
-      this.$store.commit(appTypes.TOGGLE_ASIDE, { open: false });
+    reset() {
+      const { dirId } = this.repo;
+      this.fetchFolders({ dirId });
+      this.fetchLatest({ dirId });
+      this.fetchVersions({ dirId });
     },
 
     // events
@@ -137,7 +114,7 @@ export default {
       // maybe use two-way binding later
       // faster then vuex (but we cannot use strict mode)
       ctx.setStatus('pending');
-      this.$store.dispatch(types.FETCH, {
+      this.fetchFolders({
         path: item.path,
         dirId
       }).then(() => {
@@ -162,7 +139,8 @@ export default {
         name: 'explorer', 
         params: { dirId, path: qs.encode(path) },
         query: item.type === 'MANGA' ? { type: 'manga' } : null
-      }).then(() => this.closeSidebar());
+      });
+      this.toggleAside(false)
     },
 
     handleGotoRepos() {
@@ -174,8 +152,7 @@ export default {
         const { dirId } = this.repo;
         this.$router.push({ name: 'explorer', params: { dirId }});
       }
-      
-      this.closeSidebar();
+      this.toggleAside(false);
     },
 
     handleLatest() {
@@ -186,15 +163,29 @@ export default {
       this.$router.push({ 
         name: 'explorer', 
         params: { dirId, path }
-      }).then(() => this.closeSidebar());
+      });
+      this.toggleAside(false);
+    },
+
+    handleRandom() {
+      const { dirId } = this.repo;
+      const path = this.$consts.RANDOM_PATH;
+
+      this.activeItem = { path };
+      this.$router.push({ 
+        name: 'explorer', 
+        params: { dirId, path }
+      });
+      this.toggleAside(false);
     },
 
     handleRefresh() {
+      const { dirId } = this.repo;
       this.$refs.nestedList.reset();
 
       Promise.all([
-        this.fetchFolders(),
-        this.fetchLatest()
+        this.fetchFolders({ dirId }),
+        this.fetchLatest({ dirId })
       ]).then(() => {
         this.$notify({
           title: 'Refresh Success'
@@ -205,12 +196,39 @@ export default {
     handleCollapse() {
       this.$refs.nestedList.collapseAll();
     }
-  }
+  },
+
+   activated() {
+    if (
+      this.appError || // error
+      (this.$route.meta.isBack && this.folderTree) // has loaded 
+    ) {
+      return;
+    }
+
+    this.reset();
+  },
+
+  beforeRouteUpdate(to, from, next) {
+    if (
+      this.appError || 
+      to.params.dirId == from.params.dirId // the same route
+    ) {
+      return;
+    }
+    this.reset();
+    next();
+  },
 }
 </script>
 
 <style lang="scss" scoped>
-.explorer-container {
+.explorer-header {
+
+}
+
+.explorer-body {
+  padding: 0;
   min-height: calc(100vh - 5rem);
 }
 
@@ -221,7 +239,8 @@ export default {
   z-index: 1030;
 }
 
-.explorer-latest {
+.explorer-latest,
+.explorer-rand {
   cursor: pointer;
   padding: .5rem 0rem;
   font-size: 80%;

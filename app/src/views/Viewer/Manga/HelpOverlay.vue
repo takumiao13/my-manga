@@ -5,7 +5,7 @@
       <div>
         Set to 
         <strong class="text-primary">
-          {{ capitalize(hand) }}
+          {{ hand.toUpperCase() }}
         </strong> 
         Mode
       </div>
@@ -68,10 +68,6 @@
 </template>
 
 <script>
-
-// TODO: use filter later
-import { capitalize } from '@/helpers/utils';
-
 const HELP = {
   left: {
     left: 'Next &rarr;',
@@ -101,10 +97,6 @@ export default {
     help() {
       return HELP[this.hand];
     }
-  },
-
-  methods: {
-    capitalize,
   }
 }
 </script>
