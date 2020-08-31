@@ -7,13 +7,13 @@
             v-if="viewMode == 'grid'"
             name="th"
             size="18"
-            @click.native="$emit('viewModeChange', 'list')"
+            @click.native="$emit('view-mode-change', 'list')"
           />
           <icon 
             v-else-if="viewMode == 'list'"
             name="th-list"
             size="18" 
-            @click.native="$emit('viewModeChange', 'grid')"
+            @click.native="$emit('view-mode-change', 'grid')"
           />
         </div>
 

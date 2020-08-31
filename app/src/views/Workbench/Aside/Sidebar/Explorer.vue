@@ -140,7 +140,7 @@ export default {
         params: { dirId, path: qs.encode(path) },
         query: item.type === 'MANGA' ? { type: 'manga' } : null
       });
-      this.toggleAside(false)
+      this.toggleAside(false);
     },
 
     handleGotoRepos() {

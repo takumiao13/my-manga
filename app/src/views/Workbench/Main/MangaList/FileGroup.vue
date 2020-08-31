@@ -7,13 +7,13 @@
             v-if="viewMode == 'grid'"
             name="th"
             size="18"
-            @click.native="$emit('viewModeChange', 'list')"
+            @click.native="$emit('view-mode-change', 'list')"
           />
           <icon 
             v-else-if="viewMode == 'list'"
             name="th-list"
             size="18" 
-            @click.native="$emit('viewModeChange', 'grid')"
+            @click.native="$emit('view-mode-change', 'grid')"
           />
         </div>
         FILES - {{ list.length }} items
@@ -38,7 +38,7 @@
       >
         <div v-show="viewMode == 'grid'" class="area-item-inner">
           <div>
-            <icon :name="icon(item)" style="color: #bbb;" />
+            <Icon :name="icon(item)" style="color: #bbb;" />
           </div>
         </div>
         
@@ -47,7 +47,7 @@
         </div>
 
         <div v-show="viewMode == 'list'" class="text-truncate">
-          <icon :name="icon(item)" size="18" />
+          <Icon :name="icon(item)" size="18" />
           &nbsp; {{ item.name }} 
         </div>
       </div>

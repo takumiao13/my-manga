@@ -6,7 +6,9 @@
   >
     <div class="area-header">
       <div class="area-header-inner">
-        CHAPTERS - {{ list.length }} <!-- max 50 group support later -->
+        CHAPTERS - {{ list.length }}
+
+        <!-- max 50 group support later -->
         <div class="actions float-right">
           <a @click="sort">
             <Icon :name="`sort-by-no-${desc ? 'desc' : 'asc'}`" size="18" />
@@ -36,7 +38,8 @@
     </div>
 
     <div v-else class="list-group">
-      <a class="list-group-item list-group-item-action chapter-item"
+      <a 
+        class="list-group-item list-group-item-action chapter-item"
         :class="{ active: item.name === activeName}"
         v-for="item in sortedList" 
         :key="item.path"
@@ -55,7 +58,6 @@
 import MangaItem from './MangaItem';
 
 export default {
-
   components: {
     MangaItem
   },
@@ -81,9 +83,7 @@ export default {
     },
 
     sortedList() {
-      return this.desc ? 
-        this.list.slice().reverse() :
-        this.list;
+      return this.desc ? this.list.slice().reverse() : this.list;
     }
   },
 

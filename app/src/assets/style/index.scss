@@ -78,21 +78,6 @@ input {
       margin: .5rem;
       font-size: 1rem;
     }
-    
-    &.warn {
-      background: #ffb648;
-      border-left-color: #f48a06;
-    }
-  
-    &.error {
-      background: #E54D42;
-      border-left-color: #B82E24;
-    }
-  
-    &.success {
-      background: #68CD86;
-      border-left-color: #42A85F;
-    }
   }
 
   &.app-toast-group-viewer {

@@ -3,7 +3,7 @@ $grid-breakpoints: (
   sm: 576px,
   md: 768px,
   lg: 992px,
-  xl: 1540px
+  xl: 1540px // <-- change xl breadpoint
 );
 
 @import "../../../node_modules/bootstrap/scss/functions";

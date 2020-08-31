@@ -1,5 +1,5 @@
 <template>
-  <div id="app-error" v-if="error">
+  <div id="app.error" class="error-container" v-if="error">
     <div>
       <div class="error-icon">
         <icon :name="error.icon" size="100" />
@@ -12,7 +12,7 @@
       <p class="error-code">Error Code: {{ error.code }}</p>
 
       <p>
-      `<button 
+        <button 
           v-if="error.code === 500"
           class="btn btn-outline-secondary" 
           @click="handleTryRefresh"
@@ -68,7 +68,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-#app-error {
+.error-container {
   position: fixed;
   top: 0;
   left: 0;
@@ -87,7 +87,6 @@ export default {
 
   .error-icon {
     margin-bottom: 2rem;
-    color: #999;
   }
 
   .error-title {
@@ -99,10 +98,6 @@ export default {
     max-width: 480px;
     padding: 1rem;
     margin: 0 auto;
-  }
-
-  .error-code {
-    color: #999;
   }
 }
 </style>

@@ -5,10 +5,10 @@
       class="cover"
       v-bind="$service.image.coverStyle(item)"
     >
-      <div 
-        class="tags" 
-        :class="{ 'tags-lg': !latest && item.placeholder == 2 }"
-        v-if="item.verNames && tags"
+      <div
+        v-if="versionLabelsVisible && item.verNames"
+        class="manga-version-labels" 
+        :class="{ 'manga-version-labels-lg': !latest && item.placeholder == 2 }"
       >
         <ul>
           <li 
@@ -98,7 +98,7 @@ export default {
     },
     activePath: String,
     latest: Boolean,
-    tags: {
+    versionLabelsVisible: {
       type: Boolean,
       default: true
     },
@@ -137,12 +137,6 @@ export default {
 
 <style lang="scss" scoped>
 @import '@/assets/style/base';
-  // flex-grow: 1;
-
-  // // should extend later
-  // cursor: pointer;
-  // padding: .5rem;
-  // margin-bottom: 3rem;
   
   .cover {
     cursor: pointer;
@@ -270,12 +264,22 @@ export default {
     margin-top: .25rem;
   }
 
-  // TODO: should rename `.tags` -> `version-labels` ??
-  .tags {
+  .manga-version-labels {
     position: absolute;
     bottom: .5rem;
     right: -3px;
     z-index: 2;
+
+    &.manga-version-labels-lg {
+      li {
+        padding: 3px 13px 5px 10px;
+        font-size: 70%;
+
+        &::after {
+          border-right-width: 3px;
+        }
+      } 
+    }
 
     ul {
       list-style: none;
@@ -287,20 +291,16 @@ export default {
     li {
       display: block;
       right: 0px;
-      color: #fff;
       padding: 2px 8px 2px 6px;
       font-size: 60%;
-      background-color: #333;
-      border-bottom: .5px solid #666;
       overflow: hidden;
 
       &::after {
-        content:"";
+        content: "";
         position: absolute;
         top: 0px;
         right: 0px;
         height: 100%;
-        border-right: 2px solid $primary;
       }
     }
 
@@ -318,21 +318,6 @@ export default {
     > ul > li:last-child {
       border-bottom: 0;
     }
-
-    > ul > li:hover { 
-      background-color: $primary; 
-    }
-  }
-
-  .tags.tags-lg {
-    li {
-      padding: 3px 13px 5px 10px;
-      font-size: 70%;
-
-      &::after {
-        border-right-width: 3px;
-      }
-    } 
   }
 
   .badge {

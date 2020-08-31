@@ -28,8 +28,8 @@
           ref="metadata"
           :title="title"
           :sharing="sharing"
-          @read-manga="readManga"
-          @read-file="readFile"
+          @read-manga="handleMangaRead"
+          @read-file="handleFileRead"
         />
 
         <div class="row">
@@ -40,8 +40,8 @@
               v-if="!path && !isSearch && latest.length"
               :list="latest"
               :active-path="activePath"
-              @more="readFile"  
-              @item-click="readFile"
+              @more="handleFileRead"  
+              @item-click="handleFileRead"
             />
 
             <!-- FILE -->
@@ -49,8 +49,8 @@
               :view-mode="viewMode.file"
               :list="files"
               :active-path="activePath"
-              @viewModeChange="(mode) => viewMode.file = mode"
-              @item-click="readFile"
+              @view-mode-change="(mode) => viewMode.file = mode"
+              @item-click="handleFileRead"
             />
 
             <!-- MANGA -->
@@ -58,8 +58,8 @@
               :view-mode="viewMode.manga"
               :list="mangas"
               :active-path="activePath"
-              @viewModeChange="(mode) => viewMode.manga = mode"
-              @item-click="readFile"
+              @view-mode-change="(mode) => viewMode.manga = mode"
+              @item-click="handleFileRead"
             />
 
             <!-- CHAPTER -->
@@ -67,14 +67,16 @@
               :list="chapters"
               :active-name="activeChapter"
               :metadata="metadata"
-              @item-click="readManga"
+              @item-click="handleMangaRead"
             />
 
             <!-- GALLERY -->
             <GalleryGroup
+              :view-mode="viewMode.gallery"
               :list="images"
               :hide-first-image="type === 'MANGA'"
-              @item-click="readManga"
+              @item-click="handleMangaRead"
+              @view-mode-change="(mode) => viewMode.gallery = mode"
             />
           </div>   
         </div>   
@@ -84,11 +86,10 @@
 </template>
 
 <script>
+import { mapState, mapGetters, mapActions, mapMutations } from 'vuex';
 import { isDef, get } from '@/helpers/utils';
 import { getScrollTop } from '@/helpers/dom';
 import qs from '@/helpers/querystring';
-import { types as mangaTypes } from '@/store/modules/manga';
-import { mapState, mapGetters, mapActions, mapMutations } from 'vuex';
 
 // Components
 import Header from './Header';
@@ -121,7 +122,8 @@ export default {
       viewType: 'file',
       viewMode: {
         file: 'grid',
-        manga: 'grid'
+        manga: 'grid',
+        gallery: 'grid'
       }
     }
   },
@@ -191,8 +193,8 @@ export default {
     },
 
     needAddress() {
-      return (this.viewType === 'file' || this.viewType === 'random') && 
-             !!this.navs.length;
+      return (this.viewType === 'file' || this.viewType === 'random') 
+        && !!this.navs.length;
     },
   },
 
@@ -211,7 +213,7 @@ export default {
 
     ...mapMutations('viewer', [ 'setManga' ]),
 
-    refreshData(route) {
+    _reset(route) {
       this.sharing = false;
       this.showAddress = true; // always show addressbar when route update
       this._ignoreScrollEvent = true; // prevent collapse addressbar
@@ -231,7 +233,7 @@ export default {
       }
     },
 
-    fetchMangasWithVersion(route, { isBack = false, clear = false } = {}) {
+    fetchData(route, { isBack = false, clear = false } = {}) {
       const { 
         params: { path }, 
         query: { kw, search, ver, uptime } 
@@ -266,8 +268,19 @@ export default {
       return promise;
     },
 
+    toggleTopTitle(scrollTop) {
+      const metaHeight = (this.$refs.metadata.$refs.root.clientHeight/2) - 16;
+      this.showTitle = metaHeight > 0 && (scrollTop >= metaHeight);
+    },
+
+    toggleAddressbar(scrollTop, prevScrollTop) {
+      this.showAddress = scrollTop >= 160 ? 
+        isDef(prevScrollTop) && scrollTop < prevScrollTop :
+        true;
+    },
+
     // when file clicked.
-    readFile(item, type) {
+    handleFileRead(item, type) {
       const { dirId } = this.repo;
       const { isDir, fileType, path, verNames } = item;
 
@@ -316,7 +329,7 @@ export default {
     },
 
     // when chapter and gallery clicked.
-    readManga(item, index = 0) {
+    handleMangaRead(item, index = 0) {
       const { dirId } = this.repo;
       const ch = item.type === 'CHAPTER' ? item.name : undefined;
       
@@ -368,17 +381,6 @@ export default {
       });
     },
 
-    toggleTopTitle(scrollTop) {
-      const metaHeight = (this.$refs.metadata.$refs.root.clientHeight/2) - 16;
-      this.showTitle = metaHeight > 0 && (scrollTop >= metaHeight);
-    },
-
-    toggleAddressbar(scrollTop, prevScrollTop) {
-      this.showAddress = scrollTop >= 160 ? 
-        isDef(prevScrollTop) && scrollTop < prevScrollTop :
-        true;
-    },
-
     // events
     handleScroll() {
       const scrollTop = getScrollTop();
@@ -402,27 +404,28 @@ export default {
     },
 
     handleRefresh() {
-      this.fetchMangasWithVersion(this.$route, { clear: true })
+      this.fetchData(this.$route, { clear: true })
         .then(() => {
           window.setTimeout(() => window.scrollTo(0, 0));
         });
     },
 
-    handleShareManga() {
-      const { HOST, PORT } = this.$config.api;
-      const { hash } = window.location;
+    // TODO: support later
+    // handleShareManga() {
+    //   const { HOST, PORT } = this.$config.api;
+    //   const { hash } = window.location;
       
-      const port = process.env.NODE_ENV === 'development' ?
-        window.location.port : // user client port
-        PORT; // user server port
+    //   const port = process.env.NODE_ENV === 'development' ?
+    //     window.location.port : // user client port
+    //     PORT; // user server port
 
-      const protocol = this.$platform.isElectron() ? 'http:' : window.location.protocol;
-      const url = `${protocol}//${HOST}:${port}/${hash}`;
+    //   const protocol = this.$platform.isElectron() ? 'http:' : window.location.protocol;
+    //   const url = `${protocol}//${HOST}:${port}/${hash}`;
       
-      this.$store.dispatch(mangaTypes.SHARE, { url }).then(() => {
-        this.sharing = true;
-      }); 
-    }
+    //   this.$store.dispatch(mangaTypes.SHARE, { url }).then(() => {
+    //     this.sharing = true;
+    //   }); 
+    // }
   },
 
   activated() {
@@ -434,8 +437,8 @@ export default {
       return;
     }
 
-    this.refreshData(this.$route);
-    this.fetchMangasWithVersion(this.$route);
+    this._reset(this.$route);
+    this.fetchData(this.$route);
   },
 
   beforeRouteUpdate(to, from, next) {
@@ -452,9 +455,9 @@ export default {
     }
 
     // reset data and fetch mangas
-    this.refreshData(to);
-    to.meta.resolver = this.fetchMangasWithVersion(to, { isBack: to.meta.isBack });
-    // we should `next()` immediately etherwise lose pageOffset
+    this._reset(to);
+    to.meta.resolver = this.fetchData(to, { isBack: to.meta.isBack });
+    // we should `next()` immediately otherwise lose pageOffset
     // when back can remember scroller position
     next();
   },

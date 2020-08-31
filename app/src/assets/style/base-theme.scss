@@ -1,9 +1,28 @@
 // App
 // ==
-[id="app"],
-[id="app-error"] {
+[id="app"] {
   background: $app-bg !important;
   color: $app-color !important;
+}
+
+[id="app.error"] {
+  .error-icon,
+  .error-code {
+    color: $app-gray-100;
+  }
+}
+
+[id="app.login"] {
+  .logo-icon {
+    color: $app-primary;
+  }
+
+  .login-box {    
+    @include media-breakpoint-up(sm) {
+      border: .5px solid $app-border-color;
+      background: $app-main;
+    }
+  }
 }
 
 // ## workbench.aside
@@ -12,17 +31,17 @@
 
   .topbar > .navbar {
     background: $app-sidebar-bg !important;
-    box-shadow: 0 1px 2px rgba($black, .1);
+    box-shadow: 0 1px 2px rgba($app-shadow-color, .1);
     z-index: 1030;
   }
 
   .a2hs-logo {
-    box-shadow: 0 1px 1px rgba($black, .4);
+    box-shadow: 0 1px 1px rgba($app-shadow-color, .4);
   }
 
   .aside-open & {
     @include media-breakpoint-down(sm) {
-      box-shadow: 3px 0 3px rgba($black, .1);
+      box-shadow: 3px 0 3px rgba($app-shadow-color, .1);
     }
   }  
 }
@@ -31,7 +50,7 @@
 [id="workbench.aside.sidebar.explorer"] {
   .explorer-repo-name {
     background: $app-lighter-bg;
-    box-shadow: 0 1px 2px rgba($black, .1);
+    box-shadow: 0 1px 2px rgba($app-shadow-color, .1);
 
     > span:hover {
       font-size: bold;
@@ -72,8 +91,18 @@
   }
 }
 
+// ## workbench.aside.sidebar.watchOnMobile
+[id="workbench.aside.sidebar.watchOnMobile"] {
+  .qrcode-wrapper .qrcode {
+    background: $app-main;
+    border: .5px solid $app-border-color;
+  }
+}
+
 // ## workbench.aside.menubar
 [id="workbench.aside.menubar"] {
+  background: $app-sidebar-menubar-bg;
+
   .menubar-btn.active {
     &::after {
       background: $app-primary !important;
@@ -85,7 +114,7 @@
 [id="workbench.main.manga"] {
   .header > .navbar {
     background: $app-main !important;
-    box-shadow: 0 1px 2px rgba($black, .1);
+    box-shadow: 0 1px 2px rgba($app-shadow-color, .1);
     z-index: 1030;
 
     &.no-shadow {
@@ -93,8 +122,28 @@
     }
 
     & + .addressbar {
-      box-shadow: 0 1px 2px rgba($black, .1);
+      box-shadow: 0 1px 2px rgba($app-shadow-color, .1);
       z-index: 1020;
+    }
+  }
+
+  // metadata
+  .metadata-info,
+  .metadata-actions {
+    background: $app-main;
+    border-bottom: .5px solid $app-border-color;
+  }
+
+  .metadata-actions {
+    color: $app-muted-color;
+  }
+
+  .metadata-versions .list-group-item {
+    border-left: 3px solid $app-border-color !important;
+  
+    &.version-active {
+      border-left-color: $app-primary !important;
+      color: $app-primary !important;
     }
   }
 
@@ -113,6 +162,7 @@
 
   .area-header a {
     color: $app-muted-color;
+
     &:hover {
       color: $app-primary;
     }
@@ -122,7 +172,17 @@
   .manga-item {
     .cover {
       border-bottom: 0;
+
+      &:hover {
+        .cover-placeholder {
+          .svg-icon {
+            // color: $app-primary;
+          }
+        }
+      }
     }
+
+    
 
     .badge {   
       border: .5px solid $app-muted-color;
@@ -131,6 +191,26 @@
 
     .manga-status {
       color: $app-primary;
+    }
+
+    .manga-version-labels {  
+      ul {
+        box-shadow: 0px 0px 2px $app-border-color;   
+      }
+  
+      li {
+        color: $app-main;
+        background-color: rgba($app-gray-300, .85);
+        border-bottom: .5px solid $app-gray-200;
+
+        &::after {
+          border-right: 2px solid $app-primary;
+        }
+      }
+    
+      > ul > li:hover { 
+        background-color: $app-primary; 
+      }
     }
   }
 
@@ -155,7 +235,7 @@
   .file-area {
     .area-item-inner {
       background: $app-light-bg;
-      box-shadow: 0 4px 8px -4px rgba($black, .4);         
+      box-shadow: 0 4px 8px -4px rgba($app-shadow-color, .4);         
     }
 
     .area-item:hover {
@@ -176,7 +256,7 @@
       .area-item-inner {
         background: $app-light-bg;
         box-shadow: 0 0 0 4px $app-grid-active-bg,
-                    0 4px 8px -4px rgba($black, .4);
+                    0 4px 8px -4px rgba($app-shadow-color, .4);
       }  
     }
   }
@@ -185,7 +265,7 @@
   .chapter-area {
     .manga-item {
       .cover-inner {
-        box-shadow: 0 4px 8px -4px rgba($black, .4);        
+        box-shadow: 0 4px 8px -4px rgba($app-shadow-color, .4);        
       } 
     }
 
@@ -225,7 +305,7 @@
     .area-item.active {
       .cover-inner {
         box-shadow: 0 0 0 4px $app-grid-active-bg,
-                    0 4px 8px -4px rgba($black, .4);
+                    0 4px 8px -4px rgba($app-shadow-color, .4);
       }
     }
   }
@@ -290,14 +370,16 @@
 
 // ## common.placeholder.color
 ::placeholder {
-  color: $light-400 !important;
+  color: $app-light-300 !important;
   font-size: .85em;
 }
 
+// ## common.scrollbar.track
 ::-webkit-scrollbar-track {
   background-color: $app-scrollbar-track;
 }
 
+// ## common.scrollbar.thumb
 ::-webkit-scrollbar-thumb {
   background-color: $app-scrollbar-track;
 }
@@ -314,7 +396,7 @@ body::-webkit-scrollbar-thumb {
 // Viewer (support themes later)
 // ==
 
-$viewer-bg: $black;
+$viewer-bg: #000;
 $viewer-color: #eee;
 $viewer-toolbar-bg: #333;
 
@@ -340,7 +422,7 @@ body.viewer-active {
   .viewer-topbar .navbar,
   .viewer-toolbar .navbar {
     background: $viewer-toolbar-bg !important;
-    box-shadow: 0px 1px 2px 0px rgba($black, 0.3);
+    box-shadow: 0px 1px 2px 0px rgba($app-shadow-color, 0.3);
   }
 
   .viewer-loading {
@@ -363,9 +445,9 @@ body.viewer-active {
   .dropdown-menu {
     background: $viewer-toolbar-bg !important;
     color: $viewer-color !important;
-    box-shadow: 0 2px 4px -1px rgba($black, 0.2), 
-                0 4px 5px 0 rgba($black, 0.14), 
-                0 1px 10px 0 rgba($black, 0.12);
+    box-shadow: 0 2px 4px -1px rgba($app-shadow-color, 0.2), 
+                0 4px 5px 0 rgba($app-shadow-color, 0.14), 
+                0 1px 10px 0 rgba($app-shadow-color, 0.12);
 
     .dropdown-item:hover {
       background: rgba($white, .1);      
@@ -376,8 +458,8 @@ body.viewer-active {
     background: $viewer-toolbar-bg !important;
     color: #ccc !important;
     border-color: #ccc !important;
-    box-shadow: 0 2px 4px -1px rgba($black, 0.2), 
-                0 4px 5px 0 rgba($black, 0.14), 
-                0 1px 10px 0 rgba($black, 0.12);
+    box-shadow: 0 2px 4px -1px rgba($app-shadow-color, 0.2), 
+                0 4px 5px 0 rgba($app-shadow-color, 0.14), 
+                0 1px 10px 0 rgba($app-shadow-color, 0.12);
   }
 }

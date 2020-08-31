@@ -2,10 +2,10 @@
   <div class="header topbar">
     <Navbar
       :title="title"
-      :class="{'no-shadow': needAddress }" 
+      :class="{ 'no-shadow': needAddress }" 
       :left-btns="leftBtns"
       :right-btns="rightBtns"
-      @click.native="handleBackToTop"
+      @dblclick.native="handleBackToTop"
     />
     
     <Addressbar
@@ -41,7 +41,6 @@ export default {
     ...mapGetters('app', [ 'repo' ]),
 
     leftBtns() {
-
       const fileBtns = [{
         icon: 'bars',
         className: 'd-inline-block d-md-none',
@@ -177,8 +176,7 @@ export default {
 .header {
   height: 3rem;
 
-  .manga-title-shown {
-    color: '';
+  .manga-title-shown {;
 
     .navbar-brand {
       opacity: 1

@@ -1,7 +1,7 @@
 <template>
   <div id="metadata" ref="root">
 
-    <!-- SHARE (hidden now) -->
+    <!-- SHARE (hidden now - support later) -->
     <div class="metadata-share metadata-inner" v-if="sharing">
       <div class="modal mb-3" tabindex="-1" role="dialog">
         <div class="modal-dialog">
@@ -44,7 +44,7 @@
           <MangaItem 
             :item="$store.state.manga" 
             :caption="false"
-            :tags="false"
+            :version-labels-visible="false"
           />
         </div>
 
@@ -53,24 +53,39 @@
           <p class="title">{{ title }}</p>
 
           <!-- versions -->
-          <div v-if="versions.length" class="text-muted">
-            Versions: {{ activeVer }}     
+          <div v-if="versions.length">
+            Versions : 
+            <span class="text-muted">{{ activeVer }}</span>
           </div>
 
           <!-- status -->
-          <div v-if="metadata && metadata.status" class="text-muted">
-            Status:
+          <div v-if="metadata && metadata.status">
+            Status :
             <span v-if="completed" class="manga-status">Completed</span>
-            <span v-if="status && !completed"># {{ status }}</span>
+            <span v-if="status && !completed" class="text-muted"># {{ status }}</span>
           </div>
 
           <!-- type -->
-          <div v-else-if="fileType" class="text-muted">Type: {{ fileType }}</div>
-          <div v-else-if="chapters.length" class="text-muted">Chapters: {{ chapters.length }}</div>
-          <div v-else class="text-muted">Pages: <span>{{ images.length }}</span></div>
+          <div v-else-if="fileType">
+            Type : 
+            <span class="text-muted">{{ fileType }}</span>
+          </div>
+
+          <!-- chapters or pages -->
+          <div v-else-if="chapters.length">
+            Chapters : 
+            <span class="text-muted">{{ chapters.length }}</span>
+          </div>
+          <div v-else>
+            Pages : 
+            <span class="text-muted">{{ images.length }}</span>
+          </div>
 
           <!-- update time -->
-          <div class="text-muted">Updated at: <small>{{ birthtime | dateFormat('yyyy-mm-dd') }}</small></div>        
+          <div>
+            Updated at : 
+            <span class="text-muted">{{ birthtime | dateFormat('yyyy-mm-dd') }}</span>
+          </div>        
         </div>
       </div>
     </div>
@@ -84,10 +99,10 @@
     </div>
 
     <!-- VERSIONS -->
-    <div 
+    <div
+      v-show="versions.length" 
       class="metadata-versions mb-2" 
-      :class="{ touch: $feature.touch}" 
-      v-show="versions.length"
+      :class="{ touch: $feature.touch}"
     >
       <div class="area-header">
         <div class="area-header-inner">
@@ -122,7 +137,6 @@ import qs from '@/helpers/querystring';
 import MangaItem from './MangaItem';
 
 export default {
-
   components: {
     MangaItem
   },
@@ -205,6 +219,7 @@ export default {
 #metadata {
   margin-left: -15px;
   margin-right: -15px;
+
   @include media-breakpoint-up(md) {
     margin-left: 0;
     margin-right: 0;
@@ -278,10 +293,8 @@ export default {
 .metadata-info {
   display: flex;
   align-items: center;
-  border-bottom: .5px solid #dedede;
   padding: 15px;
   font-size: 14px;
-  background: #fff;
 
   > .metadata-cover {
     width: 40%;
@@ -388,9 +401,6 @@ export default {
 .metadata-actions {
   padding: .75rem 15px;
   margin: 0;
-  border-bottom: .5px solid #dedede;
-  color: #999;
-  background: #fff;
 
   a {
     font-size: 1.1rem;
@@ -400,7 +410,7 @@ export default {
   }
 
   a + a {
-    border-left: .5px solid #dedede;
+    // border-left: .5px solid #dedede;
   }
 
   .svg-icon {
@@ -514,19 +524,20 @@ export default {
       width: calc(25% - .4rem);
     }
   }
+
+  @include media-breakpoint-up(xl) {
+    .list-group-item {
+      width: calc(16.66667% - .4rem);
+    }
+  }
 }
 
 .metadata-versions .list-group-item {
-  border-left: 3px solid #ddd !important;
-
   &:not(.version-active) {
     cursor: pointer;
   }
   
-  // TODO:
   &.version-active {
-    border-left-color: $primary !important;
-    color: $primary !important;
     font-weight: 500;
   }
 }
