@@ -1,6 +1,11 @@
 <template>
   <div id="viewer">
-    <div :class="['topbar viewer-topbar fixed-top', { open: locking }]">
+    <div 
+      :class="[
+        'topbar viewer-topbar fixed-top', 
+        { open: locking }
+      ]"
+    >
       <navbar :left-btns="leftBtns" :right-btns="rightBtns" />
     </div>
 
@@ -16,6 +21,14 @@
         />
       </div>
     </div>
+
+    <ListDrawer
+      :visible="chapterListVisible"
+      :list="parts"
+      :active-name="name"
+      @change="handlePartChange"
+      @close="chapterListVisible = false"
+    />
   </div>
 </template>
 
@@ -24,21 +37,27 @@ import { mapState, mapActions } from 'vuex';
 import qs from '@/helpers/querystring';
 import screenfull from 'screenfull';
 
+import ListDrawer from '../components/ListDrawer';
+
 export default {
+  components: {
+    ListDrawer
+  },
 
   data() {
     return {
       inited: false,
       paused: true,
       locking: true,
-      isFullscreen: false
+      isFullscreen: false,
+      chapterListVisible: false,
     }
   },
   
   computed: {
     ...mapState('app', { appError: 'error' }),
 
-    ...mapState('viewer', [ 'name', 'path', 'cover' ]),
+    ...mapState('viewer', [ 'name', 'path', 'cover', 'parts' ]),
     
     options() {
       return this.inited ? {
@@ -70,11 +89,18 @@ export default {
     },
 
     rightBtns() {
-      return [{  
-        icon: this.isFullscreen ? 'compress' : 'expand',
-        tip: 'Fullscreen',
-        click: () => this.fullscreenToggle()
-      }]
+      return [
+        this.parts.length > 1 ? {
+          icon: 'list-alt',
+          tip: 'parts',
+          click: () => this.chapterListVisible = true
+        } : null,
+        {  
+          icon: this.isFullscreen ? 'compress' : 'expand',
+          tip: 'Fullscreen',
+          click: () => this.fullscreenToggle()
+        }
+      ]
     }
   },
 
@@ -116,6 +142,14 @@ export default {
       if (!this.paused) {
         this.locking = false;
       }
+    },
+
+    handlePartChange(item) {
+      this.$router.replace({
+        name: 'viewer',
+        params: this.$route.params,
+        query: Object.assign({}, this.$route.query, { name: item.name })
+      }).then(() => this.chapterListVisible = false);
     }
   },
 
@@ -129,6 +163,7 @@ export default {
     this.$on('update', (route) => {
       const { dirId, path } = route.params;
       const { ver, name } = route.query;
+ 
       this.fetchVideo({ dirId, path: qs.decode(path), ver, name })
         .then(() => {
           // TODO: tmp use inited to support async init videojs
@@ -174,6 +209,7 @@ export default {
   left: 0 !important;
   height: 100% !important;
   padding-top: 0 !important;
+  top: 3rem;
 
   .vjs-poster {
     top: 3rem !important;

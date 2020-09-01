@@ -10,12 +10,12 @@
     <Header 
       :title="title"
       :pager="pager"
-      :auto-scrolling="autoScrolling"
       :locking="locking"
       :fullscreen="fullscreen"
       :settings="settings"
+      :chapterlist-visible="!!chapters.length"
+      @chapterlist:show="chapterListVisible = true"
       @back="handleBack"
-      @settings="handleSettings"
       @fullscreen="setFullscreen"
     />
 
@@ -26,12 +26,12 @@
     />
     <!-- /HEADER -->
 
-    <div class="viewer-backdrop" @click.stop="handleBackdropClick"></div>
+    <div class="viewer-backdrop" @mousedown.stop="handleBackdropClick"></div>
 
     <!-- VIEWPORT -->
     <Viewport
       :locking="locking"
-      :auto-scrolling="autoScrolling"
+      :auto-scrolling="autoPlaying"
       :hand="settings.hand"
       @click="setLocking"
       @prev="prevPage"
@@ -78,18 +78,24 @@
       @finish="handleSettings"
     />
 
+    <ListDrawer
+      :visible="chapterListVisible"
+      :list="chapters || parts"
+      :active-name="ch"
+      @change="handleChapterChange"
+      @close="chapterListVisible = false"
+    />
+
     <div
       class="viewer-toolbar fixed-bottom" 
       :class="{ open: locking }"
-    >
-      <div class="viewer-toolbar-container">
-        <Seekbar :value="page" :max="count" @end="gotoPage" />
-        <Controlbar
-          :auto-scrolling="autoScrolling"
-          @autoPlayChange="handleAutoPlayChange"
-          @settings="handleSettingsVisible"
-        />
-      </div>
+    >  
+      <Seekbar :value="page" :max="count" @end="gotoPage" />
+      <Controlbar
+        :auto-playing="autoPlaying"
+        @autoPlayChange="handleAutoPlayChange"
+        @settings="handleSettingsVisible"
+      /> 
     </div>
 
     <div 
@@ -116,6 +122,7 @@ import Seekbar from './Seekbar';
 import Controlbar from './Controlbar';
 import HelpOverlay from './HelpOverlay';
 import SettingsMenu from './SettingsMenu';
+import ListDrawer from '../components/ListDrawer'
 
 export default {
   components: {
@@ -127,12 +134,14 @@ export default {
     Controlbar,
     HelpOverlay,
     SettingsMenu,
+    ListDrawer,
   },
 
   data() {
     return {
       helpVisible: false,
       settingsVisible: false,
+      chapterListVisible: false,
       backdropVisible: false
     }
   },
@@ -154,8 +163,8 @@ export default {
   
   computed: {
     ...mapState('viewer', [ 
-      'name', 'path', 'page', 'ch', 'chName', 'images', 'chapters',
-      'settings', 'autoScrolling', 'fullscreen', 'locking',
+      'name', 'path', 'page', 'ch', 'chName', 'images', 'chapters', 'parts',
+      'settings', 'autoPlaying', 'fullscreen', 'locking',
     ]),
 
     ...mapState('app', { appError: 'error', appSize: 'size' }),
@@ -189,7 +198,7 @@ export default {
         chCount: this.chCount,
         settings: this.settings,
         fullscreen: this.fullscreen,
-        autoScrolling: this.autoScrolling,
+        autoPlaying: this.autoPlaying,
         locking: this.locking,
         appSize: this.appSize
       }
@@ -225,7 +234,7 @@ export default {
 
     ...mapMutations('viewer', [
       'setSettings',
-      'setAutoScrolling',
+      'setAutoPlaying',
       'setLocking',
       'setFullscreen'
     ]),
@@ -270,23 +279,23 @@ export default {
     },
 
     handleScroll() {
-      if (window._ignoreScrollEvent || this.autoScrolling) return;
+      if (window._ignoreScrollEvent || this.autoPlaying) return;
       if (this.locking) this.setLocking(false);
       this.helpVisible = false;
     },
 
     handleAutoPlayChange() {
-      if (this.autoScrolling) {
-        this.setAutoScrolling(false);
+      if (this.autoPlaying) {
+        this.setAutoPlaying(false);
         this.setLocking(true);
       } else if (this.page < this.count) {
-        this.setAutoScrolling(true);
+        this.setAutoPlaying(true);
         this.setLocking(false);
       }
     },
 
     handleAutoPlayEnd() {
-      this.setAutoScrolling(false);
+      this.setAutoPlaying(false);
       this.setLocking(true);
     },
 
@@ -299,8 +308,8 @@ export default {
          $event.preventDefault();
       }
 
-      // when autoScrolling (no-pause) should disable keyboard events
-      if (this.autoScrolling) {
+      // when autoPlaying (no-pause) should disable keyboard events
+      if (this.autoPlaying) {
         if (keyCode === action.lock) {
           this.setLocking();
         }
@@ -343,6 +352,17 @@ export default {
 
     handleBackdropClick() {
       this.settingsVisible = false;
+    },
+
+    handleChapterChange(item) {
+      const route = this.$route;
+      route.params.ch = item.name;
+      this.$router.replace(route)
+        .then(() => {
+          setTimeout(() => {
+            this.chapterListVisible = false
+          }, 500);
+        });
     }
   },
 
@@ -356,7 +376,7 @@ export default {
     this.$on('leave', () => {
       // when manga or chapter changed this callback will be invoked
       // we should stop scrolling and lock viewer to show title info.
-      this.setAutoScrolling(false);
+      this.setAutoPlaying(false);
       // prevent locked when scroll.
       this.setLocking(true);
       this.setFullscreen(false);
@@ -436,7 +456,6 @@ export default {
 }
 
 .viewer-left-hand {
-
   .viewer-back {
     display: block;
   }

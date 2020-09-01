@@ -15,7 +15,7 @@ const SET_PAGE = 'setPage';
 const SET_SETTINGS = 'setSettings';
 const SET_LOCKING = 'setLocking';
 const SET_FULLSCREEN = 'setFullscreen';
-const SET_AUTO_SCROLLING = 'setAutoScrolling';
+const SET_AUTO_PLAYING = 'setAutoPlaying';
 
 const statusHelper = createRequestStatus('status');
 
@@ -26,6 +26,7 @@ const initialState = {
   verNames: [],
   images: [],
   chapters: [],
+  parts: [], // video only
 
   ch: '', // original chapter name
   chIndex: 0,
@@ -39,7 +40,7 @@ const initialState = {
   locking: true,
 
   // mode state
-  autoScrolling: false, // use `autoPlaying` replace later
+  autoPlaying: false, // use `autoPlaying` replace later
 
   // settings state
   settings: {
@@ -179,19 +180,21 @@ const createModule = (state = { ...initialState }) => ({
 
       statusHelper.pending(commit);
       return mangaAPI.list({ dirId, path }).then(res => {
-        const { name, cover, children, verNames } = res;
+        const { cover, children, verNames } = res;
         // find video from list
         // - version
         // - name (parts of video)
-        const findOptions = ver ? { ver } : { name: payload.name };
+        // ver ? { ver } : 
+        const findOptions = { name: payload.name };
         const video = find(children, findOptions);
 
         commit(SET_MANGA, {
-          name, 
-          verNames,
+          name: video.name, 
           path: video.path,
           cover: cover || '', // overwrite cover
-          activeVer: ver
+          activeVer: ver,
+          verNames,
+          parts: children
         });
 
         // should update status after state mutated 
@@ -245,12 +248,12 @@ const createModule = (state = { ...initialState }) => ({
       state.settings = { ...state.settings, ...payload };
     },
 
-    [SET_AUTO_SCROLLING](state, payload) {
-      const autoScrolling = isDef(payload) ? 
+    [SET_AUTO_PLAYING](state, payload) {
+      const autoPlaying = isDef(payload) ? 
         !!payload :
-        !state.autoScrolling;
+        !state.autoPlaying;
 
-      state.autoScrolling = autoScrolling;
+      state.autoPlaying = autoPlaying;
     },
 
     [SET_LOCKING](state, payload) {

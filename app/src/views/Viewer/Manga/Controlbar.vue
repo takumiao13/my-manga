@@ -8,15 +8,15 @@
 <script>
 export default {
   props: {
-    autoScrolling: Boolean
+    autoPlaying: Boolean
   },
 
   computed: {
     leftBtns() {
       return [{
-        icon: this.autoScrolling ? 'stop' : 'play',
-        title: this.autoScrolling ? 'Stop' : 'Auto Play',
-        click: this.autoScrollToggle
+        icon: this.autoPlaying ? 'stop' : 'play',
+        title: this.autoPlaying ? 'Stop' : 'Auto Play',
+        click: this.togglePlaying
       }];
     },
 
@@ -30,7 +30,7 @@ export default {
   },
 
   methods: {
-    autoScrollToggle() {
+    togglePlaying() {
       this.$emit('autoPlayChange');
     }
   }

@@ -177,7 +177,6 @@ export default {
   height: 3rem;
 
   .manga-title-shown {;
-
     .navbar-brand {
       opacity: 1
     }

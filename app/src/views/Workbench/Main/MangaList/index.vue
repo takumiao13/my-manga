@@ -317,15 +317,17 @@ export default {
       } else if (fileType === 'video') {
         // use parent path as route path
         const query = this.activeVer ? 
-          { ver: this.activeVer } : 
+          { ver: this.activeVer, name: item.name } : 
           { name: item.name }
+
+        const path = this.activeVerPath || this.path;
 
         this.$router.push({
           name: 'viewer',
           params: {
             type: 'video', 
             dirId, 
-            path: qs.encode(this.path)
+            path: qs.encode(path)
           },
           query
         });
@@ -376,7 +378,6 @@ export default {
       let path = item.type === 'CHAPTER_SP' ? this.path + '/@sp' : this.path
       path = this.activeVer ? this.activeVerPath : path;
 
-      debugger;
       this.$router.push({
         name: 'viewer',
         params: { 

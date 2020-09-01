@@ -66,7 +66,7 @@ export default {
       default: 'width'
     },
     fullscreen: Boolean,
-    autoScrolling: Boolean,
+    autoPlaying: Boolean,
     locking: Boolean,
     appSize: String
   },
@@ -117,13 +117,13 @@ export default {
       }
     },
 
-    autoScrolling(val) {
+    autoPlaying(val) {
       this[val ? 'startScroll' : 'stopScroll']();
       this._$preventScroll(val);
     },
 
     locking(val) {
-      if (this.autoScrolling) {
+      if (this.autoPlaying) {
         this[val ? 'pauseScroll' : 'startScroll']();
         this._$preventScroll(!val);
       } 
@@ -233,7 +233,7 @@ export default {
     },
 
     stopScroll() {
-      if (this.autoScrolling) {
+      if (this.autoPlaying) {
         console.log('[scroll] stop');
         this._scroller.pause();
         this.$emit('autoPlayEnd');

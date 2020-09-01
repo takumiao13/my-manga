@@ -15,14 +15,14 @@
 export default {
   name: 'Viewport',
 
-  props: [ 'hand', 'autoScrolling', 'locking' ],
+  props: [ 'hand', 'autoPlaying', 'locking' ],
 
   computed: {
     shouldLock() {
       // TODO:
       // lock viewport disable prev and next ??
       // use css to implement ??
-      return (this.autoScrolling && !this.locking) || (!this.autoScrolling && this.locking);
+      return (this.autoPlaying && !this.locking) || (!this.autoPlaying && this.locking);
     }
   },
 

@@ -462,4 +462,34 @@ body.viewer-active {
                 0 4px 5px 0 rgba($app-shadow-color, 0.14), 
                 0 1px 10px 0 rgba($app-shadow-color, 0.12);
   }
+  
+  .viewer-chapter-list {
+    background: $viewer-toolbar-bg !important;
+    color: #ccc !important;
+    box-shadow: -2px 0 4px rgba($app-shadow-color, 0.2);
+
+    header {
+      background-color: #333;
+    }
+
+    .viewer-chapter-list-actions {
+      background-color: #666;
+    }
+
+    .list-group-item {
+      background: $viewer-toolbar-bg !important;
+      color: #ccc;
+      border-color: #555;
+
+      &.active {
+        background-color: #666 !important;
+        color: #fff !important;
+        font-weight: 500;
+      }
+
+      &:hover {
+        color: $app-primary;
+      }
+    }
+  }
 }

@@ -58,13 +58,13 @@ export default {
     chCount: Number,
     settings: Object,
     fullscreen: Boolean,
-    autoScrolling: Boolean,
+    autoPlaying: Boolean,
     locking: Boolean
   },
 
   data() {
     return {
-      started: this.autoScrolling,
+      started: this.autoPlaying,
       paused: true 
     }
   },
@@ -103,12 +103,12 @@ export default {
     },
 
     locking(val) {
-      if (this.autoScrolling && this.started) {
+      if (this.autoPlaying && this.started) {
         this[val ? 'pausePlay' : 'startPlay']();
       }
     },
 
-    autoScrolling(val) {
+    autoPlaying(val) {
       this[val ? 'startPlay' : 'stopPlay']();
     }
   },
@@ -121,7 +121,7 @@ export default {
         this.$emit('pageChange', page);
       }
 
-      if (page >= this.gallery.length && this.autoScrolling) {
+      if (page >= this.gallery.length && this.autoPlaying) {
         this.$emit('autoPlayEnd');
       }
     });
