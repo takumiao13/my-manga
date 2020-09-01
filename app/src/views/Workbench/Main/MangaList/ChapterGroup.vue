@@ -6,9 +6,10 @@
   >
     <div class="area-header">
       <div class="area-header-inner">
-        CHAPTERS - {{ list.length }}
+        <span v-if="sp">CHAPTERS SP</span>
+        <span v-else>CHAPTERS</span>
+         - {{ list.length }}
 
-        <!-- max 50 group support later -->
         <div class="actions float-right">
           <a @click="sort">
             <Icon :name="`sort-by-no-${desc ? 'desc' : 'asc'}`" size="18" />
@@ -63,6 +64,10 @@ export default {
   },
 
   props: {
+    sp: {
+      type: Boolean,
+      default: false
+    },
     list: Array,
     activeName: String,
     metadata: Object

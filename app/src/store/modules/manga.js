@@ -99,6 +99,7 @@ const initialState = {
   files: [], // Manga[]
   mangas: [], // Manga[]
   chapters: [], // Manga[]
+  chaptersSp: [], // Manga[]
   images: [], // Manga[]
 
   versions: [], // Manga[]

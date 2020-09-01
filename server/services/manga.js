@@ -17,6 +17,7 @@ const FileTypes = {
   MANGA: 'MANGA', 
   IMAGE: 'IMAGE',
   CHAPTER: 'CHAPTER',
+  CHAPTER_SP: 'CHAPTER_SP',
   VERSION: 'VERSION'
 };
 
@@ -380,7 +381,9 @@ async function traverse({
     const _versionFiles = [];
     let _chapterFiles = [];
     let _chapterWithCoverFiles = [];
-
+    let _chapterSpFiles = [];
+    let _chapterSpWithCoverFiles = [];
+    
     files
       .filter(ignorePathFilter)
       .forEach(file => {
@@ -409,6 +412,25 @@ async function traverse({
           if (version.indexOf(ver) === -1) {
             version.push(ver);
           }         
+        } else if (isChapterSp(file)) {
+          try {
+            let files = fs.readdirSync(pathFn.resolve(absPath, file));
+            files = files.map(file => {
+              return {
+                name: pathFn.basename(file),
+                chapterName: isChapter(file, fixChildOptions),
+                path: pathFn.posix.join(childpath, file),
+                type: FileTypes.CHAPTER_SP,
+              }
+            });
+
+            if (_showChapterCover) {
+              _chapterSpWithCoverFiles = files;
+            } else {
+              _chapterSpFiles = files;
+            }
+          } catch (err) {
+          }
         } else if (chapterName = isChapter(file, fixChildOptions)) {
           const chapterNode = {
             name, chapterName,
@@ -440,6 +462,8 @@ async function traverse({
     const lastChars = ['最終', '最终'];
     _chapterFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames, lastChars));
     _chapterWithCoverFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames, lastChars));
+    _chapterSpFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames, lastChars));
+    _chapterSpWithCoverFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames, lastChars));
     _filterdFiles.sort((a, b) => fs.filenameComparator(
       pathFn.basename(a.path), // protect such as No.1000 (.1000 is not extname)
       pathFn.basename(b.path),
@@ -447,11 +471,13 @@ async function traverse({
       lastChars
     ));
 
-    // speical sort for chapters
+    // special sort for chapters
     const spConfig = get(metadata, 'chapters.sort');
     if (spConfig) {
       _chapterFiles = adjustChapters(_chapterFiles, spConfig);
       _chapterWithCoverFiles = adjustChapters(_chapterWithCoverFiles, spConfig);
+      _chapterSpFiles = adjustChapters(_chapterSpFiles, spConfig);
+      _chapterSpWithCoverFiles = adjustChapters(_chapterWithCoverFiles, spConfig)
     }
 
     if (maxDepth === 0) _filterdFiles = take(_filterdFiles, LAST_LOOP_COUNT);
@@ -460,7 +486,7 @@ async function traverse({
     const createTask = (node) => async () => {
       const { path } = node;
       const child = maxDepth > 0 ?
-        await traverse({ baseDir, path, maxDepth: maxDepth-1, onlyFile, settings}) : 
+        await traverse({ baseDir, path, maxDepth: maxDepth-1, onlyFile, settings }) : 
         await traverseLast({ baseDir, path });
 
       return child ? Object.assign(child, node) : child;
@@ -469,9 +495,11 @@ async function traverse({
     const tasks = _filterdFiles.map(createTask);
     const childNodes = await parallel$(tasks, 10);
 
-
     const chapterTasks = _chapterWithCoverFiles.map(createTask);
     const chapterNodes = await parallel$(chapterTasks, 10);
+
+    const chapterSpTasks = _chapterSpWithCoverFiles.map(createTask);
+    const chapterSpNodes = await parallel$(chapterSpTasks, 10);
 
     const filteredChildNodes = childNodes.filter((child, index) => {
       if (!child) return false;
@@ -510,19 +538,12 @@ async function traverse({
 
       children = _versionFiles
         .concat(_chapterFiles)
+        .concat(_chapterSpFiles)
         .concat(chapterNodes)
-        .concat(filteredChildNodes);
+        .concat(chapterSpNodes)
+        .concat(filteredChildNodes)
+        .filter(Boolean)
     }
-
-    // not need this ?? 'cover.jpg|png' will be sorted to the top.
-    // if not find cover try to find `cover.jpg` as cover
-    // if (maxDepth === 0 && !cover && filesLength > LAST_LOOP_COUNT) {
-    //   const hasCover = await fs.accessAsync(pathFn.join(absPath, COVER_FILENAME));
-      
-    //   if (hasCover) {
-    //     cover = pathFn.posix.join(path, COVER_FILENAME);
-    //   }
-    // }
   }
 
   // Last loop will not run after.
@@ -707,6 +728,11 @@ const isChapter = (name, { parentName, metadata, filepath }) => {
     }
   }
 
+  return false;
+}
+
+const isChapterSp = (name) => {
+  if (name === '@sp') return true;
   return false;
 }
 

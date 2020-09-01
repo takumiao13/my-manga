@@ -70,6 +70,15 @@
               @item-click="handleMangaRead"
             />
 
+            <!-- CHAPTER SP -->
+            <ChapterGroup 
+              sp
+              :list="chaptersSp"
+              :active-name="activeChapter"
+              :metadata="metadata"
+              @item-click="handleMangaRead"
+            />
+
             <!-- GALLERY -->
             <GalleryGroup
               :view-mode="viewMode.gallery"
@@ -139,7 +148,7 @@ export default {
 
     ...mapState('manga', [
       'inited', 'name', 'path', 'list', 'type', 'fileType', 'cover', 
-      'files', 'chapters', 'versions', 'images', 
+      'files', 'chapters', 'chaptersSp', 'versions', 'images', 
       'activePath', 'activeVer', 'activeVerPath',
       'error', 'metadata'
     ]),
@@ -331,7 +340,7 @@ export default {
     // when chapter and gallery clicked.
     handleMangaRead(item, index = 0) {
       const { dirId } = this.repo;
-      const ch = item.type === 'CHAPTER' ? item.name : undefined;
+      const ch = item.type.startsWith('CHAPTER') ? item.name : undefined;
       
       // TODO: when in multi versions could not sync state
       // because of `this.path` is changed to active version path.
@@ -341,7 +350,7 @@ export default {
           return !this.path || this.path !== this.viewerPath || this.viewerPath;
         }
 
-        if (item.type === 'CHAPTER') {
+        if (item.type.startsWith('CHAPTER')) {
           return !this.path || 
             this.path !== this.viewerPath || 
             this.ch !== this.viewerCh;
@@ -349,7 +358,7 @@ export default {
       };
 
       // activate chapter
-      if (item.type === 'CHAPTER') {
+      if (item.type.startsWith('CHAPTER')) {
         this.activeChapter = item.name;
       }
 
@@ -363,8 +372,11 @@ export default {
         });
       }
 
-      const path = this.activeVer ? this.activeVerPath : this.path;
-      
+      // handle chapter sp
+      let path = item.type === 'CHAPTER_SP' ? this.path + '/@sp' : this.path
+      path = this.activeVer ? this.activeVerPath : path;
+
+      debugger;
       this.$router.push({
         name: 'viewer',
         params: { 
