@@ -26,8 +26,6 @@
     />
     <!-- /HEADER -->
 
-    <div class="viewer-backdrop" @mousedown.stop="handleBackdropClick"></div>
-
     <!-- VIEWPORT -->
     <Viewport
       :locking="locking"
@@ -76,12 +74,14 @@
       :visible="settingsVisible" 
       :settings="settings"
       @finish="handleSettings"
+      @close="settingsVisible = false"
     />
 
     <ListDrawer
       :visible="chapterListVisible"
-      :list="chapters || parts"
-      :active-name="ch"
+      :list="chapters"
+      item-key="name"
+      :active-key="ch"
       @change="handleChapterChange"
       @close="chapterListVisible = false"
     />
@@ -93,7 +93,7 @@
       <Seekbar :value="page" :max="count" @end="gotoPage" />
       <Controlbar
         :auto-playing="autoPlaying"
-        @autoPlayChange="handleAutoPlayChange"
+        @auto-play-change="handleAutoPlayChange"
         @settings="handleSettingsVisible"
       /> 
     </div>
@@ -141,23 +141,13 @@ export default {
     return {
       helpVisible: false,
       settingsVisible: false,
-      chapterListVisible: false,
-      backdropVisible: false
+      chapterListVisible: false
     }
   },
 
   watch: {
     fullscreen(val) {
       screenfull[val ? 'request' : 'exit']();
-    },
-
-    settingsVisible(val) {
-      // detect settings open or not
-      this.backdropVisible = !!val;
-    },
-
-    backdropVisible(val) {
-      window.document.body.classList[val ? 'add' : 'remove']('backdrop-open');
     }
   },
   
@@ -350,10 +340,6 @@ export default {
       this.settingsVisible = true;
     },
 
-    handleBackdropClick() {
-      this.settingsVisible = false;
-    },
-
     handleChapterChange(item) {
       const route = this.$route;
       route.params.ch = item.name;
@@ -478,31 +464,6 @@ export default {
         right: auto;
       }
     }
-  }
-}
-
-// common backdrop
-.viewer-backdrop {
-  opacity: 0;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1040;
-  background: $black;
-
-  @include transition(opacity .3s);
-}
-
-.backdrop-open {
-  overflow-y: hidden !important; // hide body scroll
-  width: 100%;
-  height: 100%;
-  position: relative; // fixed will lost `scrollTop`
-  
-  .viewer-backdrop {
-    opacity: .3;
-    width: 100vw;
-    height: 100vh;
   }
 }
 </style>

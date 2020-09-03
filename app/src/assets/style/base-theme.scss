@@ -314,7 +314,7 @@
     .row {
       background: $app-main;
 
-      .area-item.active {
+      .active .cover {
         box-shadow: 0 0 0 4px $app-grid-active-bg;
       }
     }

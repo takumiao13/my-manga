@@ -15,7 +15,7 @@
           id="workbench.backdrop"
           class="backdrop" 
           @click="toggleAside(false)"
-        ></div>
+        ></div>        
       </div>
     </div>
   </div>

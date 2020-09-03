@@ -83,6 +83,7 @@
             <GalleryGroup
               :view-mode="viewMode.gallery"
               :list="images"
+              :active-page="activePage"
               :hide-first-image="type === 'MANGA'"
               @item-click="handleMangaRead"
               @view-mode-change="(mode) => viewMode.gallery = mode"
@@ -97,7 +98,7 @@
 <script>
 import { mapState, mapGetters, mapActions, mapMutations } from 'vuex';
 import { isDef, get } from '@/helpers/utils';
-import { getScrollTop } from '@/helpers/dom';
+import { getScrollTop, inViewport } from '@/helpers/dom';
 import qs from '@/helpers/querystring';
 
 // Components
@@ -123,6 +124,7 @@ export default {
   data() {
     return {
       activeChapter: '',
+      activePage: -1,
       showTitle: false,
       showAddress: true,
       isManga: false,
@@ -155,7 +157,8 @@ export default {
 
     ...mapState('viewer', {
       viewerPath: 'path',
-      viewerCh: 'ch'
+      viewerCh: 'ch',
+      viewerPage: 'page'
     }),
 
     ...mapGetters('app', [ 'repo' ]),
@@ -168,16 +171,17 @@ export default {
       }
 
       const repoName = this.repo.name;
-      const title = this.path ? 
-        get(this.metadata, 'title') || this.name : 
-        repoName;
+      const title = this.path
+        ? get(this.metadata, 'title') || this.name
+        : repoName;
       
       return title;
     },
 
     topbarTitle() {
-      return (!this.isManga || (this.isManga && this.showTitle)) ? 
-        this.title : '';
+      return (!this.isManga || (this.isManga && this.showTitle)) 
+        ? this.title 
+        : '';
     },
 
     navs() {
@@ -202,17 +206,24 @@ export default {
     },
 
     needAddress() {
-      return (this.viewType === 'file' || this.viewType === 'random') 
-        && !!this.navs.length;
+      return !!this.navs.length
+        && (this.viewType === 'file' || this.viewType === 'random')
     },
   },
 
   watch: {
-    // TODO: pretty code
-    // when route change (not update)
+    // when route change (not update !!)
     $route(to, from) {
       if (from.name === 'viewer') {
         this.activeChapter = this.viewerCh;
+        this.activePage = this.viewerPage;
+
+        this.$nextTick(() => {
+          this.scrollToActive();
+        });
+      } else {
+        this.activeChapter = '';
+        this.activePage = -1;
       }
     }
   },
@@ -278,15 +289,41 @@ export default {
     },
 
     toggleTopTitle(scrollTop) {
-      const metaHeight = (this.$refs.metadata.$refs.root.clientHeight/2) - 16;
+      const metaHeight = (this.$refs.metadata.$refs.root.clientHeight / 2) - 16;
       this.showTitle = metaHeight > 0 && (scrollTop >= metaHeight);
     },
 
     toggleAddressbar(scrollTop, prevScrollTop) {
-      this.showAddress = scrollTop >= 160 ? 
-        isDef(prevScrollTop) && scrollTop < prevScrollTop :
-        true;
+      this.showAddress = scrollTop >= 160 
+        ? isDef(prevScrollTop) && scrollTop < prevScrollTop
+        : true;
     },
+
+    scrollToActive() {
+      if (this.activeChapter || this.activePage > 0) {
+        const activeEl = document.querySelector('.gallery-area .active')
+          || document.querySelector('.chapter-area .active');
+
+        // check active element is in viewport
+        if (activeEl && inViewport(activeEl)) return;
+
+        // top of viewport
+        const { top } = activeEl.getBoundingClientRect();
+
+        // dont scroll to top (offset 120px)
+        const offsetY = 120; 
+
+        // the target scroll to
+        const y = top > 0 
+          ? top  - getScrollTop()
+          : getScrollTop() + top;
+        
+        window.scrollTo(0, Math.min(0, y - offsetY));
+      }
+    },
+
+    // Events
+    // ==
 
     // when file clicked.
     handleFileRead(item, type) {
@@ -347,32 +384,32 @@ export default {
       // TODO: when in multi versions could not sync state
       // because of `this.path` is changed to active version path.
       // sync state to viewer store.
-      const shouldSyncState = () => {
-        if (item.type === 'IMAGE') {
-          return !this.path || this.path !== this.viewerPath || this.viewerPath;
-        }
+      // const shouldSyncState = () => {
+      //   if (item.type === 'IMAGE') {
+      //     return !this.path || this.path !== this.viewerPath || this.viewerPath;
+      //   }
 
-        if (item.type.startsWith('CHAPTER')) {
-          return !this.path || 
-            this.path !== this.viewerPath || 
-            this.ch !== this.viewerCh;
-        }
-      };
+      //   if (item.type.startsWith('CHAPTER')) {
+      //     return !this.path || 
+      //       this.path !== this.viewerPath || 
+      //       this.ch !== this.viewerCh;
+      //   }
+      // };
 
-      // activate chapter
-      if (item.type.startsWith('CHAPTER')) {
-        this.activeChapter = item.name;
-      }
+      // activate chapter ??
+      // if (item.type.startsWith('CHAPTER')) {
+      //   this.activeChapter = item.name;
+      // }
 
-      // sync state to viewer store
-      if (shouldSyncState()) {
-        this.setManga({
-          name: this.name,
-          path: this.path,
-          images: this.images,
-          chapters: this.chapters
-        });
-      }
+      // TODO: sync state to viewer store (has problem refactor later)
+      // if (shouldSyncState()) {
+      //   this.setManga({
+      //     name: this.name,
+      //     path: this.path,
+      //     images: this.images,
+      //     chapters: this.chapters
+      //   });
+      // }
 
       // handle chapter sp
       let path = item.type === 'CHAPTER_SP' ? this.path + '/@sp' : this.path
@@ -394,7 +431,6 @@ export default {
       });
     },
 
-    // events
     handleScroll() {
       const scrollTop = getScrollTop();
 

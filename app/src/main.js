@@ -32,6 +32,7 @@ import Dropdown from '@/components/Dropdown';
 import VideoPlayer from '@/components/VideoPlayer';
 import Modal from '@/components/Modal';
 import Switcher from '@/components/Switcher';
+import Backdrop from '@/components/Backdrop';
 
 // Third part components
 import VueLazyload from 'vue-lazyload';
@@ -64,6 +65,7 @@ Vue.component('Dropdown', Dropdown);
 Vue.component('VideoPlayer', VideoPlayer);
 Vue.component('Modal', Modal);
 Vue.component('Switcher', Switcher);
+Vue.component('Backdrop', Backdrop);
 
 Vue.directive('loading', loadingDirective);
 Vue.directive('click-out-side', clickOutSideDirective);

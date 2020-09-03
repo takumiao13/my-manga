@@ -29,7 +29,8 @@
         :class="{
           'col-4 col-sm-3 col-lg-2 area-item': viewMode === 'grid',
           'list-group-item list-group-item-action': viewMode == 'list',
-          'd-none': index === 0 && hideFirstImage
+          'd-none': index === 0 && hideFirstImage,
+          active: index === activePage,
         }"
         v-for="(item, index) in list" 
         :key="item.path"
@@ -77,6 +78,7 @@ export default {
   props: {
     viewMode: String,
     list: Array,
+    activePage: Number,
     hideFirstImage: Boolean
   }
 }

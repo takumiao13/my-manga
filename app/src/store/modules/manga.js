@@ -32,19 +32,27 @@ export const cacheStack = {
 
   replace(item) {
     const index = this.find(item._dirId, item.path, item._kw);
-    if (~index) {
-      this._value[index] = item;
-    } else {
+
+    if (index === - 1) {
       this.push(item);
+      return
     }
+
+    this._value[index] = item;
   },
 
   pop(index) {
+    // get next value
     const next = this._value[index + 1];
+    // remove next state
     this._value = this._value.slice(0, index + 1);
-    return Object.assign(last(this._value), {
-      activePath: next ? next._prevPath : ''
-    });
+    // get cached state
+    const result = last(this._value);
+    // merge `activePath`
+    return {
+      activePath: next && next.path,
+      ...result
+    }
   },
 
   clear() {
@@ -56,22 +64,24 @@ export const cacheStack = {
    * @param {*} dirId current repo id
    * @param {*} path current path
    * @param {*} kw keyword
+   * @param {*} ver version
    */
   find(dirId, path = '', kw, ver) {
     const index = this._value
       .map(item => item.path)
       .lastIndexOf(path);
 
-    //console.log('--->', index, dirId, kw);
-    if (~index) {
-      const target = this._value[index];
-      if (target._dirId === dirId && target._kw === kw && target._ver === ver) {
-        return index;
-      } else {
-        return -1
-      }
+    if (index === -1) return -1;
+    const target = this._value[index];
+
+    if (
+      target._dirId === dirId 
+      && target._kw === kw 
+      && target._ver === ver
+    ) {
+      return index;
     } else {
-      return -1;
+      return -1
     }
   }
 };
@@ -193,13 +203,14 @@ const createModule = (state = { ...initialState }) => ({
 
         return mangaAPI[method](params, options)
           .then(res => {
-            cacheStack[!clear ? 'push' : 'replace'](Object.assign(res, {
-              _prevPath: path, // store the prev path
+            // cache current state
+            Object.assign(res, {
               _dirId: dirId,
               _kw: keyword,
               _ver: ver
-            }));
-
+            });
+            
+            cacheStack[clear ? 'replace' : 'push'](res);
             abortController = null;
             commit(SET_MANGAS, res);
             return statusHelper.success(commit);

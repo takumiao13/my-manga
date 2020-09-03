@@ -25,7 +25,8 @@
     <ListDrawer
       :visible="chapterListVisible"
       :list="parts"
-      :active-name="name"
+      item-key="name"
+      :active-key="name"
       @change="handlePartChange"
       @close="chapterListVisible = false"
     />

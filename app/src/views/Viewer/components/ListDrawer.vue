@@ -1,45 +1,48 @@
 <template>
-  <div 
-    class="viewer-chapter-list" 
-    :class="{ open: visible }" 
-    ref="container"
-  >
-    <header class="topbar">
-      <Navbar 
-        title="Chapters" 
-        :right-btns="[{
-          icon: 'times',
-          click: () => $emit('close' )
-        }]" 
-      />
-      <div class="viewer-chapter-list-actions">
-        <div class="float-right">
-          <a class="mr-2" @click="locate">
-            <Icon name="map-marker-alt" />
-          </a>
-          <a @click="sort">
-            <Icon :name="`sort-by-no-${desc ? 'desc' : 'asc'}`" />
-          </a> 
-        </div>
+  <div>
+    <div 
+      class="viewer-chapter-list" 
+      :class="{ open: visible }" 
+      ref="container"
+    >
+      <header class="topbar">
+        <Navbar 
+          title="Chapters" 
+          :right-btns="[{
+            icon: 'times',
+            click: () => $emit('close' )
+          }]" 
+        />
+        <div class="viewer-chapter-list-actions">
+          <div class="float-right">
+            <a class="mr-2" @click="locate">
+              <Icon name="map-marker-alt" />
+            </a>
+            <a @click="sort">
+              <Icon :name="`sort-by-no-${desc ? 'desc' : 'asc'}`" />
+            </a> 
+          </div>
 
-        {{ list.length }} items
-      </div>
-    </header>
-    
-    <section>
-      <div class="list-group">
-        <div 
-          class="list-group-item"
-          :class="{ active: item.name === activeName }"
-          v-for="item in sortedList"
-          :key="item.path"
-          @click.stop="$emit('change', item)"
-        >
-          <Icon v-if="item.name === activeName" name="map-marker-alt" />
-          {{ item.name }}
+          {{ list.length }} items
         </div>
-      </div>
-    </section>
+      </header>
+      
+      <section>
+        <div class="list-group">
+          <div 
+            class="list-group-item"
+            :class="{ active: item[itemKey] === activeKey }"
+            v-for="item in sortedList"
+            :key="item[itemKey]"
+            @click.stop="$emit('change', item)"
+          >
+            <Icon v-if="item.name === activeKey" name="map-marker-alt" />
+            {{ item.name }}
+          </div>
+        </div>
+      </section>
+    </div>
+    <Backdrop lock :visible="backdropVisible" @click.native="$emit('close')" />
   </div>
 </template>
 
@@ -50,12 +53,20 @@ export default {
   props: {
     visible: Boolean,
     list: Array,
-    activeName: String
+    itemKey: String,
+    activeKey: String
   },
 
   data() {
     return {
       desc: true,
+      backdropVisible: false
+    }
+  },
+
+  watch: {
+    visible(val) {
+      this.backdropVisible = val;
     }
   },
 
@@ -84,7 +95,7 @@ export default {
 
 .viewer-chapter-list {
   position: fixed;
-  z-index: 1400;
+  z-index: 1500;
   top: 0;
   bottom: 0;
   right: 0;

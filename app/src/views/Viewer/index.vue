@@ -1,21 +1,21 @@
 <template>
-  <MangaViewer ref="viewer" v-if="type === 'manga'" />
-  <VideoViewer ref="viewer" v-else-if="type === 'video'" />
+  <VideoPlayer ref="viewer" v-if="type === 'video'" />
+  <MangaViewer ref="viewer" v-else />
 </template>
 
 <script>
-import MangaViewer from './Manga';
-import VideoViewer from './Video';
+import MangaViewer from './MangaViewer';
+import VideoPlayer from './VideoPlayer';
 
 export default {
   components: {
     MangaViewer,
-    VideoViewer
+    VideoPlayer
   },
 
   data() {
     return {
-      type: this.$route.params.type || 'manga'
+      type: this.$route.params.type
     }
   },
 
