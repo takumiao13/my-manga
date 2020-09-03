@@ -41,7 +41,8 @@
           :active-path="activePath"
           :view-mode="viewMode"
           :item="item"
-          @click.native="$emit('item-click', item, 'manga')"
+          @cover-click="$emit('cover-click', item)"
+          @item-click="$emit('item-click', item)"
         />
       </div>
     </div>

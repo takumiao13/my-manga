@@ -44,7 +44,8 @@
             latest  
             :active-path="activePath"
             :item="item"
-            @click.native="$emit('item-click', item, 'manga')"
+            @cover-click="$emit('cover-click', item)"
+            @item-click="$emit('item-click', item)"
           />
         </div>
       </div>

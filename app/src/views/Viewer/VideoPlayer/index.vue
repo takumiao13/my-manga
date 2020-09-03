@@ -1,5 +1,5 @@
 <template>
-  <div id="viewer">
+  <div>
     <div 
       :class="[
         'topbar viewer-topbar fixed-top', 
@@ -183,8 +183,6 @@ export default {
   cursor: pointer;
   position: relative;
   min-height: 100vh;
-  padding-top: 3rem;
-  padding-bottom: 3rem;
 
   display: flex;
   justify-content: center;
@@ -210,7 +208,6 @@ export default {
   left: 0 !important;
   height: 100% !important;
   padding-top: 0 !important;
-  top: 3rem;
 
   .vjs-poster {
     top: 3rem !important;

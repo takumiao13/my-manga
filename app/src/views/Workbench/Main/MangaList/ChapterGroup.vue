@@ -33,7 +33,8 @@
       >
         <MangaItem 
           :item="item"
-          @click.native="$emit('item-click', item)"
+          @item-click="$emit('item-click', item)"
+          @cover-click="$emit('cover-click', item)"
         />
       </div>
     </div>
@@ -44,7 +45,7 @@
         :class="{ active: item.name === activeName}"
         v-for="item in sortedList" 
         :key="item.path"
-        @click="$emit('item-click', item, 0)"
+        @click="$emit('item-click', item)"
       >
 
         <div class="text-truncate pr-2">

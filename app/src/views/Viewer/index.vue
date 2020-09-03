@@ -1,40 +1,104 @@
 <template>
-  <VideoPlayer ref="viewer" v-if="type === 'video'" />
-  <MangaViewer ref="viewer" v-else />
+  <div id="viewer">
+    <VersionSelect 
+      v-if="type === 'mix'" 
+      :versions="versions" 
+      @change="handleVersionChange"
+    />
+    <VideoPlayer ref="viewer" v-else-if="type === 'video'" />
+    <MangaViewer ref="viewer" v-else />
+  </div>
 </template>
 
 <script>
+import { mapGetters } from 'vuex';
+import qs from '@/helpers/querystring';
+import mangaAPI from '@/apis/manga';
+
+// components
 import MangaViewer from './MangaViewer';
 import VideoPlayer from './VideoPlayer';
+import VersionSelect from './components/VersionSelect';
 
 export default {
   components: {
     MangaViewer,
-    VideoPlayer
+    VideoPlayer,
+    VersionSelect
   },
 
   data() {
     return {
-      type: this.$route.params.type
+      type: this.$route.params.type,
+      versions: null
+    }
+  },
+
+  computed: {
+    ...mapGetters('app', [ 'repo' ]),
+  },
+
+  methods: {
+    fetchVersions(route) {
+      const { dirId, path } = route.params;
+      mangaAPI.list({ dirId, path: qs.decode(path) })
+        .then(res => this.versions = res.children)
+    },
+
+    handleVersionChange(version) {
+      const { dirId } = this.repo;
+      const { path, fileType = 'manga', name, ver } = version;
+
+      if (fileType === 'pdf') {
+        const href = this.$service.pdf.makeSrc(path);
+        href && window.open(href, 'target', '');
+        return;
+      }
+
+      const query = fileType === 'video' 
+        ? { ver, name }
+        : { name }
+
+      this.$router.replace({
+        name: 'viewer',
+        params: {
+          type: fileType, 
+          dirId, 
+          path: qs.encode(path)
+        },
+        query
+      });
     }
   },
 
   beforeRouteLeave(to, from, next) {
-    this.$refs.viewer.$emit('leave');
+    this.$refs.viewer && this.$refs.viewer.$emit('leave');
     next();
   },
 
   beforeRouteUpdate(to, from, next) {
     // trigger action to update store
     // then enter the view.
-    this.$refs.viewer.$emit('update', to);
+    this.type = to.params.type;
+    if (this.type === 'mix') {
+      this.fetchVersions(to);
+    } else {
+      this.$nextTick(() => {
+        this.$refs.viewer && this.$refs.viewer.$emit('update', to);
+      });
+    }
+    
     next();
   },
 
   mounted() {
-    this.$nextTick(() => {
-      this.$refs.viewer.$emit('update', this.$route);
-    });
+    if (this.type === 'mix') {
+      this.fetchVersions(this.$route);
+    } else {
+      this.$nextTick(() => {
+        this.$refs.viewer.$emit('update', this.$route);
+      });
+    }
   }
 }
 </script>

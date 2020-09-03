@@ -36,7 +36,7 @@
         :key="item.path"
         @click="$emit('item-click', item, index)"
       >
-        <div 
+        <div
           v-show="viewMode === 'grid'"
           class="cover"
           :style="$service.image.style(item, 240)"

@@ -302,7 +302,7 @@ export default {
   text-align: center;
   cursor: pointer;
   position: relative;
-  z-index: 3; // over `viewer-viewport`
+  z-index: 4; // over `viewer-viewport`
   background: #666;
 
   &:hover {

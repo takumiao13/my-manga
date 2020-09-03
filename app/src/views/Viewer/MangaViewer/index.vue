@@ -1,6 +1,5 @@
 <template>
   <div 
-    id="viewer" 
     :class="[
       `viewer-${settings.hand}-hand`,
       `viewer-${settings.mode}-mode`
@@ -26,8 +25,15 @@
     />
     <!-- /HEADER -->
 
+    <!-- LOADING -->
+    <div class="viewer-loading" v-show="pending">
+      <Spinner class="loading-spinner" size="lg" tip="Loading" />
+    </div>
+    <!-- /LOADING -->
+
     <!-- VIEWPORT -->
     <Viewport
+      v-show="success"
       :locking="locking"
       :auto-scrolling="autoPlaying"
       :hand="settings.hand"
@@ -57,10 +63,6 @@
       />
     </Viewport>
     <!-- /VIEWPORT -->
-
-    <div class="viewer-loading" v-show="pending">
-      <Spinner class="loading-spinner" size="lg" tip="Loading" />
-    </div>
 
     <HelpOverlay
       v-show="helpVisible"
@@ -152,16 +154,16 @@ export default {
   },
   
   computed: {
+    ...mapState('app', { appError: 'error', appSize: 'size' }),
+
     ...mapState('viewer', [ 
       'name', 'path', 'page', 'ch', 'chName', 'images', 'chapters', 'parts',
-      'settings', 'autoPlaying', 'fullscreen', 'locking',
+      'autoPlaying', 'fullscreen', 'locking',
     ]),
-
-    ...mapState('app', { appError: 'error', appSize: 'size' }),
 
     ...mapGetters('app', [ 'repo' ]),
 
-    ...mapGetters('viewer', [ 'count', 'chIndex', 'chCount', 'pending', 'settings' ]),
+    ...mapGetters('viewer', [ 'count', 'chIndex', 'chCount', 'pending', 'success', 'settings' ]),
 
     title() {
       if (this.appSize === 'sm') {

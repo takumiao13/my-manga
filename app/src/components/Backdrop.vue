@@ -49,6 +49,10 @@ export default {
     visible(val) {
       this.lock && window.document.body.classList[val ? 'add' : 'remove']('backdrop-lock');
     }
+  },
+
+  destroyed() {
+    window.document.body.classList.remove('backdrop-lock');
   }
 }
 </script>

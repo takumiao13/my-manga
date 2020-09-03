@@ -93,7 +93,7 @@ class MangaService extends Service {
           if (child.type === FileTypes.MANGA) {
             count++;
             callback(pick(child, [
-              'name', 'path', 'type', 'birthtime', 'mtime', 'cover', 
+              'name', 'path', 'type', 'birthtime', 'mtime', 'cover', 'fileType',
               'cover', 'width', 'height', 'verNames', 'chapterSize', 'metadata'
             ]));
           } else if (child.isDir && child.type === FileTypes.FILE) {

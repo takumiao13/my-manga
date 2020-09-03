@@ -25,6 +25,15 @@
   }
 }
 
+// ## repos
+[id="repos"] {
+  .topbar > .navbar {
+    background: $app-main !important;
+    box-shadow: 0 1px 2px rgba($app-shadow-color, .1);
+    z-index: 1030;
+  }
+}
+
 // ## workbench.aside
 [id="workbench.aside"] {
   background: $app-sidebar-bg !important;
@@ -172,17 +181,7 @@
   .manga-item {
     .cover {
       border-bottom: 0;
-
-      &:hover {
-        .cover-placeholder {
-          .svg-icon {
-            // color: $app-primary;
-          }
-        }
-      }
     }
-
-    
 
     .badge {   
       border: .5px solid $app-muted-color;
@@ -241,10 +240,6 @@
     .area-item:hover {
       .area-item-inner { 
         filter: brightness(90%);
-
-        > div {
-          transform: scale(1.1);
-        }
       }
 
       .caption {
@@ -265,7 +260,7 @@
   .chapter-area {
     .manga-item {
       .cover-inner {
-        box-shadow: 0 4px 8px -4px rgba($app-shadow-color, .4);        
+        box-shadow: 0 4px 8px -4px rgba($app-shadow-color, .4);
       } 
     }
 
@@ -284,20 +279,15 @@
       }
     }
 
-    .area-item:hover {  
-      img {
-        top: 55%;
-        left: 55%;
-        transform: scale(1.1) translateX(-50%) translateY(-50%);
-        filter: brightness(90%);
+    .area-item {
+      .cover:hover {        
+        img,
+        .cover-placeholder {
+          filter: brightness(90%);
+        }
       }
       
-      .cover-placeholder {
-        transform: scale(1.1);
-        filter: brightness(90%);
-      }
-
-      .caption {
+      .caption:hover {
         color: $app-primary;
       }
     }
@@ -337,15 +327,6 @@
       &:hover {
         background: $app-border-color;
       }
-      
-      // &:last-child,
-      // &.muted {
-      //   color: $app-muted-color;
-      
-      //   &:hover {
-      //     background: none;
-      //   }
-      // }
     }
     
     .address-separator {
@@ -357,6 +338,7 @@
 // Common
 // ==
 .list-group .list-group-item {
+  border-radius: 0;
   border-color: $app-border-color;
 
   &.disabled {
@@ -486,6 +468,25 @@ body.viewer-active {
         color: #fff !important;
         font-weight: 500;
       }
+
+      &:hover {
+        color: $app-primary;
+      }
+    }
+  }
+
+  .viewer-version-select {
+    background: rgba($viewer-toolbar-bg, .8) !important;
+
+    .list-group {
+      box-shadow: 0 2px 4px -1px rgba($app-shadow-color, 0.2), 
+                  0 4px 5px 0 rgba($app-shadow-color, 0.14), 
+                  0 1px 10px 0 rgba($app-shadow-color, 0.12);
+    }
+
+    .list-group-item {
+      background-color: $viewer-toolbar-bg !important;
+      border-color: #555;
 
       &:hover {
         color: $app-primary;

@@ -1,8 +1,9 @@
 <template>
   <div class="viewer-container">
     <div class="viewer-viewport-left" @click.stop="handleLeft" />
-    <div 
-      :class="['viewer-viewport', { 'viewer-locking': shouldLock }]"
+    <div
+      class="viewer-viewport"
+      :class="{ 'viewer-locking': shouldLock }"
       @click.stop="$emit('click')"
     >
       <slot class="viewer-mode" /> 
@@ -53,8 +54,6 @@ export default {
   cursor: pointer;
   position: relative;
   min-height: 100vh;
-  padding-top: 3rem;
-  padding-bottom: 3rem;
   user-select: none;
 
   // locked
@@ -140,14 +139,18 @@ export default {
 }
 
 .viewer-scroll-mode {
+  .viewer-viewport {
+    padding-top: 3rem;
+  }
+
   .viewer-mode {
-    min-height: calc(100vh - 6rem);
+    min-height: calc(100vh - 3rem);
   }
 }
 
 .viewer-swipe-mode {
   .viewer-mode {
-    height: calc(100vh - 6rem);
+    height: calc(100vh - 3rem);
   }
 
   @include media-breakpoint-down(sm) {

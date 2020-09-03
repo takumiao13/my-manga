@@ -67,6 +67,10 @@ const createModule = (state = { ...initialState }) => ({
     pending(state) {
       return statusHelper.is.pending(state);
     },
+
+    success(state) {
+      return statusHelper.is.success(state);
+    },
   
     count(state) {
       return state.images.length;
@@ -102,77 +106,56 @@ const createModule = (state = { ...initialState }) => ({
       }
 
       // the final viewer settings
+      console.log(mergedSettings);
       return mergedSettings;
     }
   },
 
   actions: {
-    fetchManga({ commit, state }, payload = {}) {
-      const { dirId, path, ch, page } = payload;
-      const promiseArray = [];
-      const pathResStub = () => {};
+    fetchManga({ commit }, payload = {}) {
+      let { ch, page } = payload;
+      let name, path, images, chapters, verNames, cover;
 
-      const pathPromise = state.path !== path ? 
-        mangaAPI.list({ dirId, path }) : 
-        pathResStub;
-  
-      promiseArray.push(pathPromise);
+      const params = {
+        dirId: payload.dirId,
+        path: payload.path
+      };
 
- 
-      // fetch chapters images every time
-      // TODO: should check is not need fetch again
-      if (ch) {
-        const chPromise = mangaAPI.list({ 
-          dirId, 
-          path: `${path}/${ch}` 
-        }); 
-        promiseArray.push(chPromise);
-      }
-  
       // loading
       statusHelper.pending(commit);
-      
-      // fetch images and chapter parallelly
-      Promise.all(promiseArray).then(([res1, res2]) => {
-        let name = state.name, 
-            path = state.path, 
-            chapters, 
-            images,
-            verNames,
-            cover;
-  
-        // handle no chapters
-        if (res2 === void 0) {
-          if (res1 !== pathResStub) {
-            name = res1.name;
-            path = res1.path;
-            images = res1.images;
-            chapters = res1.chapters;
-            cover = res1.cover;
-            verNames = res1.verNames
+
+      mangaAPI.list(params)
+        .then(res => {
+          name = res.name;
+          path = res.path;
+          images = res.images;
+          chapters = res.chapters;
+          verNames = res.verNames;
+          cover = res.cover;
+
+          const chapterSize = res.chapterSize;
+
+          // auto ch
+          if (ch || chapterSize) {
+            ch = ch || chapters[0].name;
+            return mangaAPI.list({ 
+              dirId: payload.dirId, 
+              path: `${path}/${ch}` 
+            });
           }
+        })
+        .then(res => {
+          if (res) images = res.images;
           
-        // handle chapters
-        } else {
-          if (res1 !== pathResStub) {
-            name = res1.name;
-            path = res1.path;
-            chapters = res1.chapters;
-            cover = res1.cover;
-            verNames = res1.verNames;
-          }
-  
-          images = res2.images;
-        }
-  
-        // try to remove name prefix
-        const chName = ch.replace(`${name} - `, '');
-        commit(SET_MANGA, { name, path, cover, images, chapters, chName, verNames });
-        commit(SET_PAGE, { page, ch });
-        Vue.nextTick(() => statusHelper.success(commit));
-      }).catch(error => {
-        statusHelper.error(commit, { error });
-      });
+          // try to remove name prefix
+          const chName = ch.replace(`${name} - `, '');
+          commit(SET_MANGA, { name, path, cover, images, chapters, chName, verNames });
+          commit(SET_PAGE, { page, ch });
+          Vue.nextTick(() => statusHelper.success(commit));
+        })
+        .catch(error => {
+          statusHelper.error(commit, { error });
+        });
     },
 
     fetchVideo({ commit }, payload = {}) {
@@ -184,8 +167,7 @@ const createModule = (state = { ...initialState }) => ({
         // find video from list
         // - version
         // - name (parts of video)
-        // ver ? { ver } : 
-        const findOptions = { name: payload.name };
+        const findOptions = { name: payload.name || children[0].name };
         const video = find(children, findOptions);
 
         commit(SET_MANGA, {

@@ -36,7 +36,7 @@
 
       <!-- Page Gaps -->
       <div v-show="mode === 'scroll'" class="viewer-settings-item" >
-        <div>Show Gaps:</div>
+        <div>Show Gaps: {{ gaps }}</div>
         <div><Switcher v-model="gaps" /></div>
       </div>
 
@@ -145,6 +145,7 @@ export default {
   },
 
   data() {
+    console.log(this.settings);
     return {
       backdropVisible: false,
       force: this.settings.force,

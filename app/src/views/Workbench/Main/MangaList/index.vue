@@ -40,8 +40,9 @@
               v-if="!path && !isSearch && latest.length"
               :list="latest"
               :active-path="activePath"
-              @more="handleFileRead"  
+              @more="handleFileRead"
               @item-click="handleFileRead"
+              @cover-click="handleMangaRead"
             />
 
             <!-- FILE -->
@@ -60,6 +61,7 @@
               :active-path="activePath"
               @view-mode-change="(mode) => viewMode.manga = mode"
               @item-click="handleFileRead"
+              @cover-click="handleMangaRead"
             />
 
             <!-- CHAPTER -->
@@ -85,8 +87,8 @@
               :list="images"
               :active-page="activePage"
               :hide-first-image="type === 'MANGA'"
-              @item-click="handleMangaRead"
               @view-mode-change="(mode) => viewMode.gallery = mode"
+              @item-click="handleMangaRead"
             />
           </div>   
         </div>   
@@ -123,6 +125,7 @@ export default {
 
   data() {
     return {
+      _viewerPath: '',
       activeChapter: '',
       activePage: -1,
       showTitle: false,
@@ -151,14 +154,18 @@ export default {
     ...mapState('manga', [
       'inited', 'name', 'path', 'list', 'type', 'fileType', 'cover', 
       'files', 'chapters', 'chaptersSp', 'versions', 'images', 
-      'activePath', 'activeVer', 'activeVerPath',
+      'activeVer', 'activeVerPath', 'activePath',
       'error', 'metadata'
     ]),
 
+    ...mapState('manga', {
+      mangaPath: 'activePath'
+    }),
+
     ...mapState('viewer', {
       viewerPath: 'path',
-      viewerCh: 'ch',
-      viewerPage: 'page'
+      viewerPage: 'page',
+      viewerCh: 'ch'
     }),
 
     ...mapGetters('app', [ 'repo' ]),
@@ -209,21 +216,26 @@ export default {
       return !!this.navs.length
         && (this.viewType === 'file' || this.viewType === 'random')
     },
+
+    // TODO: remove _viewerPath tmp variable
+    activePath() {
+      return this._viewerPath
+        ? this.viewerPath
+        : this.mangaPath;
+    }
   },
 
   watch: {
-    // when route change (not update !!)
     $route(to, from) {
       if (from.name === 'viewer') {
         this.activeChapter = this.viewerCh;
         this.activePage = this.viewerPage;
-
-        this.$nextTick(() => {
-          this.scrollToActive();
-        });
+        this._viewerPath = this.viewerPath;
+        this.$nextTick(() => this.scrollToActive());
       } else {
         this.activeChapter = '';
         this.activePage = -1;
+        this._viewerPath = '';
       }
     }
   },
@@ -266,7 +278,11 @@ export default {
       // - search
       // - @random
       // - toggle activity
-      if (path === '@random' || path !== this.path || search) {
+      if (
+        path === this.$consts.RANDOM_PATH 
+        || path !== this.path 
+        || search
+      ) {
         promise = promise
           .then(() => this.fetchMangas({ 
               isBack, dirId, ver, search, clear,
@@ -304,8 +320,8 @@ export default {
         const activeEl = document.querySelector('.gallery-area .active')
           || document.querySelector('.chapter-area .active');
 
-        // check active element is in viewport
-        if (activeEl && inViewport(activeEl)) return;
+        // check active element existsa and is in viewport
+        if (!activeEl || inViewport(activeEl)) return;
 
         // top of viewport
         const { top } = activeEl.getBoundingClientRect();
@@ -322,24 +338,47 @@ export default {
       }
     },
 
+    viewVideo(path, name) {
+      // use parent path as route path
+      path = this.activeVerPath || path;
+      const { dirId } = this.repo;
+
+      this.$router.push({
+        name: 'viewer',
+        params: {
+          type: 'video', 
+          dirId, 
+          path: qs.encode(path)
+        },
+        query: {
+          ver: this.activeVer, 
+          name: name
+        }
+      });
+    },
+
+    viewPDF(path) {
+      // TODO: use custom PDF reader
+      // use browser as pdf reader 
+      const href = this.$service.pdf.makeSrc(path);
+      href && window.open(href, 'target', '');
+    },
+
     // Events
     // ==
 
-    // when file clicked.
-    handleFileRead(item, type) {
+    // when file, manga, caption clicked.
+    handleFileRead(item) {
       const { dirId } = this.repo;
       const { isDir, fileType, path, verNames } = item;
 
-      // handle manga or dir
       if (isDir || item.type === 'MANGA') {
-        const ver = verNames && verNames.length > 1 ? 
-          verNames[0] : undefined;
-        let query = null;
-        
         // use the first version if exists multi version
-        if (ver || type) {
-          query = Object.assign({}, { ver, type });
-        }
+        const ver = verNames && verNames.length > 1
+          ? verNames[0] 
+          : undefined;
+        
+        const type = item.type.toLowerCase();
 
         this.$router.push({
           name: 'explorer', 
@@ -347,40 +386,18 @@ export default {
             dirId,
             path: qs.encode(path) // hanle path with % char
           },
-          query
+          query: { ver, type }
         });
 
-      // handle pdf | mp4 | zip (support later)
       } else if (fileType === 'video') {
-        // use parent path as route path
-        const query = this.activeVer ? 
-          { ver: this.activeVer, name: item.name } : 
-          { name: item.name }
-
-        const path = this.activeVerPath || this.path;
-
-        this.$router.push({
-          name: 'viewer',
-          params: {
-            type: 'video', 
-            dirId, 
-            path: qs.encode(path)
-          },
-          query
-        });
+        this.viewVideo(path, item.name);
       } else if (fileType === 'pdf') {
-        // use browser as pdf reader 
-        // `item.path` as source
-        const href = this.$service.pdf.makeSrc(path);
-        href && window.open(href, 'target', '');
+        this.videoPDF(path);
       }
     },
 
-    // when chapter and gallery clicked.
+    // when chapter, gallery, manga cover clicked.
     handleMangaRead(item, index = 0) {
-      const { dirId } = this.repo;
-      const ch = item.type.startsWith('CHAPTER') ? item.name : undefined;
-      
       // TODO: when in multi versions could not sync state
       // because of `this.path` is changed to active version path.
       // sync state to viewer store.
@@ -396,11 +413,6 @@ export default {
       //   }
       // };
 
-      // activate chapter ??
-      // if (item.type.startsWith('CHAPTER')) {
-      //   this.activeChapter = item.name;
-      // }
-
       // TODO: sync state to viewer store (has problem refactor later)
       // if (shouldSyncState()) {
       //   this.setManga({
@@ -411,24 +423,54 @@ export default {
       //   });
       // }
 
-      // handle chapter sp
-      let path = item.type === 'CHAPTER_SP' ? this.path + '/@sp' : this.path
-      path = this.activeVer ? this.activeVerPath : path;
+      const { dirId } = this.repo;
+      let path;
+      
+      // handle multi version first
+      if (this.activeVer) {
+        path = this.activeVerPath;
+        console.log(path);
+        debugger;
 
-      this.$router.push({
-        name: 'viewer',
-        params: { 
-          type: 'manga', 
-          dirId, 
-          path: qs.encode(path),
-          ch 
-        },
-        query: {
-          // use a query from start page, prepare for history feature
-          start: index + 1,
-          ver: this.activeVer
-        }
-      });
+      // handle image
+      } else if (item.type === 'IMAGE') {
+        path = this.path;
+
+      // handle chapter
+      } else if (item.type === 'CHAPTER') {
+        path = this.path;
+
+      // handle chapter sp
+      } else if (item.type === 'CHAPTER_SP') {
+        path = `${this.path}/@sp`;
+
+      } else {
+        path = item.path;
+      }
+
+      if (item.fileType === 'video') {
+        this.viewVideo(path);
+      } else if (item.fileType === 'pdf') {
+        this.viewPDF(path);
+      } else {
+        const ch = item.type.startsWith('CHAPTER') ? item.name : undefined;
+        const type = item.fileType === 'mix' || (item.verNames && item.verNames.length > 1)
+          ? 'mix' : 'manga';
+        const query = type === 'manga' 
+          ? { start: index + 1, ver: this.activeVer } 
+          : undefined;
+
+        this.$router.push({
+          name: 'viewer',
+          params: { 
+            type,
+            dirId,
+            path: qs.encode(path),
+            ch
+          },
+          query
+        });
+      }
     },
 
     handleScroll() {
@@ -479,9 +521,9 @@ export default {
 
   activated() {
     if (
-      this.appError || // error
-      this.$router._reset || // reset store
-      (this.$route.meta.isBack && this.inited) // back
+      this.appError // error
+      || this.$router._reset // reset store
+      || (this.$route.meta.isBack && this.inited) // back
     ) {
       return;
     }

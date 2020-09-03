@@ -67,6 +67,14 @@ export default {
   watch: {
     visible(val) {
       this.backdropVisible = val;
+    },
+
+    activeKey() {
+      this.locate();
+    },
+
+    list() {
+      this.$nextTick(() => this.locate());
     }
   },
 
@@ -83,6 +91,8 @@ export default {
 
     locate() {
       const targetEl = this.$refs.container.querySelector('.list-group-item.active');
+      if (!targetEl) return;
+
       const target = targetEl.offsetTop - 90; // header height
       animateScrollTo(target, { container: this.$refs.container });
     }
@@ -134,7 +144,7 @@ export default {
       .svg-icon {
         position: absolute;
         left: .5rem;
-        top: .5rem;
+        top: .65rem;
       }
     }
   }

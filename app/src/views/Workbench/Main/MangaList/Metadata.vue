@@ -23,7 +23,7 @@
       </div>
       <div class="metadata-btn">
         <a @click="sharing = false">
-          <icon name="times" size="36" />
+          <Icon name="times" size="36" />
         </a>
         <span>Close</span>
       </div>
@@ -41,8 +41,9 @@
             `cover-size-${placeholder}`
           ]"
         >
-          <MangaItem 
+          <MangaItem
             :item="$store.state.manga" 
+            :play-logo="false"
             :caption="false"
             :version-labels-visible="false"
           />
@@ -93,7 +94,7 @@
     <!-- ACTIONS -->
     <div class="metadata-actions row d-flex">
       <a class="col" @click="handleRead">
-        <icon :name="fileType === 'video' ? 'play' : 'book-open'" /> 
+        <Icon :name="fileType === 'video' ? 'play' : 'book-open'" /> 
         Start {{ fileType === 'video' ? 'Watching' : 'Reading' }}
       </a>
     </div>

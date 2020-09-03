@@ -1,5 +1,5 @@
 <template>
-  <div class="repos">
+  <div id="repos" class="repos">
     <div class="topbar">
       <navbar class="d-sm-none" :title="title" :left-btns="leftBtns" />
     </div>
@@ -25,7 +25,7 @@
       </div>
 
       <p class="my-3 text-muted" style="font-size: 80%;">
-        REPOS ({{ repos.length }})
+        REPOS - {{ repos.length }}
       </p>
 
       
