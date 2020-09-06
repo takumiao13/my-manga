@@ -279,15 +279,15 @@
       }
     }
 
-    .area-item {
-      .cover:hover {        
+    .area-item:hover {
+      .cover {        
         img,
         .cover-placeholder {
           filter: brightness(90%);
         }
       }
       
-      .caption:hover {
+      .caption {
         color: $app-primary;
       }
     }
@@ -332,6 +332,11 @@
     .address-separator {
       color: $app-color;
     }
+  }
+
+  .manga-version-loading,
+  .data-view-loading-mask {
+    background-color: $app-main;
   }
 }
 
@@ -404,7 +409,7 @@ body.viewer-active {
   .viewer-topbar .navbar,
   .viewer-toolbar .navbar {
     background: $viewer-toolbar-bg !important;
-    box-shadow: 0px 1px 2px 0px rgba($app-shadow-color, 0.3);
+    box-shadow: 0px 2px 4px 0px rgba($app-shadow-color, 0.3);
   }
 
   .viewer-loading {

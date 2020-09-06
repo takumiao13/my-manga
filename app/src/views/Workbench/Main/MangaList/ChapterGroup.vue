@@ -34,7 +34,6 @@
         <MangaItem 
           :item="item"
           @item-click="$emit('item-click', item)"
-          @cover-click="$emit('cover-click', item)"
         />
       </div>
     </div>

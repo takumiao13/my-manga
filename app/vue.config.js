@@ -129,17 +129,27 @@ module.exports = {
     svgRule.exclude.add(/node_modules/)
     svgRule
       .test(/icons\/.+?\.svg$/)
-      .use('svg-sprite-loader')
-        .loader('svg-sprite-loader')
-        .options()
+      .oneOf('url')
+        .resourceQuery(/inline/)
+        .use('svg-inline-loader')
+          .loader('svg-inline-loader')
+          .options()
+          .end()
+        .end()
+      .oneOf('sprite')
+        .use('svg-sprite-loader')
+          .loader('svg-sprite-loader')
+          .options()
+          .end();
+      
     
     // inline svg loader
     const svgInlineRule = config.module.rule('svg-inline');
     svgInlineRule.exclude.add(/icons/)
     svgInlineRule
       .test(/\.svg$/)
-      .oneOf('inline')
-        .resourceQuery(/inline/)
+      .oneOf('url')
+        .resourceQuery(/url/)
         .use('svg-url-loader')
           .loader('svg-url-loader')
           .end()

@@ -114,7 +114,9 @@ export default {
 
       // scroll to right
       if (this.$feature.touch) {
-        this.$nextTick(() => this.$refs.mobile.scrollLeft = 9999);
+        this.$nextTick(() => {
+          this.$refs.mobile && (this.$refs.mobile.scrollLeft = 9999)
+        });
       }
     },
 

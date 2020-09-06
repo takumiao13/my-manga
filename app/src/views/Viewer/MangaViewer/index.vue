@@ -10,12 +10,11 @@
       :title="title"
       :pager="pager"
       :locking="locking"
-      :fullscreen="fullscreen"
       :settings="settings"
       :chapterlist-visible="!!chapters.length"
       @chapterlist:show="chapterListVisible = true"
       @back="handleBack"
-      @fullscreen="setFullscreen"
+      @detail="handleDetail"
     />
 
     <div 
@@ -25,15 +24,8 @@
     />
     <!-- /HEADER -->
 
-    <!-- LOADING -->
-    <div class="viewer-loading" v-show="pending">
-      <Spinner class="loading-spinner" size="lg" tip="Loading" />
-    </div>
-    <!-- /LOADING -->
-
     <!-- VIEWPORT -->
     <Viewport
-      v-show="success"
       :locking="locking"
       :auto-scrolling="autoPlaying"
       :hand="settings.hand"
@@ -41,6 +33,8 @@
       @prev="prevPage"
       @next="nextPage"
     >
+      <Loading :visible="pending" />
+
       <ScrollMode 
         v-if="settings.mode === $consts.VIEWER_MODE.SCROLL"
         v-bind="viewerModeProps"
@@ -94,15 +88,17 @@
     >  
       <Seekbar :value="page" :max="count" @end="gotoPage" />
       <Controlbar
+        :fullscreen="fullscreen"
         :auto-playing="autoPlaying"
         @auto-play-change="handleAutoPlayChange"
         @settings="handleSettingsVisible"
+        @fullscreen="setFullscreen"
       /> 
     </div>
 
     <div 
       v-show="settings.pagerInfo && !locking" 
-      class="viewer-page-indicator p-2"
+      class="viewer-page-indicator"
     >
       {{ page }} / {{ images.length }}
     </div>
@@ -112,6 +108,7 @@
 <script>
 import { mapState, mapGetters, mapMutations, mapActions } from 'vuex';
 import qs from '@/helpers/querystring';
+import { last } from '@/helpers/utils';
 import screenfull from 'screenfull';
 import animateScrollTo from 'animate-scroll-to.js';
 
@@ -124,7 +121,9 @@ import Seekbar from './Seekbar';
 import Controlbar from './Controlbar';
 import HelpOverlay from './HelpOverlay';
 import SettingsMenu from './SettingsMenu';
+
 import ListDrawer from '../components/ListDrawer'
+import Loading from '../components/Loading';
 
 export default {
   components: {
@@ -137,6 +136,7 @@ export default {
     HelpOverlay,
     SettingsMenu,
     ListDrawer,
+    Loading,
   },
 
   data() {
@@ -166,16 +166,11 @@ export default {
     ...mapGetters('viewer', [ 'count', 'chIndex', 'chCount', 'pending', 'success', 'settings' ]),
 
     title() {
-      if (this.appSize === 'sm') {
-        return this.ch ? this.chName : '';
-      } else {
-        let title = this.name;
-
-        // addon chapter name
-        // TODO: use chName ....
-        if (this.ch) title = `${this.chName} / ${title}`;
-        return ' ' + title;
-      }
+      const title = this.ch 
+        ? this.chName
+        : this.$options.filters.stripVer(this.name);
+      
+      return ' ' + title;
     },
 
     pager() {
@@ -265,6 +260,33 @@ export default {
       }
     },
 
+    handleDetail() {
+      const { dirId } = this.repo;
+      const { ver } = this.$router.history.current.query;
+      const path = ver
+        ? this.path.split('/').slice(0, -1).join('/')
+        : this.path;
+
+      const prevMangaListFullpath = `/repo/${dirId}/manga/${encodeURIComponent(path)}`
+      const mayBeBack = last(this.$router._routerHistory).startsWith(prevMangaListFullpath);
+
+      if (mayBeBack) {
+        this.$router.go(-1);
+      } else {
+        this.$router.replace({
+          name: 'explorer',
+          params: { 
+            dirId, 
+            path: qs.encode(path)
+          },
+          query: {
+            type: 'manga',
+            ver
+          }
+        });
+      }
+    },
+
     handleSettings(payload) {
       this.setSettings(payload);
       this.settingsVisible = false;
@@ -324,7 +346,6 @@ export default {
           $event.preventDefault();
           this.nextPage();
           break;
-        // TODO: scroll mode only  
         case action.up:
           if (this.settings.mode !== 'scroll') return;
           $event.preventDefault();
@@ -345,12 +366,8 @@ export default {
     handleChapterChange(item) {
       const route = this.$route;
       route.params.ch = item.name;
-      this.$router.replace(route)
-        .then(() => {
-          setTimeout(() => {
-            this.chapterListVisible = false
-          }, 500);
-        });
+      this.chapterListVisible = false;
+      setTimeout(() => this.$router.replace(route), 300);
     }
   },
 
@@ -416,26 +433,28 @@ export default {
   }
 }
 
-.viewer-loading {
-  position: fixed;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1040;
-
-  .loading-spinner {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-}
-
+// pager info
 .viewer-page-indicator {
   position: fixed;
   right: 0;
   bottom: 0;
+}
+
+.viewer-scroll-mode {
+  .viewer-page-indicator {
+    padding: .25rem .5rem;
+  }
+}
+
+.viewer-swipe-mode {
+  .viewer-page-indicator {
+    text-align: center;
+    left: 0;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 // change left and right position

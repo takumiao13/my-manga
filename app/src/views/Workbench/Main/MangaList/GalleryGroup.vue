@@ -1,5 +1,5 @@
 <template>
-  <div class="gallery-area mb-4" v-show="list.length" :data-view-mode="viewMode">
+  <div class="gallery-area mb-4" v-show="list.length > hideFirstImage ? 1 : 0" :data-view-mode="viewMode">
     <div class="area-header">
       <div class="area-header-inner">
         <div class="actions float-right">
@@ -30,7 +30,7 @@
           'col-4 col-sm-3 col-lg-2 area-item': viewMode === 'grid',
           'list-group-item list-group-item-action': viewMode == 'list',
           'd-none': index === 0 && hideFirstImage,
-          active: index === activePage,
+          active: index+1 === activePage,
         }"
         v-for="(item, index) in list" 
         :key="item.path"

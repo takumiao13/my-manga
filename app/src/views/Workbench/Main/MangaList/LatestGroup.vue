@@ -44,7 +44,6 @@
             latest  
             :active-path="activePath"
             :item="item"
-            @cover-click="$emit('cover-click', item)"
             @item-click="$emit('item-click', item)"
           />
         </div>
@@ -54,7 +53,6 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
 import MangaItem from './MangaItem';
 
 export default {
@@ -64,7 +62,8 @@ export default {
 
   props: {
     list: Array,
-    activePath: String
+    activePath: String,
+    appSize: String
   },
 
   data() {
@@ -74,11 +73,6 @@ export default {
   },
 
   computed: {
-
-    ...mapState('app', { 
-      appSize: 'size'
-    }),
-
     offsetX() {
       return -100*this.step;
     },

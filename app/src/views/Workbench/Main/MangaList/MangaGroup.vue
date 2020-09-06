@@ -37,11 +37,11 @@
         v-for="item in list"
         :key="item.path"
       >
-        <MangaItem   
+        <MangaItem
+          :show-path="showPath"
           :active-path="activePath"
           :view-mode="viewMode"
           :item="item"
-          @cover-click="$emit('cover-click', item)"
           @item-click="$emit('item-click', item)"
         />
       </div>
@@ -60,7 +60,8 @@ export default {
   props: {
     list: Array,
     viewMode: String,
-    activePath: String
+    activePath: String,
+    showPath: Boolean,
   }
 }
 </script>

@@ -18,79 +18,91 @@
       class="manga-body"
       :class="{ 'has-addressbar' : needAddress }"
       :loading="pending"
-      :empty="empty"
       :error="error"
+      :spinner="{ size: 'md' }"
     >
-      <div v-show="success && !empty">
-        <!-- METADATA -->
-        <Metadata
-          v-if="isManga"
-          ref="metadata"
-          :title="title"
-          :sharing="sharing"
-          @read-manga="handleMangaRead"
-          @read-file="handleFileRead"
-        />
 
-        <div class="row">
-          <div class="area-container mt-3 col-12" v-show="!sharing">
+      <template v-slot:spinner-tip>
+        <p class="manga-loading-tip">Loading</p>
+      </template>
 
-            <!-- LATEST -->
-            <LatestGroup 
-              v-if="!path && !isSearch && latest.length"
-              :list="latest"
-              :active-path="activePath"
-              @more="handleFileRead"
-              @item-click="handleFileRead"
-              @cover-click="handleMangaRead"
-            />
+      <!-- METADATA -->
+      <Metadata
+        v-if="isManga"
+        v-show="success"
+        ref="metadata"
+        :ver-loading="loadingVersion"
+        :title="title"
+        :sharing="sharing"
+        @item-click="handleItemClick"
+      />
 
-            <!-- FILE -->
-            <FileGroup
-              :view-mode="viewMode.file"
-              :list="files"
-              :active-path="activePath"
-              @view-mode-change="(mode) => viewMode.file = mode"
-              @item-click="handleFileRead"
-            />
+      <div class="manga-empty-container" v-show="success && empty">
+        <Empty full />
+      </div>
 
-            <!-- MANGA -->
-            <MangaGroup
-              :view-mode="viewMode.manga"
-              :list="mangas"
-              :active-path="activePath"
-              @view-mode-change="(mode) => viewMode.manga = mode"
-              @item-click="handleFileRead"
-              @cover-click="handleMangaRead"
-            />
+      <div class="manga-area row" v-show="success && !sharing && !empty">
+        <div class="manga-version-loading" v-show="loadingVersion">
+          <Spinner center>
+            <p class="text-center">Loading</p>
+          </Spinner>
+        </div>
+        <div class="area-container mt-3 col-12" v-show="!loadingVersion">
 
-            <!-- CHAPTER -->
-            <ChapterGroup
-              :list="chapters"
-              :active-name="activeChapter"
-              :metadata="metadata"
-              @item-click="handleMangaRead"
-            />
+          <!-- LATEST -->
+          <LatestGroup 
+            v-if="!path && !isSearch && latest.length"
+            :list="latest"
+            :active-path="activePath"
+            :app-size="appSize"
+            @more="handleItemClick"
+            @item-click="handleItemClick"
+          />
 
-            <!-- CHAPTER SP -->
-            <ChapterGroup 
-              sp
-              :list="chaptersSp"
-              :active-name="activeChapter"
-              :metadata="metadata"
-              @item-click="handleMangaRead"
-            />
+          <!-- FILE -->
+          <FileGroup
+            :view-mode="viewMode.file"
+            :list="files"
+            :active-path="activePath"
+            @view-mode-change="(mode) => viewMode.file = mode"
+            @item-click="handleItemClick"
+          />
 
-            <!-- GALLERY -->
-            <GalleryGroup
-              :view-mode="viewMode.gallery"
-              :list="images"
-              :active-page="activePage"
-              :hide-first-image="type === 'MANGA'"
-              @view-mode-change="(mode) => viewMode.gallery = mode"
-              @item-click="handleMangaRead"
-            />
-          </div>   
+          <!-- MANGA -->
+          <MangaGroup
+            :show-path="isSearch"
+            :view-mode="viewMode.manga"
+            :list="mangas"
+            :active-path="activePath"
+            @view-mode-change="(mode) => viewMode.manga = mode"
+            @item-click="handleItemClick"
+          />
+
+          <!-- CHAPTER -->
+          <ChapterGroup
+            :list="chapters"
+            :active-name="activeChapter"
+            :metadata="metadata"
+            @item-click="handleItemClick"
+          />
+
+          <!-- CHAPTER SP -->
+          <ChapterGroup sp
+            :list="chaptersSp"
+            :active-name="activeChapter"
+            :metadata="metadata"
+            @item-click="handleItemClick"
+          />
+
+          <!-- GALLERY -->
+          <GalleryGroup
+            :view-mode="viewMode.gallery"
+            :list="images"
+            :active-page="activePage"
+            :hide-first-image="type === 'MANGA'"
+            @view-mode-change="(mode) => viewMode.gallery = mode"
+            @item-click="handleItemClick"
+          />
         </div>   
       </div>
     </DataView>
@@ -125,7 +137,7 @@ export default {
 
   data() {
     return {
-      _viewerPath: '',
+      activePath: '',
       activeChapter: '',
       activePage: -1,
       showTitle: false,
@@ -133,6 +145,7 @@ export default {
       isManga: false,
       isSearch: false,
       sharing: false,
+      loadingVersion: false,
       viewType: 'file',
       viewMode: {
         file: 'grid',
@@ -143,7 +156,7 @@ export default {
   },
 
   computed: {
-    ...mapState('app', { appError: 'error' }),
+    ...mapState('app', { appError: 'error', appSize: 'size' }),
 
     ...mapState('explorer', {
       latest(state) {
@@ -154,7 +167,7 @@ export default {
     ...mapState('manga', [
       'inited', 'name', 'path', 'list', 'type', 'fileType', 'cover', 
       'files', 'chapters', 'chaptersSp', 'versions', 'images', 
-      'activeVer', 'activeVerPath', 'activePath',
+      'activeVer', 'activeVerPath',
       'error', 'metadata'
     ]),
 
@@ -174,12 +187,15 @@ export default {
 
     title() {
       if (this.isSearch) {
-        return 'Search: ' + this.$route.query.kw;
+        let title = 'Search: ';
+        if (this.$route.query.kw) title += this.$route.query.kw;
+        if (this.$route.query.ver) title += `[${this.$route.query.ver}]`;
+        return title;
       }
 
       const repoName = this.repo.name;
       const title = this.path
-        ? get(this.metadata, 'title') || this.name
+        ? get(this.metadata, 'title') || this.$options.filters.stripVer(this.name)
         : repoName;
       
       return title;
@@ -215,13 +231,6 @@ export default {
     needAddress() {
       return !!this.navs.length
         && (this.viewType === 'file' || this.viewType === 'random')
-    },
-
-    // TODO: remove _viewerPath tmp variable
-    activePath() {
-      return this._viewerPath
-        ? this.viewerPath
-        : this.mangaPath;
     }
   },
 
@@ -230,12 +239,12 @@ export default {
       if (from.name === 'viewer') {
         this.activeChapter = this.viewerCh;
         this.activePage = this.viewerPage;
-        this._viewerPath = this.viewerPath;
+        this.activePath = this.viewerPath;
         this.$nextTick(() => this.scrollToActive());
       } else {
         this.activeChapter = '';
         this.activePage = -1;
-        this._viewerPath = '';
+        this.$nextTick(() =>  this.activePath = this.mangaPath);
       }
     }
   },
@@ -246,6 +255,7 @@ export default {
     ...mapMutations('viewer', [ 'setManga' ]),
 
     _reset(route) {
+      this._prevScrollTop = undefined;
       this.sharing = false;
       this.showAddress = true; // always show addressbar when route update
       this._ignoreScrollEvent = true; // prevent collapse addressbar
@@ -297,8 +307,13 @@ export default {
       // when not search type
       // attach version handle multi versions
       if (!search && ver) {
+        if (this.success) {
+          this.loadingVersion = true;
+        }
+
         promise = promise
-          .then(() => this.fetchVersion({ dirId, ver }));
+          .then(() => this.fetchVersion({ dirId, ver }))
+          .then(() => this.loadingVersion = false);
       }
 
       return promise;
@@ -316,6 +331,10 @@ export default {
     },
 
     scrollToActive() {
+      if (this.activePage === 1 && !this.activeChapter) {
+        return window.scrollTo(0, 0);
+      }
+
       if (this.activeChapter || this.activePage > 0) {
         const activeEl = document.querySelector('.gallery-area .active')
           || document.querySelector('.chapter-area .active');
@@ -333,52 +352,51 @@ export default {
         const y = top > 0 
           ? top  - getScrollTop()
           : getScrollTop() + top;
-        
-        window.scrollTo(0, Math.min(0, y - offsetY));
+
+        window.scrollTo(0, Math.max(0, y - offsetY));
       }
-    },
-
-    viewVideo(path, name) {
-      // use parent path as route path
-      path = this.activeVerPath || path;
-      const { dirId } = this.repo;
-
-      this.$router.push({
-        name: 'viewer',
-        params: {
-          type: 'video', 
-          dirId, 
-          path: qs.encode(path)
-        },
-        query: {
-          ver: this.activeVer, 
-          name: name
-        }
-      });
-    },
-
-    viewPDF(path) {
-      // TODO: use custom PDF reader
-      // use browser as pdf reader 
-      const href = this.$service.pdf.makeSrc(path);
-      href && window.open(href, 'target', '');
     },
 
     // Events
     // ==
-
-    // when file, manga, caption clicked.
-    handleFileRead(item) {
+    handleItemClick(item, index = 0) {
       const { dirId } = this.repo;
-      const { isDir, fileType, path, verNames } = item;
+      const { fileType, verNames, chapterSize } = item;
+      const isMulitVers = verNames && verNames.length > 1;
+      
+      // handle pdf in manga
+      if (fileType === 'pdf' && this.isManga) {
+        const path = item.path;
+        const href = this.$service.pdf.makeSrc(path);
+        href && window.open(href, 'target', '');
 
-      if (isDir || item.type === 'MANGA') {
+      // handle video
+      } else if (fileType === 'video') {
+        const path = this.isManga
+          ? this.activeVer ? this.activeVerPath : this.path
+          : item.path;
+
+        const name = this.isManga ? item.name : undefined
+
+        this.$router.push({
+          name: 'viewer',
+          params: {
+            type: 'video', 
+            dirId, 
+            path: qs.encode(path)
+          },
+          query: {
+            ver: this.activeVer || undefined,
+            name
+          }
+        });
+
+      // handle file、chapter、mulit version manga or pdf in dir
+      } else if (!this.isManga && (item.type === 'FILE' || fileType === 'pdf' || chapterSize || isMulitVers)) {
         // use the first version if exists multi version
-        const ver = verNames && verNames.length > 1
-          ? verNames[0] 
-          : undefined;
-        
+        const ver = isMulitVers ? verNames[0] : undefined;       
         const type = item.type.toLowerCase();
+        const path = item.path;
 
         this.$router.push({
           name: 'explorer', 
@@ -389,86 +407,26 @@ export default {
           query: { ver, type }
         });
 
-      } else if (fileType === 'video') {
-        this.viewVideo(path, item.name);
-      } else if (fileType === 'pdf') {
-        this.videoPDF(path);
-      }
-    },
-
-    // when chapter, gallery, manga cover clicked.
-    handleMangaRead(item, index = 0) {
-      // TODO: when in multi versions could not sync state
-      // because of `this.path` is changed to active version path.
-      // sync state to viewer store.
-      // const shouldSyncState = () => {
-      //   if (item.type === 'IMAGE') {
-      //     return !this.path || this.path !== this.viewerPath || this.viewerPath;
-      //   }
-
-      //   if (item.type.startsWith('CHAPTER')) {
-      //     return !this.path || 
-      //       this.path !== this.viewerPath || 
-      //       this.ch !== this.viewerCh;
-      //   }
-      // };
-
-      // TODO: sync state to viewer store (has problem refactor later)
-      // if (shouldSyncState()) {
-      //   this.setManga({
-      //     name: this.name,
-      //     path: this.path,
-      //     images: this.images,
-      //     chapters: this.chapters
-      //   });
-      // }
-
-      const { dirId } = this.repo;
-      let path;
-      
-      // handle multi version first
-      if (this.activeVer) {
-        path = this.activeVerPath;
-        console.log(path);
-        debugger;
-
-      // handle image
-      } else if (item.type === 'IMAGE') {
-        path = this.path;
-
-      // handle chapter
-      } else if (item.type === 'CHAPTER') {
-        path = this.path;
-
-      // handle chapter sp
-      } else if (item.type === 'CHAPTER_SP') {
-        path = `${this.path}/@sp`;
-
-      } else {
-        path = item.path;
-      }
-
-      if (item.fileType === 'video') {
-        this.viewVideo(path);
-      } else if (item.fileType === 'pdf') {
-        this.viewPDF(path);
+      // handle click from chapter、gallery、single manga
       } else {
         const ch = item.type.startsWith('CHAPTER') ? item.name : undefined;
-        const type = item.fileType === 'mix' || (item.verNames && item.verNames.length > 1)
-          ? 'mix' : 'manga';
-        const query = type === 'manga' 
-          ? { start: index + 1, ver: this.activeVer } 
-          : undefined;
-
+        let path = this.isManga
+          ? this.activeVer ? this.activeVerPath : this.path
+          : item.path;
+        if (item.type === 'CHAPTER_SP') path += '/@sp';
+        
         this.$router.push({
           name: 'viewer',
           params: { 
-            type,
+            type: 'manga',
             dirId,
             path: qs.encode(path),
             ch
           },
-          query
+          query: { 
+            start: index + 1, 
+            ver: this.activeVer || undefined
+          } 
         });
       }
     },
@@ -534,7 +492,6 @@ export default {
 
   beforeRouteUpdate(to, from, next) {
     if (this.appError) return next();
-
     // check route is changed (besides `activity` querystring)
     if (JSON.stringify(to.params) == JSON.stringify(from.params)) {
       const { activity: a, ...toQuery  } = to.query;
@@ -554,7 +511,7 @@ export default {
   },
 
   created() {
-    this._prevScrollTop;
+    this._reset(this.$route);
     window.addEventListener('scroll', this.handleScroll);
   },
 
@@ -573,6 +530,8 @@ export default {
   padding-right: 15px;
   margin-right: auto;
   margin-left: auto;
+  display: flex;
+  flex-direction: column;
   
   &.has-addressbar {
     margin-top: 2rem;
@@ -592,6 +551,27 @@ export default {
   @include media-breakpoint-up(xl) {
     max-width: 1440px;
   }
+}
+
+.manga-version-loading {
+  position: absolute;
+  margin: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1040;
+}
+
+.manga-area,
+.manga-empty-container {
+  position: relative;
+  flex: 1;
+}
+
+.manga-loading-tip {
+  text-align: center;
+  font-size: 1.5rem;
 }
 
 // Area
@@ -617,10 +597,12 @@ export default {
     padding-right: 15px;
   }
 
-  position: sticky;
-  top: 78px;
-  z-index: 3;
-  transition-duration: .3s;
+  &:not(.static) {
+    position: sticky;
+    top: 78px;
+    z-index: 3;
+    transition-duration: .3s;
+  }
 
   .area-header-inner {
 

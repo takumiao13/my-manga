@@ -55,37 +55,43 @@
 
           <!-- versions -->
           <div v-if="versions.length">
-            Versions : 
-            <span class="text-muted">{{ activeVer }}</span>
+            Version : 
+            <span v-if="verLoading" class="text-muted">--</span>
+            <span v-else class="text-muted">{{ activeVer }}</span>
           </div>
 
           <!-- status -->
           <div v-if="metadata && metadata.status">
             Status :
-            <span v-if="completed" class="manga-status">Completed</span>
-            <span v-if="status && !completed" class="text-muted"># {{ status }}</span>
+            <span v-if="verLoading" class="text-muted">--</span>
+            <span v-if="!verLoading && completed" class="manga-status">Completed</span>
+            <span v-if="!verLoading && status && !completed" class="text-muted"># {{ status }}</span>
           </div>
 
           <!-- type -->
           <div v-else-if="fileType">
             Type : 
-            <span class="text-muted">{{ fileType }}</span>
+            <span v-if="verLoading" class="text-muted">--</span>
+            <span v-else class="text-muted">{{ fileType }}</span>
           </div>
 
           <!-- chapters or pages -->
           <div v-else-if="chapters.length">
             Chapters : 
-            <span class="text-muted">{{ chapters.length }}</span>
+            <span v-if="verLoading" class="text-muted">--</span>
+            <span v-else class="text-muted">{{ chapters.length }}</span>
           </div>
           <div v-else>
             Pages : 
-            <span class="text-muted">{{ images.length }}</span>
+            <span v-if="verLoading" class="text-muted">--</span>
+            <span v-else class="text-muted">{{ images.length }}</span>
           </div>
 
           <!-- update time -->
           <div>
             Updated at : 
-            <span class="text-muted">{{ birthtime | dateFormat('yyyy-mm-dd') }}</span>
+            <span v-if="verLoading" class="text-muted">--</span>
+            <span v-else class="text-muted">{{ birthtime | dateFormat('yyyy-mm-dd') }}</span>
           </div>        
         </div>
       </div>
@@ -105,13 +111,17 @@
       class="metadata-versions mb-2" 
       :class="{ touch: $feature.touch}"
     >
-      <div class="area-header">
+      <div class="area-header static">
         <div class="area-header-inner">
           VERSIONS - {{ versions.length }}
 
           <div class="actions float-right">
             <a @click="toggleAllVersionsVisible">
-              <Icon :name="`chevron-${allVersionsVisible ? 'up' : 'down'}`" size="18" />
+              <Icon 
+                v-show="expandVersionVisible" 
+                :name="`chevron-${allVersionsVisible ? 'up' : 'down'}`" 
+                size="18"
+              />
             </a>
           </div>
         </div>
@@ -137,6 +147,15 @@ import { mapState, mapGetters } from 'vuex';
 import qs from '@/helpers/querystring';
 import MangaItem from './MangaItem';
 
+
+const versionCounts = {
+  xs: 3,
+  sm: 3,
+  md: 4,
+  lg: 4,
+  xl: 6
+};
+
 export default {
   components: {
     MangaItem
@@ -144,7 +163,8 @@ export default {
 
   props: {
     title: String,
-    sharing: Boolean
+    sharing: Boolean,
+    verLoading: Boolean,
   },
 
   data() {
@@ -156,10 +176,16 @@ export default {
   computed: {
     ...mapGetters('app', [ 'repo' ]),
 
+    ...mapState('app', { appSize: 'size' }),
+
     ...mapState('manga', [ 
       'path', 'versions', 'metadata', 'shortId', 'fileType', 'placeholder',
       'cover', 'banner', 'birthtime', 'files', 'chapters', 'images', 'activeVer'
     ]),
+
+    expandVersionVisible() {
+      return this.versions && this.versions.length > versionCounts[this.appSize];
+    },
 
     status() {
       if (!this.metadata) return false;
@@ -174,6 +200,16 @@ export default {
       const { HOST, PORT } = this.$config.api;
       const protocol = this.$platform.isElectron() ? 'http:' : window.location.protocol;
       return `${protocol}//${HOST}:${PORT}/s/${this.shortId}`
+    },
+
+    item() {
+      if (this.fileType) {
+        return this.files[0];
+      } else {
+        return this.chapters.length
+          ? this.chapters[0] 
+          : this.images[0];
+      }
     }
   },
 
@@ -183,7 +219,8 @@ export default {
       const { dirId } = this.repo;
       
       if (ver === this.activeVer) return;
-  
+
+      // just replace href
       this.$router.replace({
         name: 'explorer', 
         params: { dirId, path: qs.encode(this.path) },
@@ -196,19 +233,11 @@ export default {
     },
 
     handleRead() {
-      let item;
-
-      if (this.fileType) {
-        item = this.files[0];
-        this.$emit('read-file', item);
-      } else {
-        if (this.chapters.length) {
-          item = this.chapters[0]
-        } else {
-          item = this.images[0];
-        }
-        this.$emit('read-manga', item);
+      if (!this.item || this.verLoading) {
+        this.$notify({ title: 'No Content' });
+        return;
       }
+      this.$emit('item-click', this.item);
     }
   }
 }
@@ -269,7 +298,7 @@ export default {
 
     p {
       word-wrap: break-word;
-      word-break:break-all;     
+      word-break:break-all;
     }
   }
 
@@ -308,6 +337,8 @@ export default {
 
     .title {
       font-size: 1.2rem;
+      word-wrap: break-word;
+      word-break:break-all;
     }
 
     div {
@@ -512,6 +543,7 @@ export default {
     overflow: hidden;
   }
 
+  // 1/3
   .list-group-item {
     margin: .2rem;
     padding: .5rem 1rem;
@@ -520,12 +552,14 @@ export default {
     flex-shrink: 0;
   }
 
-  @include media-breakpoint-up(lg) {
+  // 1/4
+  @include media-breakpoint-up(md) {
     .list-group-item {
       width: calc(25% - .4rem);
     }
   }
 
+  // 1/6
   @include media-breakpoint-up(xl) {
     .list-group-item {
       width: calc(16.66667% - .4rem);

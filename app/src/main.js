@@ -3,7 +3,6 @@ import './registerServiceWorker';
 
 import Vue from 'vue';
 import App from './App.vue';
-import FastClick from 'fastclick'
 import config from '@/config';
 import consts from '@/consts';
 
@@ -13,6 +12,7 @@ import { delay } from '@/helpers/promise';
 import feature from '@/helpers/feature';
 import platform from '@/helpers/platform';
 import EventEmitter from '@/helpers/eventemitter';
+import FastClick from '@/helpers/fastclick';
 
 // Store & Router (router is depend on store, so must after it)
 import store, { resetStore, loadSettingsState } from '@/store';
@@ -34,6 +34,7 @@ import VideoPlayer from '@/components/VideoPlayer';
 import Modal from '@/components/Modal';
 import Switcher from '@/components/Switcher';
 import Backdrop from '@/components/Backdrop';
+import Empty from '@/components/Empty';
 
 // Third part components
 import VueLazyload from 'vue-lazyload';
@@ -50,6 +51,7 @@ import clickOutSideDirective from '@/directives/click-out-side';
 // Filters
 import verNameFilter from '@/filters/verName';
 import dateFormatFilter from '@/filters/dateFormat';
+import stripVerFilter from '@/filters/stripVer';
 
 // Services
 import $Service from '@/services';
@@ -67,16 +69,18 @@ Vue.component('VideoPlayer', VideoPlayer);
 Vue.component('Modal', Modal);
 Vue.component('Switcher', Switcher);
 Vue.component('Backdrop', Backdrop);
+Vue.component('Empty', Empty);
 
 Vue.directive('loading', loadingDirective);
 Vue.directive('click-out-side', clickOutSideDirective);
 
 Vue.filter('verName', verNameFilter);
 Vue.filter('dateFormat', dateFormatFilter);
+Vue.filter('stripVer', stripVerFilter);
 
 Vue.use(VueQriously);
 Vue.use(VueLazyload, {
-  preLoad: 1,
+  preLoad: 2,
   attempt: 2,
   observer: true, // when image in slot observer is need.
   adapter: {
@@ -183,8 +187,8 @@ function bootstrapApp() {
   store.dispatch(appTypes.checkUser)
     // try to get user settings
     .then(() => Promise.all([
-        store.dispatch(settingTypes.user.init),
-        store.dispatch(settingTypes.repo.init)  
+        store.dispatch(settingTypes.user.init)
+        // store.dispatch(settingTypes.repo.init)  
       ])
     )
     .then(checkCurrentRepo)

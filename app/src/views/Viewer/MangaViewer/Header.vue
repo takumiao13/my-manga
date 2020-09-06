@@ -4,13 +4,15 @@
     :class="{ open: locking }"
   >
     <Navbar
+      :left-btns="leftBtns"
+      :right-btns="rightBtns"
+    />
+    <!--
       :title="{ 
         content: pager, 
         className: 'text-center d-none d-md-block'
       }"
-      :left-btns="leftBtns"
-      :right-btns="rightBtns"
-    />
+    -->
   </div>
 </template>
 
@@ -21,7 +23,6 @@ export default {
     title: String,
     pager: String,
     locking: Boolean,
-    fullscreen: Boolean,
     settings: Object,
     chapterlistVisible: Boolean
   },
@@ -53,10 +54,10 @@ export default {
           click: () => this.$emit('chapterlist:show')
         } : null,
         {
-          icon: this.fullscreen ? 'compress' : 'expand',
-          tip: 'Fullscreen',
-          click: () => this.$emit('fullscreen')
-        }   
+          icon: 'level-up-alt',
+          tip: 'Detail',
+          click: () => this.$emit('detail')
+        }
       ];
     }
   }

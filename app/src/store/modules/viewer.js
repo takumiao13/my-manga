@@ -98,7 +98,7 @@ const createModule = (state = { ...initialState }) => ({
       // override default settings
       if (viewerSettings.overrides) {
         viewerSettings.overrides.forEach(item => {
-          if (minimatch(item.path, path)) {
+          if (minimatch(path, item.path)) {
             Object.assign(mergedSettings, item.options || {});
             mergedSettings.force = true; // cannot changed mode
           }
@@ -106,7 +106,6 @@ const createModule = (state = { ...initialState }) => ({
       }
 
       // the final viewer settings
-      console.log(mergedSettings);
       return mergedSettings;
     }
   },
@@ -124,7 +123,7 @@ const createModule = (state = { ...initialState }) => ({
       // loading
       statusHelper.pending(commit);
 
-      mangaAPI.list(params)
+      return mangaAPI.list(params)
         .then(res => {
           name = res.name;
           path = res.path;
@@ -167,7 +166,8 @@ const createModule = (state = { ...initialState }) => ({
         // find video from list
         // - version
         // - name (parts of video)
-        const findOptions = { name: payload.name || children[0].name };
+        const parts = children.filter(item => item.fileType === 'video');
+        const findOptions = { name: payload.name || parts[0].name };
         const video = find(children, findOptions);
 
         commit(SET_MANGA, {
@@ -176,7 +176,7 @@ const createModule = (state = { ...initialState }) => ({
           cover: cover || '', // overwrite cover
           activeVer: ver,
           verNames,
-          parts: children
+          parts
         });
 
         // should update status after state mutated 

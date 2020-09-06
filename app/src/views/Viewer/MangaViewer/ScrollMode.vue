@@ -81,7 +81,7 @@ export default {
     gallery(val) {
       if (val) {
         this.$nextTick(() => {
-          this.refresh('gallery');
+          this.refresh();
           this.scrollToCurrPage(); 
         });
       }
@@ -139,13 +139,6 @@ export default {
     this._$effects(false);
   },
 
-  mounted() {
-    if (this.gallery.length) {
-      this.refresh()
-      this.scrollToCurrPage();
-    }
-  },
-
   methods: {
     _$preventScroll(val) {
       const options = { passive: false };
@@ -163,34 +156,14 @@ export default {
     },
 
     refresh() {
-      // update viewWidth first
-      const { zoom } = this.settings;
-      this.$refs.mode.style['max-width'] = zoom === 100 ? 'none' : null;
-
       const imgWrappers = this.$refs.imgWrapper;
-      const viewWidth = this.$refs.mode.clientWidth;
-      const viewHeight = window.innerHeight;
       if (!imgWrappers) return;
 
-      // TODO: need optimize
       // should divide calculate offsets and set styles
       this._offsets = [].slice.call(imgWrappers).map((item, index) => {
         // when zoom is fit to screen we should adjust image height
-        const { width: orgWidth, height: orgHeight } = this.gallery[index];
-        const realWidth = Math.max(viewWidth, orgWidth);
-        const ratio = realWidth / orgWidth;
-        const realHeight = orgHeight * ratio;
-        
-        item.style['max-width'] = zoom === 100 ? 'none' : null;
-
-        if (zoom === 'screen') {
-          if (realHeight > viewHeight) {
-            const ratio = viewHeight / realHeight;
-            item.style.width = orgWidth * ratio + 'px';
-          }
-        } else {
-          item.style.width = orgWidth + 'px';
-        }
+        const { width } = this.gallery[index];
+        item.style.width = width + 'px';
 
         const scrollTop = getScrollTop();
         const itemBCR = item.getBoundingClientRect();
@@ -213,7 +186,6 @@ export default {
         y -= 2;
       }
 
-      // console.log('scrollTo', this.page, y, this.locking);
       window._ignoreScrollEvent = true;
       window.scrollTo(0, y);
     },

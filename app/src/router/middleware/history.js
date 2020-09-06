@@ -34,10 +34,12 @@ export default async function history(ctx, next) {
 			to.meta.isBack = (
         store.state.manga.inited && 
         to.params.dirId === store.state.app.repoId
-      );
+			);
 		} else {
 			to.meta.isBack = false;
 		}
+	} else {
+		to.meta.isBack = false;
 	}
 
 	// hack for something ... :(

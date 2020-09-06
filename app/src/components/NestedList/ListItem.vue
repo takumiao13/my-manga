@@ -18,7 +18,7 @@
         }"
         @click="toggleItem()"
       >
-        <icon v-if="isBranch" :name="toggleIcon" />
+        <Icon v-if="isBranch" :name="toggleIcon" />
       </span>
 
       <div class="list-nested-label" 
@@ -29,13 +29,13 @@
       </div>
     </div>
     <div class="list-group-loading" v-show="loading">
-      <spinner />
+      <Spinner />
     </div>
     <div class="list-group-error" v-show="open && error">
-      <icon name="folder-items" size="32" />
+      <Icon name="folder-items" size="32" />
     </div>
     <div class="list-group" v-show="open && !error" v-if="isBranch">
-      <list-item
+      <ListItem
         v-for="item in item[props.children]"
         :key="item[props.key]"
         :props="props"
@@ -45,7 +45,7 @@
         @select-item="handleSelectItem"
         @expand-item="handleExpandItem"
         @collapse-item="handleCollapseItem"
-      ></list-item>
+      />
     </div>
   </div>
 </template>

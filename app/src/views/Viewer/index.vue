@@ -55,10 +55,6 @@ export default {
         return;
       }
 
-      const query = fileType === 'video' 
-        ? { ver, name }
-        : { name }
-
       this.$router.replace({
         name: 'viewer',
         params: {
@@ -66,7 +62,7 @@ export default {
           dirId, 
           path: qs.encode(path)
         },
-        query
+        query: { ver, name }
       });
     }
   },
@@ -107,10 +103,10 @@ export default {
 @import '@/assets/style/base';
 
 .viewer-title {
-  max-width: 50vw;
+  max-width: calc(100vw - 90px);
 
   @include media-breakpoint-up(md) {
-    max-width: 40vw;
+    max-width: 50vw;
   }
 }
 
@@ -119,6 +115,7 @@ export default {
 }
 
 .viewer-topbar {
+  z-index: 1050;
   transform: translateY(-100%);
   transition: transform .3s ease-in;
 

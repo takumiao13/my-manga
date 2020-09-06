@@ -11,9 +11,13 @@
 
     <div class="viewer-container">
       <div class="viewer-viewport">
+        <Loading :visible="!inited" />
+
         <video-player
           v-if="inited"
+          ref="videoPlayer"
           :options="options"
+          @ready="handleReady"
           @play="handlePlay"
           @pause="handlePause"
           @active="handleActive"
@@ -34,23 +38,24 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex';
+import { mapState, mapGetters, mapMutations, mapActions } from 'vuex';
 import qs from '@/helpers/querystring';
+import { last } from '@/helpers/utils';
 import screenfull from 'screenfull';
-
 import ListDrawer from '../components/ListDrawer';
+import Loading from '../components/Loading';
+import FullscreenToggle from './FullscreenToggle';
 
 export default {
   components: {
-    ListDrawer
+    ListDrawer,
+    Loading,
   },
 
   data() {
     return {
       inited: false,
       paused: true,
-      locking: true,
-      isFullscreen: false,
       chapterListVisible: false,
     }
   },
@@ -58,7 +63,9 @@ export default {
   computed: {
     ...mapState('app', { appError: 'error' }),
 
-    ...mapState('viewer', [ 'name', 'path', 'cover', 'parts' ]),
+    ...mapState('viewer', [ 'name', 'path', 'cover', 'parts', 'fullscreen', 'locking' ]),
+
+    ...mapGetters('app', [ 'repo' ]),
     
     options() {
       return this.inited ? {
@@ -96,24 +103,62 @@ export default {
           tip: 'parts',
           click: () => this.chapterListVisible = true
         } : null,
-        {  
-          icon: this.isFullscreen ? 'compress' : 'expand',
-          tip: 'Fullscreen',
-          click: () => this.fullscreenToggle()
+        {
+          icon: 'level-up-alt',
+          tip: 'Detail',
+          click: () => this.handleDetail()
         }
       ]
+    }
+  },
+
+  watch: {
+    fullscreen(val) {
+      screenfull[val ? 'request' : 'exit']();
     }
   },
 
   methods: {
     ...mapActions('viewer', ['fetchVideo']),
 
-    fullscreenToggle() {
-      screenfull.toggle();
-      this.isFullscreen = !this.isFullscreen;
-    },
+    ...mapMutations('viewer', [
+      'setSettings',
+      'setAutoPlaying',
+      'setLocking',
+      'setFullscreen'
+    ]),
 
     // events
+    handlePlay() {
+      this.paused = false;
+    },
+
+    handlePause() {
+      this.paused = true;
+      // this.locking = true;
+      this.setLocking(true);
+    },
+
+    handleActive() {
+      //this.locking = true;
+      this.setLocking(true);
+    },
+
+    handleInactive() {
+      if (!this.paused) {
+        //this.locking = false;
+        this.setLocking(false);
+      }
+    },
+
+    handlePartChange(item) {
+      this.$router.replace({
+        name: 'viewer',
+        params: this.$route.params,
+        query: Object.assign({}, this.$route.query, { name: item.name })
+      }).then(() => this.chapterListVisible = false);
+    },
+
     handleBack() {
       if (this.$router._routerHistory.length === 1) {
         const { dirId } = this.$router.history.current.params;
@@ -126,31 +171,43 @@ export default {
       }
     },
 
-    handlePlay() {
-      this.paused = false;
-    },
+    handleDetail() {
+      const { dirId } = this.repo;
+      const { ver } = this.$router.history.current.query;
+      let path  = qs.decode(this.$router.history.current.params.path);
 
-    handlePause() {
-      this.paused = true;
-      this.locking = true;
-    },
+      path = ver
+        ? path.split('/').slice(0, -1).join('/')
+        : path;
 
-    handleActive() {
-      this.locking = true;
-    },
+      const prevMangaListFullpath = `/repo/${dirId}/manga/${encodeURIComponent(path)}`
+      const mayBeBack = last(this.$router._routerHistory).startsWith(prevMangaListFullpath);
 
-    handleInactive() {
-      if (!this.paused) {
-        this.locking = false;
+      if (mayBeBack) {
+        this.$router.go(-1);
+      } else {
+        this.$router.replace({
+          name: 'explorer',
+          params: { 
+            dirId, 
+            path: qs.encode(path)
+          },
+          query: {
+            type: 'manga',
+            ver
+          }
+        });
       }
     },
 
-    handlePartChange(item) {
-      this.$router.replace({
-        name: 'viewer',
-        params: this.$route.params,
-        query: Object.assign({}, this.$route.query, { name: item.name })
-      }).then(() => this.chapterListVisible = false);
+    handleReady(videoPlayer) {
+      const controlBar = videoPlayer.getChild('ControlBar'); 
+      // fullscreen button
+      const fullscreenToggleButton = new FullscreenToggle(videoPlayer);
+      fullscreenToggleButton.el().style.marginLeft = 'auto';
+      fullscreenToggleButton.on('click', () => this.setFullscreen());
+
+      controlBar.addChild(fullscreenToggleButton);
     }
   },
 
@@ -171,7 +228,6 @@ export default {
           this.inited = true;
         });
     });
-    
   }
 }
 </script>
@@ -208,6 +264,11 @@ export default {
   left: 0 !important;
   height: 100% !important;
   padding-top: 0 !important;
+
+
+  &.vjs-error .vjs-error-display .vjs-modal-dialog-content {
+    top: 3rem;
+  }
 
   .vjs-poster {
     top: 3rem !important;

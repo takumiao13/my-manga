@@ -5,20 +5,21 @@
       <div class="explorer-repo-name">
         <div class="float-right">
           <a class="mr-2" @click="handleCollapse" title="Collapse all">
-            <icon name="minus-square" size="14"/>
+            <Icon name="minus-square" size="14"/>
           </a>
           <a @click="handleRefresh" title="Refresh">
-            <icon name="refresh" size="14" />
+            <Icon name="refresh" size="14" />
           </a>    
         </div>   
         <span @click="handleBack">{{ repo.name }}</span>
       </div>
     </div>
     
-    <DataView 
+    <Empty full v-show="empty" />
+    <DataView
+      v-show="!empty"
       class="explorer-body"
       :loading="pending" 
-      :empty="empty"
     >
       <div 
         class="explorer-latest"
@@ -34,7 +35,7 @@
         :class="{ active: activeItem && activeItem.path === $consts.RANDOM_PATH }"
         @click="handleRandom"
       >
-        <Icon name="random" size="14" />Random (50)
+        <Icon name="random" size="14" />Random 100
       </div>
       <NestedList
         ref="nestedList"
@@ -223,6 +224,11 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.explorer {
+  position: relative;
+  min-height: 100%;
+}
+
 .explorer-header {
 
 }

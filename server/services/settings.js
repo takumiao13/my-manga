@@ -64,39 +64,21 @@ class SettingsService extends Service {
 
   async get(scope, key, encode) {
     const settings = this._getScope(scope);
-
-    // if unknown scope settings return null
-    if (!settings) return null; 
-    const { data } = settings;
-
-    let value = data.get(key);
+    let value = settings ? settings.data.get(key) : {};
 
     if (encode !== false) {
       value = this._cryptoValue(key, value);
     }
     
+    // get repo by scope
     if (scope !== 'user') {
-      // get repo by scope
-      const dirId = scope === 'repo' ? '' : scope;
-      const repo = this.service.repo.get(dirId)
+      const repo = this.service.repo.get(scope)
 
       if (isUndef(key) && repo) {      
         Object.assign(value, {
           name: repo.name,
           dirId: repo.dirId
         });
-      }
-    }
-
-    // handle get all user settings
-    // addon latest updated mangas
-    if (scope == 'user' && !key) {
-      const repos = value.repos;
-      for (let i = 0; i < repos.length; i++) {
-        const repo = repos[i];
-        const { dirId } = repo;
-        const latest = await this.service.manga.latest(dirId, 10);
-        repo.latest = latest;
       }
     }
     
@@ -135,7 +117,7 @@ class SettingsService extends Service {
   }
 
   _setPath(scope, path, addonData = {}) {
-    let settings;
+    let settings = null;
 
     if (fs.existsSync(path)) {
       const data = fs.readJSONSync(path);

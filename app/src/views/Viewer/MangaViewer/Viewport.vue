@@ -50,12 +50,16 @@ export default {
   }
 }
 
+.viewer-container {
+  position: relative;
+}
+
 .viewer-viewport {
   cursor: pointer;
   position: relative;
   min-height: 100vh;
-  user-select: none;
-
+  user-select: none
+  
   // locked
   &:after {
     content: none;
@@ -100,11 +104,11 @@ export default {
   }
 
   .viewer-viewport-left:hover {
-    background-image: url('../../../assets/chevron-left.svg?inline');
+    background-image: url('../../../assets/chevron-left.svg?url');
   }
 
   .viewer-viewport-right:hover {
-    background-image: url('../../..//assets/chevron-right.svg?inline');
+    background-image: url('../../..//assets/chevron-right.svg?url');
   }
 }
 

@@ -139,17 +139,16 @@ const createModule = (state = { ...initialState }) => ({
       return statusHelper.is.success(state);
     },
 
-    empty(state) {
-      return state.inited && state.path !== consts.LATEST_PATH && !state.list.length;
+    empty(state, getters, allState) {
+      return state.path === consts.LATEST_PATH
+        ? !allState.explorer.latest.length
+        : state.inited && !state.list.length;
     },
 
     mangas(state, getters, allState) {
-      let mangas = null;
-      if (state.path === consts.LATEST_PATH) {
-        mangas = allState.explorer.latest;
-      } else {
-        mangas = state.mangas;
-      }
+      const mangas = state.path === consts.LATEST_PATH
+        ? allState.explorer.latest
+        : state.mangas;
 
       // reflow mangas to fit gutter
       reflowMangas(mangas, allState.app.size);
@@ -178,6 +177,7 @@ const createModule = (state = { ...initialState }) => ({
           ...initialState,
           name: 'Latest',
           path,
+          inited: true
         });
         return statusHelper.success(commit);
       }
@@ -245,7 +245,7 @@ const createModule = (state = { ...initialState }) => ({
       } else {
         const { path } = currVer;
         // get version data first
-        mangaAPI.list({ dirId, path })
+        return mangaAPI.list({ dirId, path })
           .then(res => {
             commit(ADD_VERSION, { ver, res });
             commit(SET_VERSION, { ver, res }) 
@@ -266,6 +266,7 @@ const createModule = (state = { ...initialState }) => ({
       state.inited || (state.inited = true);
       safeAssign(state, {
         activeVer: '',
+        activeVerPath: '',
         cover: '',
         banner: '',
         placeholder: 1,

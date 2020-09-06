@@ -36,7 +36,7 @@
 
       <!-- Page Gaps -->
       <div v-show="mode === 'scroll'" class="viewer-settings-item" >
-        <div>Show Gaps: {{ gaps }}</div>
+        <div>Show Gaps:</div>
         <div><Switcher v-model="gaps" /></div>
       </div>
 
@@ -99,7 +99,7 @@
         <div><Switcher v-model="pagerInfo" /></div>
       </div>
 
-      <!-- Hand -->
+      <!-- Hand swiper mode not support
       <div class="viewer-settings-item">
         <div>Hand Mode:</div>
         <div>
@@ -119,13 +119,14 @@
           </div>
         </div>
       </div>
+      -->
 
       <!-- Quality -->
 
       <div class="viewer-settings-footer">
         <button
           type="button" 
-          class="btn btn-lg btn-block btn-outline-secondary"
+          class="btn btn-block btn-outline-secondary"
           @click.stop="handleFinish"
         >
           SAVE
@@ -133,7 +134,7 @@
       </div>
     </div>
 
-    <Backdrop lock :visible="backdropVisible" @mousedown.native="$emit('close')" />
+    <Backdrop lock :visible="backdropVisible" @click.native="$emit('close')" />
   </div>
 </template>
 
@@ -145,7 +146,6 @@ export default {
   },
 
   data() {
-    console.log(this.settings);
     return {
       backdropVisible: false,
       force: this.settings.force,
@@ -164,12 +164,24 @@ export default {
   watch: {
     visible(val) {
       this.backdropVisible = val;
+    },
+
+    settings(val) {
+      this.force = val.force,
+      this.mode = val.mode,
+      this.pagerInfo = val.pagerInfo,
+      this.hand = val.hand,
+      // scroll mode only
+      this.gaps = val.gaps,
+      this.scrollSpeed = val.scrollSpeed,
+      // swipe mode only
+      this.effect = val.effect,
+      this.playInterval = val.playInterval
     }
   },
 
   computed: {
     scrollSpeedDisplay() {
-      // TODO: 根据当前 app size 做一些调整
       return (this.scrollSpeed/100).toFixed(1) + 'x';
     },
 

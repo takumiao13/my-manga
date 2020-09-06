@@ -22,7 +22,7 @@ const FileTypes = {
 };
 
 const LATEST_COUNT = 100;
-const RANDOM_COUNT = 50;
+const RANDOM_COUNT = 100;
 
 const MAX_INDEX_COUNT = 50000;
 const LAST_LOOP_COUNT = 8;
@@ -350,7 +350,8 @@ async function traverse({
       _hasFolder = false,
       _childExtnames = false;
 
-  const ignorePathFilter = createIgnorePathFilter(settings.ignorePath);
+  const ignorePath = settings && settings.ignorePath;
+  const ignorePathFilter = ignorePath && createIgnorePathFilter(ignorePath);
   const fixChildOptions = { parentName: escapeRegExp(name) };
 
   // Traverse sub directory
@@ -386,72 +387,74 @@ async function traverse({
     let _chapterSpFiles = [];
     let _chapterSpWithCoverFiles = [];
     
-    files
-      .filter(ignorePathFilter)
-      .forEach(file => {
-        const { base: name, ext } = pathFn.parse(file);
-        const childpath = pathFn.posix.join(path, file);
-        const subfileType = getFileType(ext);
+    if (ignorePathFilter) {
+      files = files.filter(ignorePathFilter)
+    }
 
-        let chapterName, ver;
-        fixChildOptions.filepath = pathFn.resolve(absPath, file);
+    files.forEach(file => {
+      const { base: name, ext } = pathFn.parse(file);
+      const childpath = pathFn.posix.join(path, file);
+      const subfileType = getFileType(ext);
 
-        // extname as one of versions (only display)
-        if (!_childExtnames && subfileType == 'video' || subfileType == 'pdf') {
-          _childExtnames = ext.slice(1);
-        }
+      let chapterName, ver;
+      fixChildOptions.filepath = pathFn.resolve(absPath, file);
 
-        if (ver = isVersion(file, fixChildOptions)) {
-          // simple versions as children
-          _versionFiles.push({
-            name, ver,
-            path: childpath,
-            type: FileTypes.VERSION,
-            fileType: subfileType
+      // extname as one of versions (only display)
+      if (!_childExtnames && subfileType == 'video' || subfileType == 'pdf') {
+        _childExtnames = ext.slice(1);
+      }
+
+      if (ver = isVersion(file, fixChildOptions)) {
+        // simple versions as children
+        _versionFiles.push({
+          name, ver,
+          path: childpath,
+          type: FileTypes.VERSION,
+          fileType: subfileType
+        });
+
+        version || (version = []);
+        if (version.indexOf(ver) === -1) {
+          version.push(ver);
+        }         
+      } else if (isChapterSp(file)) {
+        try {
+          let files = fs.readdirSync(pathFn.resolve(absPath, file));
+          files = files.map(file => {
+            return {
+              name: pathFn.basename(file),
+              chapterName: isChapter(file, fixChildOptions),
+              path: pathFn.posix.join(childpath, file),
+              type: FileTypes.CHAPTER_SP,
+            }
           });
 
-          version || (version = []);
-          if (version.indexOf(ver) === -1) {
-            version.push(ver);
-          }         
-        } else if (isChapterSp(file)) {
-          try {
-            let files = fs.readdirSync(pathFn.resolve(absPath, file));
-            files = files.map(file => {
-              return {
-                name: pathFn.basename(file),
-                chapterName: isChapter(file, fixChildOptions),
-                path: pathFn.posix.join(childpath, file),
-                type: FileTypes.CHAPTER_SP,
-              }
-            });
-
-            if (_showChapterCover) {
-              _chapterSpWithCoverFiles = files;
-            } else {
-              _chapterSpFiles = files;
-            }
-          } catch (err) {
-          }
-        } else if (chapterName = isChapter(file, fixChildOptions)) {
-          const chapterNode = {
-            name, chapterName,
-            path: childpath,
-            type: FileTypes.CHAPTER,
-          };
-
           if (_showChapterCover) {
-            _chapterWithCoverFiles.push(chapterNode);
-          } else { 
-            _chapterFiles.push(chapterNode);
+            _chapterSpWithCoverFiles = files;
+          } else {
+            _chapterSpFiles = files;
           }
-          
-          chapterSize = (chapterSize || 0)+1;
-
-        } else {
-          _filterdFiles.push({ path: childpath });
+        } catch (err) {
         }
-      });
+      } else if (chapterName = isChapter(file, fixChildOptions)) {
+        const chapterNode = {
+          name, chapterName,
+          path: childpath,
+          type: FileTypes.CHAPTER,
+        };
+
+        if (_showChapterCover) {
+          _chapterWithCoverFiles.push(chapterNode);
+        } else { 
+          _chapterFiles.push(chapterNode);
+        }
+        
+        chapterSize = (chapterSize || 0)+1;
+
+      } else {
+        _filterdFiles.push({ path: childpath });
+      }
+    });
 
     // check current directory type is `MANGA` or `FILE`
     // - if directory has version or chapter then consider it as `MANGA` (_isManga)

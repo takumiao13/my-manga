@@ -52,6 +52,8 @@ export default {
 
             //this.userActive(false);
 
+            self.$emit('ready', this);
+
             this.on('play', function() {
               self.$emit('play');
             });

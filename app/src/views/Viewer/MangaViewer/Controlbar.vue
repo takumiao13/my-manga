@@ -8,7 +8,8 @@
 <script>
 export default {
   props: {
-    autoPlaying: Boolean
+    autoPlaying: Boolean,
+    fullscreen: Boolean
   },
 
   computed: {
@@ -16,22 +17,22 @@ export default {
       return [{
         icon: this.autoPlaying ? 'stop' : 'play',
         title: this.autoPlaying ? 'Stop' : 'Auto Play',
-        click: this.togglePlaying
+        click: () => this.$emit('auto-play-change')
       }];
     },
 
     rightBtns() {
       return [{
         icon: 'cog',
-        iconSize: 20,
+        iconSize: 18,
+        tip: 'Settings',
         click: () => this.$emit('settings')
+      },{
+        icon: this.fullscreen ? 'compress' : 'expand',
+        iconSize: 18,
+        tip: 'Fullscreen',
+        click: () => this.$emit('fullscreen')
       }]
-    }
-  },
-
-  methods: {
-    togglePlaying() {
-      this.$emit('autoPlayChange');
     }
   }
 }

@@ -1,10 +1,13 @@
 <template>
-  <div class="manga-item">
-    <a 
+  <div 
+    class="manga-item"
+    @click="$emit('item-click')"
+  >
+    <a
       v-show="viewMode == 'grid'"
       class="cover"
+      :title="showPath ? item.path : undefined"
       v-bind="$service.image.coverStyle(item)"
-      @click="$emit('cover-click')"
     >
       <div
         v-if="versionLabelsVisible && item.verNames"
@@ -48,7 +51,6 @@
       v-show="viewMode == 'grid' && caption" 
       class="caption" 
       :class="{ 'with-status': status }"
-      @click="$emit('item-click')"
     >
       <div>{{ item.name | stripVer }}</div>
 
@@ -58,7 +60,7 @@
       </small>
     </div>
     
-    <div v-show="viewMode == 'list'" class="manga-row" @click="$emit('item-click')">
+    <div v-show="viewMode == 'list'" class="manga-row">
       <div v-if="status" class="manga-status"></div>
       <div class="manga-row-left">
         <Icon :name="`file-${item.fileType || 'image'}`" />
@@ -91,6 +93,9 @@
             :key="ver"
           >{{ ver.toUpperCase() }}</span>
         </div>
+        <div class="manga-path" v-show="showPath">
+          <small>path : {{ item.path }}</small>
+        </div>
       </div>
     </div>
   </div>
@@ -99,6 +104,10 @@
 <script>
 export default {
   props: {
+    showPath: {
+      type: Boolean,
+      dateFormat: false
+    },
     item: Object,
     viewMode: {
       type: String,
@@ -135,13 +144,6 @@ export default {
     filterVers(vers) {
       return vers && vers
         .filter(item => item !== 'default')
-    }
-  },
-
-  filters: {
-    stripVer(value) {
-      const striped = value.replace(/(?:\s\[[^\]]*?\]){0,}$/g, '');
-      return striped
     }
   }
 }
@@ -413,6 +415,10 @@ export default {
 
     > .manga-row-main {
       flex-direction: row;
+    }
+
+    .manga-path {
+      display: none;
     }
 
     .manga-name,
