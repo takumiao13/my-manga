@@ -5,6 +5,7 @@ const fs = require('../helpers/fs');
 const { isUndef, isDef, omit, set, get, unset, cloneDeep } = require('../helpers/utils');
 
 const FILE_NAME = 'settings.json';
+const DOT_FILE_NAME = '.settings.json';
 
 class Data {
 
@@ -134,16 +135,14 @@ class SettingsService extends Service {
   }
 
   _setPath(scope, path, addonData = {}) {
-    let data;
-    const settings = this._settings[scope] = {};
-    
-    if (fs.existsSync(path)) {
-      data = fs.readFileSync(path, { encoding: 'utf8' });
-      data = JSON.parse(data);
-    }
+    let settings;
 
-    settings.path = path;
-    settings.data = new Data(Object.assign(data || {}, addonData));
+    if (fs.existsSync(path)) {
+      const data = fs.readJSONSync(path);
+      settings = this._settings[scope] = {};
+      settings.path = path;
+      settings.data = new Data(Object.assign(data || {}, addonData));
+    }
 
     return settings;
   }
@@ -162,7 +161,9 @@ class SettingsService extends Service {
     } else {
       const repo = this.service.repo.get(scope);
       const { baseDir } = repo // get real dir from repo
-      settings = this._settings[scope] || this._setPath(scope, pathFn.resolve(baseDir, FILE_NAME));
+      settings = this._settings[scope] 
+        || this._setPath(scope, pathFn.resolve(baseDir, FILE_NAME))
+        || this._setPath(scope, pathFn.resolve(baseDir, DOT_FILE_NAME));
     }
 
     return settings;

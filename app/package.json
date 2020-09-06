@@ -20,6 +20,7 @@
     "bootstrap": "^4.4.1",
     "colorthief": "^2.3.0",
     "core-js": "^2.6.11",
+    "fastclick": "^1.0.6",
     "lodash": "^4.17.11",
     "minimatch": "^3.0.4",
     "register-service-worker": "^1.7.1",

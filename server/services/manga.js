@@ -27,7 +27,7 @@ const RANDOM_COUNT = 50;
 const MAX_INDEX_COUNT = 50000;
 const LAST_LOOP_COUNT = 8;
 
-const METADATA_FILENAME = 'metadata.json';
+const METADATA_FILENAMES = ['metadata.json', '.metadata.json'];
 const imgRE = /\.(jpe?g|png|webp|gif|bmp)$/i;
 const fileRE = /\.(mp4|pdf|zip)$/i;
 const coverRE = /^cover\./;
@@ -356,12 +356,14 @@ async function traverse({
   // Traverse sub directory
   if (isDir) {
     // try to get metadata
-    const metadataPath = pathFn.join(absPath, METADATA_FILENAME);
-    const hasMetadata = await fs.accessAsync(metadataPath);
+    let metadataPath, _showChapterCover = false;
 
-    let _showChapterCover = false;
-
-    if (hasMetadata) {
+    METADATA_FILENAMES.forEach(filename => {
+      const path = pathFn.join(absPath, filename);
+      if (fs.accessSync(path)) metadataPath = path;
+    });
+    
+    if (metadataPath) {
       metadata = await readMeta(metadataPath);
 
       if (typeof metadata.chapters === 'object' && metadata.chapters.cover) {

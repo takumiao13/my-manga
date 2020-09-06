@@ -3,6 +3,7 @@ import './registerServiceWorker';
 
 import Vue from 'vue';
 import App from './App.vue';
+import FastClick from 'fastclick'
 import config from '@/config';
 import consts from '@/consts';
 
@@ -109,6 +110,7 @@ const REPO_KEY = '_REPO';
 bootstrapApp();
 
 function bootstrapApp() {
+  FastClick.attach(document.body);
   let hideSplashScreen;
 
   // not show custom splash screen when lanuched form pwa
