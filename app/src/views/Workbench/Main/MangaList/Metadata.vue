@@ -1,108 +1,114 @@
 <template>
   <div id="metadata" ref="root">
 
-    <!-- SHARE (hidden now - support later) -->
-    <div class="metadata-share metadata-inner" v-if="sharing">
-      <div class="modal mb-3" tabindex="-1" role="dialog">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Share: {{ title }}</h5>
-            </div>
-            <div class="modal-body">
-              <qriously class="mb-3 qr-code" :value="qrcodeValue" :size="160" />
-              <p class="text-center text-muted">Scan it to get link</p>                    
-              <hr/>
-              <p class="text-center">
-                Link: 
-                <a :href="qrcodeValue" target="_blank">{{ qrcodeValue }}</a>
-              </p>                    
+    <div :style="{ position: 'relative' }">
+      <!-- SHARE (hidden now - support later) -->
+      <div class="metadata-share metadata-inner" v-if="sharing">
+        <div class="modal mb-3" tabindex="-1" role="dialog">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Share: {{ title }}</h5>
+              </div>
+              <div class="modal-body">
+                <qriously class="mb-3 qr-code" :value="qrcodeValue" :size="160" />
+                <p class="text-center text-muted">Scan it to get link</p>                    
+                <hr/>
+                <p class="text-center">
+                  Link: 
+                  <a :href="qrcodeValue" target="_blank">{{ qrcodeValue }}</a>
+                </p>                    
+              </div>
             </div>
           </div>
         </div>
+        <div class="metadata-btn">
+          <a @click="sharing = false">
+            <Icon name="times" size="36" />
+          </a>
+          <span>Close</span>
+        </div>
       </div>
-      <div class="metadata-btn">
-        <a @click="sharing = false">
-          <Icon name="times" size="36" />
-        </a>
-        <span>Close</span>
-      </div>
-    </div>
 
-    <!-- COVER AND INFO -->
-    <div class="metadata-main metadata-inner" v-show="!sharing">
+      <!-- COVER AND INFO -->
+      <div class="metadata-main metadata-inner" v-show="!sharing">
+        
+        <!-- only hide in sm sreen when banner exists -->
+        <div :class="['metadata-info', { 'with-banner': banner }]">
+          <!-- cover -->
+          <div 
+            :class="[
+              'metadata-cover',
+              `cover-size-${placeholder}`
+            ]"
+          >
+            <MangaItem
+              :item="$store.state.manga" 
+              :play-logo="false"
+              :caption="false"
+              :version-labels-visible="false"
+            />
+          </div>
+
+          <!-- detail -->
+          <div class="metadata-detail">
+            <p class="title">{{ title }}</p>
+
+            <!-- versions -->
+            <div v-if="verNames">
+              Version : 
+              <span v-if="verLoading" class="text-muted">--</span>
+              <span v-else class="text-muted">
+              <!-- show default ver -->
+              {{ verNames.length == 1 ? verNames[0] : activeVer }}
+              </span>
+            </div>
+
+            <!-- status -->
+            <div v-if="metadata && metadata.status">
+              Status :
+              <span v-if="completed" class="manga-status">Completed</span>
+              <span v-if="status && !completed" class="text-muted"># {{ status }}</span>
+            </div>
+
+            <!-- type -->
+            <div v-else-if="fileType">
+              Type : 
+              <span class="text-muted">{{ fileType }}</span>
+            </div>
+
+            <!-- chapters or pages -->
+            <div v-else-if="chapters.length">
+              Chapters : 
+              <span class="text-muted">{{ chapters.length }}</span>
+            </div>
+            <div v-else>
+              Pages : 
+              <span class="text-muted">{{ images.length }}</span>
+            </div>
+
+            <!-- update time -->
+            <div>
+              Updated at : 
+              <span class="text-muted">{{ birthtime | dateFormat('yyyy-mm-dd') }}</span>
+            </div>        
+          </div>
+        </div>
+      </div>
       
-      <!-- only hide in sm sreen when banner exists -->
-      <div :class="['metadata-info', { 'with-banner': banner }]">
-        <!-- cover -->
-        <div 
-          :class="[
-            'metadata-cover',
-            `cover-size-${placeholder}`
-          ]"
-        >
-          <MangaItem
-            :item="$store.state.manga" 
-            :play-logo="false"
-            :caption="false"
-            :version-labels-visible="false"
-          />
-        </div>
-
-        <!-- detail -->
-        <div class="metadata-detail">
-          <p class="title">{{ title }}</p>
-
-          <!-- versions -->
-          <div v-if="versions.length">
-            Version : 
-            <span v-if="verLoading" class="text-muted">--</span>
-            <span v-else class="text-muted">{{ activeVer }}</span>
-          </div>
-
-          <!-- status -->
-          <div v-if="metadata && metadata.status">
-            Status :
-            <span v-if="verLoading" class="text-muted">--</span>
-            <span v-if="!verLoading && completed" class="manga-status">Completed</span>
-            <span v-if="!verLoading && status && !completed" class="text-muted"># {{ status }}</span>
-          </div>
-
-          <!-- type -->
-          <div v-else-if="fileType">
-            Type : 
-            <span v-if="verLoading" class="text-muted">--</span>
-            <span v-else class="text-muted">{{ fileType }}</span>
-          </div>
-
-          <!-- chapters or pages -->
-          <div v-else-if="chapters.length">
-            Chapters : 
-            <span v-if="verLoading" class="text-muted">--</span>
-            <span v-else class="text-muted">{{ chapters.length }}</span>
-          </div>
-          <div v-else>
-            Pages : 
-            <span v-if="verLoading" class="text-muted">--</span>
-            <span v-else class="text-muted">{{ images.length }}</span>
-          </div>
-
-          <!-- update time -->
-          <div>
-            Updated at : 
-            <span v-if="verLoading" class="text-muted">--</span>
-            <span v-else class="text-muted">{{ birthtime | dateFormat('yyyy-mm-dd') }}</span>
-          </div>        
-        </div>
+      <!-- ACTIONS -->
+      <div class="metadata-actions row d-flex">
+        <a class="col" @click="handleRead">
+          <Icon :name="fileType === 'video' ? 'play' : 'book-open'" /> 
+          Start {{ fileType === 'video' ? 'Watching' : 'Reading' }}
+        </a>
       </div>
-    </div>
-    
-    <!-- ACTIONS -->
-    <div class="metadata-actions row d-flex">
-      <a class="col" @click="handleRead">
-        <Icon :name="fileType === 'video' ? 'play' : 'book-open'" /> 
-        Start {{ fileType === 'video' ? 'Watching' : 'Reading' }}
-      </a>
+
+      <div class="metadata-loading" v-show="verLoading">
+        <Spinner center>
+          <p class="text-center">Loading</p>
+        </Spinner>
+      </div>    
     </div>
 
     <!-- VERSIONS -->
@@ -180,7 +186,7 @@ export default {
 
     ...mapState('manga', [ 
       'path', 'versions', 'metadata', 'shortId', 'fileType', 'placeholder',
-      'cover', 'banner', 'birthtime', 'files', 'chapters', 'images', 'activeVer'
+      'cover', 'banner', 'birthtime', 'files', 'chapters', 'images', 'activeVer', 'verNames'
     ]),
 
     expandVersionVisible() {
@@ -394,7 +400,7 @@ export default {
     > .metadata-detail {
 
       .title {
-        font-size: 1.4rem;
+        font-size: 1.6rem;
       }
 
       div {
@@ -420,7 +426,7 @@ export default {
 
     > .metadata-detail {
       .title {
-        font-size: 1.6rem;
+        font-size: 1.8rem;
       }
 
       div {
@@ -511,6 +517,16 @@ export default {
       height: 28px;
     }
   }
+}
+
+.metadata-loading {
+  position: absolute;
+  margin: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1040;
 }
 
 // Version

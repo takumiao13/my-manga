@@ -76,6 +76,7 @@ Chapters of a comic can be stored together and presented as a single title. Plac
 ```
 /Comics
   /Zoo
+    /cover.{ext} <-- default cover
     /Zoo - Chapter-1
     /Zoo - Chapter-2
     /Zoo - Chapter-3
@@ -106,6 +107,7 @@ Versions should be placed between brackets with the same result as seen below.
 ```
 /Comics
   /Zoo
+    /cover.{ext} <-- default cover
     /Zoo [720]
     /Zoo [Digital]
     /Zoo [Full Color]

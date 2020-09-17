@@ -81,7 +81,9 @@ export default {
   }
   
   // 1/8
-  .area-item {    
+  .area-item {
+    border-radius: .3rem;
+
     @include media-breakpoint-up(xl) {
       flex: 0 0 12.5%;
       max-width: 12.5%;
@@ -94,6 +96,7 @@ export default {
     position: relative;
     border-radius: .25rem;
     padding: 0px 0px 100%;
+    cursor: pointer;
 
     > div {
       position: absolute;
@@ -109,6 +112,14 @@ export default {
         height: 35%;
       }
     }
+  }
+
+  .caption {
+    max-height: 44px;
+    word-wrap: break-word;
+    word-break: break-all;
+    overflow: hidden;
+    line-height: 1.6;
   }
 }
 </style>

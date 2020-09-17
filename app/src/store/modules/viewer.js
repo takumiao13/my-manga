@@ -26,6 +26,8 @@ const initialState = {
   verNames: [],
   images: [],
   chapters: [],
+
+  source: '', //video only
   parts: [], // video only
 
   ch: '', // original chapter name
@@ -162,7 +164,7 @@ const createModule = (state = { ...initialState }) => ({
 
       statusHelper.pending(commit);
       return mangaAPI.list({ dirId, path }).then(res => {
-        const { cover, children, verNames } = res;
+        const { path, cover, children, verNames } = res;
         // find video from list
         // - version
         // - name (parts of video)
@@ -171,8 +173,9 @@ const createModule = (state = { ...initialState }) => ({
         const video = find(children, findOptions);
 
         commit(SET_MANGA, {
+          path,
           name: video.name, 
-          path: video.path,
+          source: video.path,
           cover: cover || '', // overwrite cover
           activeVer: ver,
           verNames,

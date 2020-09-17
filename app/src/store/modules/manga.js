@@ -275,6 +275,7 @@ const createModule = (state = { ...initialState }) => ({
         fileType: '',
         error: null,
         shortId: false,
+        verNames: null,
         metadata: null // fixed when list no-metadata cannot overwrite prev metadata
       }, payload);
     },

@@ -166,6 +166,8 @@ export default {
     ...mapGetters('viewer', [ 'count', 'chIndex', 'chCount', 'pending', 'success', 'settings' ]),
 
     title() {
+      if (this.pending) return '';
+
       const title = this.ch 
         ? this.chName
         : this.$options.filters.stripVer(this.name);

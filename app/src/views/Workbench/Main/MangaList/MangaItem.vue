@@ -1,13 +1,11 @@
 <template>
-  <div 
-    class="manga-item"
-    @click="$emit('item-click')"
-  >
+  <div class="manga-item">
     <a
       v-show="viewMode == 'grid'"
       class="cover"
       :title="showPath ? item.path : undefined"
       v-bind="$service.image.coverStyle(item)"
+      @click="$emit('item-click')"
     >
       <div
         v-if="versionLabelsVisible && item.verNames"
@@ -60,7 +58,7 @@
       </small>
     </div>
     
-    <div v-show="viewMode == 'list'" class="manga-row">
+    <div v-show="viewMode == 'list'" class="manga-row" @click="$emit('item-click')">
       <div v-if="status" class="manga-status"></div>
       <div class="manga-row-left">
         <Icon :name="`file-${item.fileType || 'image'}`" />
@@ -153,7 +151,6 @@ export default {
 @import '@/assets/style/base';
   
 .caption {
-  font-weight: 600;
   text-align: left;
   left: .5rem;
   right: .5rem;

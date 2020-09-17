@@ -94,11 +94,13 @@ export default {
       border-bottom: .5px solid;  
     }
   }
+  
   .row {
     margin-top: -1px;
     padding: .5rem .5rem;
     border-width: .5px 0;
     border-style: solid;
+    align-items: center;
 
     @include media-breakpoint-up(md) {
       margin-left: 0;
@@ -109,21 +111,16 @@ export default {
 
   .cover {
     cursor: pointer;
-    transform: translateY(-50%);
-    top: 50%;
     overflow: hidden;
   }
 
   .caption {
-    top: 100%;
     text-align: center;
     overflow: hidden;
     word-break: break-all;
     word-wrap: break-word;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    max-height: 44px;
+    line-height: 1.6;
   }
 
   // 1/8

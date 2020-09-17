@@ -200,20 +200,14 @@ export default {
   },
 
    activated() {
-    if (
-      this.appError || // error
-      (this.$route.meta.isBack && this.folderTree) // has loaded 
-    ) {
-      return;
-    }
-
+    if (this.appError || this.folderTree) return;
     this.reset();
   },
 
   beforeRouteUpdate(to, from, next) {
     if (
-      this.appError || 
-      to.params.dirId == from.params.dirId // the same route
+      this.appError
+      || to.params.dirId == from.params.dirId // the same route
     ) {
       return;
     }

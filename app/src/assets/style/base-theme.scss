@@ -241,17 +241,11 @@
       .area-item-inner { 
         filter: brightness(90%);
       }
-
-      .caption {
-        color: $app-primary;
-      }
     }
 
     .area-item.active {
       .area-item-inner {
         background: $app-light-bg;
-        box-shadow: 0 0 0 4px $app-grid-active-bg,
-                    0 4px 8px -4px rgba($app-shadow-color, .4);
       }  
     }
   }
@@ -260,7 +254,7 @@
   .chapter-area {
     .manga-item {
       .cover-inner {
-        box-shadow: 0 4px 8px -4px rgba($app-shadow-color, .4);
+        box-shadow: 0 4px 8px -4px rgba($app-shadow-color, .2);
       } 
     }
 
@@ -286,27 +280,17 @@
           filter: brightness(90%);
         }
       }
-      
-      .caption {
-        color: $app-primary;
-      }
     }
 
     .area-item.active {
-      .cover-inner {
-        box-shadow: 0 0 0 4px $app-grid-active-bg,
-                    0 4px 8px -4px rgba($app-shadow-color, .4);
-      }
+      border-color: lighten($app-primary, 20%);
+      background-color: rgba($app-primary, .1);
     }
   }
 
   .gallery-area {
     .row {
       background: $app-main;
-
-      .active .cover {
-        box-shadow: 0 0 0 4px $app-grid-active-bg;
-      }
     }
   }
 
@@ -335,8 +319,9 @@
   }
 
   .manga-version-loading,
+  .metadata-loading,
   .data-view-loading-mask {
-    background-color: $app-main;
+    background-color: $app-bg;
   }
 }
 

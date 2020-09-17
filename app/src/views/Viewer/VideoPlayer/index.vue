@@ -11,7 +11,7 @@
 
     <div class="viewer-container">
       <div class="viewer-viewport">
-        <Loading :visible="!inited" />
+        <Loading :visible="pending" />
 
         <video-player
           v-if="inited"
@@ -63,19 +63,21 @@ export default {
   computed: {
     ...mapState('app', { appError: 'error' }),
 
-    ...mapState('viewer', [ 'name', 'path', 'cover', 'parts', 'fullscreen', 'locking' ]),
+    ...mapState('viewer', [ 'name', 'source', 'cover', 'parts', 'fullscreen', 'locking' ]),
+
+    ...mapGetters('viewer', [ 'pending' ]),
 
     ...mapGetters('app', [ 'repo' ]),
     
     options() {
       return this.inited ? {
-        sources: [ this.$service.video.makeSrc(this.path, true) ],
+        sources: [ this.$service.video.makeSrc(this.source, true) ],
         poster: this.$service.image.makeSrc({
           path: this.cover,
           escape: true
         }),
         controls: true,
-        autoplay: false,
+        autoplay: true,
         preload: 'auto',
         fluid: true,
         //playbackRates: [0.5, 1, 1.5, 2],
@@ -90,7 +92,7 @@ export default {
       return [{
         icon: 'arrow-left',
         tip: 'Back',
-        title: this.name,
+        title: this.pending ? '' : this.name,
         click: this.handleBack,
         className: 'text-truncate viewer-title'
       }];
@@ -135,12 +137,10 @@ export default {
 
     handlePause() {
       this.paused = true;
-      // this.locking = true;
       this.setLocking(true);
     },
 
     handleActive() {
-      //this.locking = true;
       this.setLocking(true);
     },
 
@@ -221,10 +221,9 @@ export default {
     this.$on('update', (route) => {
       const { dirId, path } = route.params;
       const { ver, name } = route.query;
- 
+
       this.fetchVideo({ dirId, path: qs.decode(path), ver, name })
         .then(() => {
-          // TODO: tmp use inited to support async init videojs
           this.inited = true;
         });
     });

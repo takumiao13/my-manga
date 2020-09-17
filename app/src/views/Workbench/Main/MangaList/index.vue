@@ -99,7 +99,7 @@
             :view-mode="viewMode.gallery"
             :list="images"
             :active-page="activePage"
-            :hide-first-image="type === 'MANGA'"
+            :hide-first-image="type === 'MANGA' && !activeVer"
             @view-mode-change="(mode) => viewMode.gallery = mode"
             @item-click="handleItemClick"
           />
@@ -240,6 +240,9 @@ export default {
         this.activeChapter = this.viewerCh;
         this.activePage = this.viewerPage;
         this.activePath = this.viewerPath;
+
+        console.log(this.viewerPath);
+
         this.$nextTick(() => this.scrollToActive());
       } else {
         this.activeChapter = '';
@@ -290,7 +293,7 @@ export default {
       // - toggle activity
       if (
         path === this.$consts.RANDOM_PATH 
-        || path !== this.path 
+        || safepath !== this.path 
         || search
       ) {
         promise = promise
@@ -592,7 +595,7 @@ export default {
   margin-left: -15px;
   margin-right: -15px;
   
-  @include media-breakpoint-up(sm) {
+  @include media-breakpoint-up(md) {
     padding-left: 15px;
     padding-right: 15px;
   }
@@ -608,7 +611,7 @@ export default {
 
     padding: .5rem 15px;
 
-    @include media-breakpoint-up(sm) {
+    @include media-breakpoint-up(md) {
       padding: .5rem 0;
     }
     
@@ -631,9 +634,8 @@ export default {
 .area-container {
 
   .area-item {
-    cursor: pointer;
-    padding: .5rem;
-    margin-bottom: 3rem;
+    padding: .5rem .5rem 3rem .5rem;
+    border: .5px solid transparent;
   }
 
   .list-group {

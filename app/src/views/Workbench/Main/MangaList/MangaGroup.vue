@@ -77,6 +77,8 @@ export default {
 
 // 1/8
 .area-item {    
+  border-radius: .3rem;
+
   @include media-breakpoint-up(xl) {
     flex: 0 0 12.5%;
     max-width: 12.5%;

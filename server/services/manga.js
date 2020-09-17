@@ -742,8 +742,8 @@ const isChapterSp = (name) => {
 }
 
 const isVersion = (name, { parentName } = {}) => {
-  if (name === parentName) {
-    return 'default'
+  if (new RegExp(`^${parentName}$`).test(name)) {
+    return 'default';
   }
 
   const basename = parentName ? `^${parentName}` : '';

@@ -104,7 +104,7 @@ export default {
 
   methods: {
     isLastNav(index) {
-      return index === this.navs_.length - 1;
+      return index === this.navs.length - 1;
     },
 
     refresh() {
