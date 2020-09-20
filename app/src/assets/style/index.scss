@@ -4,6 +4,22 @@
 @import "./themes/default.scss";
 @import "./base-theme.scss";
 
+html {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+body {
+  width: 100vw;
+}
+
+// ios input with fastclick
+body input, body textarea {
+  -webkit-touch-callout: text;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 .topbar {
   position: sticky;
   top: 0;

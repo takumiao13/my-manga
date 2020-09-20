@@ -1,11 +1,7 @@
 <template>
-  <div class="viewer-container">
+  <div class="viewer-container" :class="{ 'viewer-locking': shouldLock }">
     <div class="viewer-viewport-left" @click.stop="handleLeft" />
-    <div
-      class="viewer-viewport"
-      :class="{ 'viewer-locking': shouldLock }"
-      @click.stop="$emit('click')"
-    >
+    <div class="viewer-viewport" @click.stop="$emit('click')">
       <slot class="viewer-mode" /> 
     </div>
     <div class="viewer-viewport-right" @click.stop="handleRight" />
@@ -29,12 +25,18 @@ export default {
 
   methods: {
     handleLeft() {
-      if (this.shouldLock) return;
+      if (this.shouldLock) {
+        this.$emit('click');
+        return;
+      }
       this.$emit(this.hand === 'right' ? 'prev' : 'next');
     },
 
     handleRight() {
-      if (this.shouldLock) return;
+      if (this.shouldLock) {
+        this.$emit('click');
+        return;
+      }
       this.$emit(this.hand === 'right' ? 'next' : 'prev');
     }
   }
@@ -44,9 +46,14 @@ export default {
 <style lang="scss" scoped>
 @import '@/assets/style/base';
 
-.viewer-viewport.viewer-locking {
-  &::after {
+.viewer-locking {
+  .viewer-viewport:after {
     content: '';
+  }
+
+  .viewer-viewport-left,
+  .viewer-viewport-right {
+    background-image: none !important;
   }
 }
 

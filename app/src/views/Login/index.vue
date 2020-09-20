@@ -86,10 +86,9 @@ export default {
 
         $form.submitted = true;
         this.login(this.form)
-          .then(() => Promise.all([
-            this.$store.dispatch(settingTypes.user.init),
-            this.$store.dispatch(settingTypes.repo.init)
-          ]))
+          .then(() => {
+            return this.$store.dispatch(settingTypes.user.init)
+          })
           .then(() => {
             this.setError(null);
             this.$router.push({ name: 'home' });

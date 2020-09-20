@@ -114,7 +114,8 @@ const REPO_KEY = '_REPO';
 bootstrapApp();
 
 function bootstrapApp() {
-  FastClick.attach(document.body);
+  // ios will occur some problem
+  // FastClick.attach(document.body);
   let hideSplashScreen;
 
   // not show custom splash screen when lanuched form pwa
@@ -182,15 +183,9 @@ function bootstrapApp() {
     }
   });
 
-
-  // TODO: uppercase ??
   store.dispatch(appTypes.checkUser)
     // try to get user settings
-    .then(() => Promise.all([
-        store.dispatch(settingTypes.user.init)
-        // store.dispatch(settingTypes.repo.init)  
-      ])
-    )
+    .then(() => store.dispatch(settingTypes.user.init))
     .then(checkCurrentRepo)
     .then(() => {
       renderApp();

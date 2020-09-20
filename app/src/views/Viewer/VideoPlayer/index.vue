@@ -205,7 +205,7 @@ export default {
       // fullscreen button
       const fullscreenToggleButton = new FullscreenToggle(videoPlayer);
       fullscreenToggleButton.el().style.marginLeft = 'auto';
-      fullscreenToggleButton.on('click', () => this.setFullscreen());
+      fullscreenToggleButton.on('tap', () => this.setFullscreen());
 
       controlBar.addChild(fullscreenToggleButton);
     }
