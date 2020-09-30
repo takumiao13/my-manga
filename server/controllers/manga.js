@@ -109,7 +109,7 @@ class MangaController extends Controller {
         response.lastModified = ifModifiedSince;
       }
     } catch(err) {
-      this.app.throwError(ERR_CODE.MANGA_NO_DIR);
+      this.app.throwError(ERR_CODE.MANGA_NO_DIR, err && err.message);
     }
   }
 

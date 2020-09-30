@@ -15,15 +15,6 @@ export function createRequestStatus(name, type = 'STATUS') {
   const SUCCESS = 'success';
   const ERROR = 'error';
   const WARN = 'warn';
-  const PENDING_DEBOUNCED = 'pending_debounced';
-  const SUCCESS_DEBOUNCED = 'success_debounced';
-  
-  let timer = null;
-
-  function clear() {
-    clearTimeout(timer);
-    timer = null;
-  }
   
   return {
     state() {
@@ -34,37 +25,14 @@ export function createRequestStatus(name, type = 'STATUS') {
     },
 
     pending(commit) {
-      commit(type, { [name]: PENDING })
-      timer = setTimeout(() => {
-        commit(type, { [name]: PENDING_DEBOUNCED });
-        timer = null;
-      }, 200);
+      commit(type, { [name]: PENDING });
     },
 
     success(commit) {
-      // has received response from server more than 200 ms
-      if (timer === null) {
-        // loading has shown
-        return new Promise((resolve) => {
-          commit(type, { [name]: SUCCESS })
-          setTimeout(() => {
-            commit(type, { [name]: SUCCESS_DEBOUNCED });
-            resolve();
-          }, 360); // after 360ms hide loading
-        })
-      }
-      
-      // loading hasn't shown
-      clear();
-      return new Promise((resolve) => {
-        commit(type, { [name]: SUCCESS_DEBOUNCED });
-        resolve();
-      });
-      
+      commit(type, { [name]: SUCCESS });
     },
 
     error(commit, payload = {}) {
-      clear();
       const isWarn = payload.warn;
       commit(type, { 
         [name]: isWarn ? WARN : ERROR,
@@ -83,15 +51,11 @@ export function createRequestStatus(name, type = 'STATUS') {
 
     is: {
       pending(state) {
-        return state[name] === PENDING_DEBOUNCED;
+        return state[name] === PENDING;
       },
 
       success(state) {
-        // debounce success
-        // state[name] === SUCCESS_DEBOUNCED  || state[name] === PENDING;
-        // will cause flash
-        // use transition later
-        return state[name] === SUCCESS_DEBOUNCED;
+        return state[name] === SUCCESS;
       },
 
       error(state) {

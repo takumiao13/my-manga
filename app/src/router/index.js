@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import routes from './routes';
 import AppRouter from './app-router';
+import { get } from '@/helpers/utils';
 
 // Middleware
 import titleMw from './middleware/title';
@@ -18,7 +19,7 @@ const router = new AppRouter({
 	mode: 'hash',
 	strict: process.env.NODE_ENV !== 'production',
 	scrollBehavior (to, from, savedPosition) {
-    const { name, isBack, resolver } = to.meta;
+    const { isBack, resolver } = to.meta;
     
     // when only querystring change not scroll
     if (JSON.stringify(to.params) === JSON.stringify(from.params)) {
@@ -27,7 +28,11 @@ const router = new AppRouter({
 
     savedPosition || (savedPosition = { x: 0, y:0 });
 
-		if (isBack && resolver) {	
+    // when back from viewer to manga scroll to active page or chapter
+    // logic is written in components
+    if (from.name === 'viewer' && get(to, 'query.type') === 'manga') {
+      return { x: 0, y: 0 };
+    } else if (isBack && resolver) {	
       return new Promise((resolve) => {
         // set scroll position when data has fetched
         resolver.then(() => {
@@ -35,7 +40,7 @@ const router = new AppRouter({
         });
       });			
 		} else {
-      return name !== 'viewer' && savedPosition;
+      return savedPosition;
 		}
   }
 });

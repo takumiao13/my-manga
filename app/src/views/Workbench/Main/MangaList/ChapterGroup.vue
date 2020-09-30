@@ -6,7 +6,10 @@
   >
     <div class="area-header">
       <div class="area-header-inner">
-        CHAPTERS - {{ list.length }} <!-- max 50 group support later -->
+        <span v-if="sp">CHAPTERS SP</span>
+        <span v-else>CHAPTERS</span>
+         - {{ list.length }}
+
         <div class="actions float-right">
           <a @click="sort">
             <Icon :name="`sort-by-no-${desc ? 'desc' : 'asc'}`" size="18" />
@@ -18,9 +21,10 @@
     <div v-if="showCover" class="row">
       <div 
         :class="{  
-          'col-4 col-sm-3 col-xl-2': item.placeholder == 1,
-          'col-12 col-sm-6 col-xl-4': item.placeholder == 2,
+          'col-4 col-sm-3 col-lg-2': item.placeholder == 1,
+          'col-12 col-sm-6 col-lg-4': item.placeholder == 2,
           'area-item': true,
+          'area-item-2x': item.placeholder == 2,
           active: item.name === activeName,
         }"
         v-for="item in sortedList"
@@ -29,17 +33,18 @@
       >
         <MangaItem 
           :item="item"
-          @click.native="$emit('item-click', item)"
+          @item-click="$emit('item-click', item)"
         />
       </div>
     </div>
 
     <div v-else class="list-group">
-      <a class="list-group-item list-group-item-action chapter-item"
+      <a 
+        class="list-group-item list-group-item-action chapter-item"
         :class="{ active: item.name === activeName}"
         v-for="item in sortedList" 
         :key="item.path"
-        @click="$emit('item-click', item, 0)"
+        @click="$emit('item-click', item)"
       >
 
         <div class="text-truncate pr-2">
@@ -54,12 +59,15 @@
 import MangaItem from './MangaItem';
 
 export default {
-
   components: {
     MangaItem
   },
 
   props: {
+    sp: {
+      type: Boolean,
+      default: false
+    },
     list: Array,
     activeName: String,
     metadata: Object
@@ -80,9 +88,7 @@ export default {
     },
 
     sortedList() {
-      return this.desc ? 
-        this.list.slice().reverse() :
-        this.list;
+      return this.desc ? this.list.slice().reverse() : this.list;
     }
   },
 
@@ -95,13 +101,30 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../../../assets/style/base';
-.chapter-area {
+@import '@/assets/style/base';
 
+.chapter-area {
   .row {
     margin-left: -.5rem;
     margin-right: -.5rem;
     align-items: flex-end;
+  }
+
+  // 1/8
+  .area-item {
+    border-radius: .3rem;
+    
+    @include media-breakpoint-up(xl) {
+      flex: 0 0 12.5%;
+      max-width: 12.5%;
+    }
+  }
+
+  .area-item-2x {    
+    @include media-breakpoint-up(xl) {
+      flex: 0 0 25%;
+      max-width: 25%;
+    }
   }
 
   .list-group {
@@ -121,13 +144,19 @@ export default {
 
     @include media-breakpoint-up(md) {
       .list-group-item {
-        width: calc(33.3% - .4rem);
+        width: calc(33.33% - .4rem);
       }
     }
 
     @include media-breakpoint-up(lg) {
       .list-group-item {
         width: calc(25% - .4rem);
+      }
+    }
+
+    @include media-breakpoint-up(xl) {
+      .list-group-item {
+        width: calc(16.66667% - .4rem);
       }
     }
   }

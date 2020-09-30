@@ -1,9 +1,9 @@
 <template>
-  <div class="spinner">
+  <div class="spinner" :class="{ 'spinner-center': center }">
     <div class="la-ball-clip-rotate" :class="[ size_, className ]">
       <div></div>
     </div>
-    <p class="text-center" v-show="tip">{{ tip }}</p>
+    <slot />
   </div>
 </template>
 
@@ -16,6 +16,7 @@ const sizeMap = {
 export default {
   props: {
     size: String,
+    center: Boolean,
     className: String,
     tip: {
       type: [ String, Boolean ],
@@ -32,6 +33,17 @@ export default {
 </script>
 
 <style lang="scss">
+
+.spinner {
+  &.spinner-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+}
+
 .la-ball-clip-rotate,
 .la-ball-clip-rotate > div {
     position: relative;

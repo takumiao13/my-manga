@@ -4,6 +4,22 @@
 @import "./themes/default.scss";
 @import "./base-theme.scss";
 
+html {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+body {
+  width: 100vw;
+}
+
+// ios input with fastclick
+body input, body textarea {
+  -webkit-touch-callout: text;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 .topbar {
   position: sticky;
   top: 0;
@@ -59,6 +75,9 @@ input {
 }
 
 .app-toast {
+  top: 3.25rem !important;
+  pointer-events: none;
+
   .vue-notification {
     padding: .75rem 1rem;
     font-size: .9rem;
@@ -74,23 +93,11 @@ input {
       max-width: none;
       margin: .5rem;
       font-size: 1rem;
-      text-align: left;
     }
-    
-    &.warn {
-      background: #ffb648;
-      border-left-color: #f48a06;
-    }
-  
-    &.error {
-      background: #E54D42;
-      border-left-color: #B82E24;
-    }
-  
-    &.success {
-      background: #68CD86;
-      border-left-color: #42A85F;
-    }
+  }
+
+  &.app-toast-group-viewer {
+    top: 10% !important;
   }
 }
 

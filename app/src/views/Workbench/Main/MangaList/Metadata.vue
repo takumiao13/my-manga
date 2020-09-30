@@ -1,101 +1,133 @@
 <template>
   <div id="metadata" ref="root">
 
-    <!-- SHARE (hidden now) -->
-    <div class="metadata-share metadata-inner" v-if="sharing">
-      <div class="modal mb-3" tabindex="-1" role="dialog">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Share: {{ title }}</h5>
-            </div>
-            <div class="modal-body">
-              <qriously class="mb-3 qr-code" :value="qrcodeValue" :size="160" />
-              <p class="text-center text-muted">Scan it to get link</p>                    
-              <hr/>
-              <p class="text-center">
-                Link: 
-                <a :href="qrcodeValue" target="_blank">{{ qrcodeValue }}</a>
-              </p>                    
+    <div :style="{ position: 'relative' }">
+      <!-- SHARE (hidden now - support later) -->
+      <div class="metadata-share metadata-inner" v-if="sharing">
+        <div class="modal mb-3" tabindex="-1" role="dialog">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Share: {{ title }}</h5>
+              </div>
+              <div class="modal-body">
+                <qriously class="mb-3 qr-code" :value="qrcodeValue" :size="160" />
+                <p class="text-center text-muted">Scan it to get link</p>                    
+                <hr/>
+                <p class="text-center">
+                  Link: 
+                  <a :href="qrcodeValue" target="_blank">{{ qrcodeValue }}</a>
+                </p>                    
+              </div>
             </div>
           </div>
         </div>
+        <div class="metadata-btn">
+          <a @click="sharing = false">
+            <Icon name="times" size="36" />
+          </a>
+          <span>Close</span>
+        </div>
       </div>
-      <div class="metadata-btn">
-        <a @click="sharing = false">
-          <icon name="times" size="36" />
-        </a>
-        <span>Close</span>
-      </div>
-    </div>
 
-    <!-- COVER AND INFO -->
-    <div class="metadata-main metadata-inner" v-show="!sharing">
+      <!-- COVER AND INFO -->
+      <div class="metadata-main metadata-inner" v-show="!sharing">
+        
+        <!-- only hide in sm sreen when banner exists -->
+        <div :class="['metadata-info', { 'with-banner': banner }]">
+          <!-- cover -->
+          <div 
+            :class="[
+              'metadata-cover',
+              `cover-size-${placeholder}`
+            ]"
+          >
+            <MangaItem
+              :item="$store.state.manga" 
+              :play-logo="false"
+              :caption="false"
+              :version-labels-visible="false"
+            />
+          </div>
+
+          <!-- detail -->
+          <div class="metadata-detail">
+            <p class="title">{{ title }}</p>
+
+            <!-- versions -->
+            <div v-if="verNames">
+              Version : 
+              <span v-if="verLoading" class="text-muted">--</span>
+              <span v-else class="text-muted">
+              <!-- show default ver -->
+              {{ verNames.length == 1 ? verNames[0] : activeVer }}
+              </span>
+            </div>
+
+            <!-- status -->
+            <div v-if="metadata && metadata.status">
+              Status :
+              <span v-if="completed" class="manga-status">Completed</span>
+              <span v-if="status && !completed" class="text-muted"># {{ status }}</span>
+            </div>
+
+            <!-- type -->
+            <div v-else-if="fileType">
+              Type : 
+              <span class="text-muted">{{ fileType }}</span>
+            </div>
+
+            <!-- chapters or pages -->
+            <div v-else-if="chapters.length">
+              Chapters : 
+              <span class="text-muted">{{ chapters.length }}</span>
+            </div>
+            <div v-else>
+              Pages : 
+              <span class="text-muted">{{ images.length }}</span>
+            </div>
+
+            <!-- update time -->
+            <div>
+              Updated at : 
+              <span class="text-muted">{{ birthtime | dateFormat('yyyy-mm-dd') }}</span>
+            </div>        
+          </div>
+        </div>
+      </div>
       
-      <!-- only hide in sm sreen when banner exists -->
-      <div :class="['metadata-info', { 'with-banner': banner }]">
-        <!-- cover -->
-        <div 
-          :class="[
-            'metadata-cover',
-            `cover-size-${placeholder}`
-          ]"
-        >
-          <MangaItem 
-            :item="$store.state.manga" 
-            :caption="false"
-            :tags="false"
-          />
-        </div>
-
-        <!-- detail -->
-        <div class="metadata-detail">
-          <p class="title">{{ title }}</p>
-
-          <!-- versions -->
-          <div v-if="versions.length" class="text-muted">
-            Versions: {{ activeVer }}     
-          </div>
-
-          <!-- status -->
-          <div v-if="metadata && metadata.status" class="text-muted">
-            Status:
-            <span v-if="completed" class="manga-status">Completed</span>
-            <span v-if="status && !completed"># {{ status }}</span>
-          </div>
-
-          <!-- type -->
-          <div v-else-if="fileType" class="text-muted">Type: {{ fileType }}</div>
-          <div v-else-if="chapters.length" class="text-muted">Chapters: {{ chapters.length }}</div>
-          <div v-else class="text-muted">Pages: <span>{{ images.length }}</span></div>
-
-          <!-- update time -->
-          <div class="text-muted">Updated at: <small>{{ birthtime | dateFormat('yyyy-mm-dd') }}</small></div>        
-        </div>
+      <!-- ACTIONS -->
+      <div class="metadata-actions row d-flex">
+        <a class="col" @click="handleRead">
+          <Icon :name="fileType === 'video' ? 'play' : 'book-open'" /> 
+          Start {{ fileType === 'video' ? 'Watching' : 'Reading' }}
+        </a>
       </div>
-    </div>
-    
-    <!-- ACTIONS -->
-    <div class="metadata-actions row d-flex">
-      <a class="col" @click="handleRead">
-        <icon :name="fileType === 'video' ? 'play' : 'book-open'" /> 
-        Start {{ fileType === 'video' ? 'Watching' : 'Reading' }}
-      </a>
+
+      <div class="metadata-loading" v-show="verLoading">
+        <Spinner center>
+          <p class="text-center">Loading</p>
+        </Spinner>
+      </div>    
     </div>
 
     <!-- VERSIONS -->
-    <div 
+    <div
+      v-show="versions.length" 
       class="metadata-versions mb-2" 
-      :class="{ touch: $feature.touch}" 
-      v-show="versions.length"
+      :class="{ touch: $feature.touch}"
     >
-      <div class="area-header">
+      <div class="area-header static">
         <div class="area-header-inner">
           VERSIONS - {{ versions.length }}
 
           <div class="actions float-right">
             <a @click="toggleAllVersionsVisible">
-              <Icon :name="`chevron-${allVersionsVisible ? 'up' : 'down'}`" size="18" />
+              <Icon 
+                v-show="expandVersionVisible" 
+                :name="`chevron-${allVersionsVisible ? 'up' : 'down'}`" 
+                size="18"
+              />
             </a>
           </div>
         </div>
@@ -121,15 +153,24 @@ import { mapState, mapGetters } from 'vuex';
 import qs from '@/helpers/querystring';
 import MangaItem from './MangaItem';
 
-export default {
 
+const versionCounts = {
+  xs: 3,
+  sm: 3,
+  md: 4,
+  lg: 4,
+  xl: 6
+};
+
+export default {
   components: {
     MangaItem
   },
 
   props: {
     title: String,
-    sharing: Boolean
+    sharing: Boolean,
+    verLoading: Boolean,
   },
 
   data() {
@@ -141,10 +182,16 @@ export default {
   computed: {
     ...mapGetters('app', [ 'repo' ]),
 
+    ...mapState('app', { appSize: 'size' }),
+
     ...mapState('manga', [ 
       'path', 'versions', 'metadata', 'shortId', 'fileType', 'placeholder',
-      'cover', 'banner', 'birthtime', 'files', 'chapters', 'images', 'activeVer'
+      'cover', 'banner', 'birthtime', 'files', 'chapters', 'images', 'activeVer', 'verNames'
     ]),
+
+    expandVersionVisible() {
+      return this.versions && this.versions.length > versionCounts[this.appSize];
+    },
 
     status() {
       if (!this.metadata) return false;
@@ -159,6 +206,16 @@ export default {
       const { HOST, PORT } = this.$config.api;
       const protocol = this.$platform.isElectron() ? 'http:' : window.location.protocol;
       return `${protocol}//${HOST}:${PORT}/s/${this.shortId}`
+    },
+
+    item() {
+      if (this.fileType) {
+        return this.files[0];
+      } else {
+        return this.chapters.length
+          ? this.chapters[0] 
+          : this.images[0];
+      }
     }
   },
 
@@ -168,7 +225,8 @@ export default {
       const { dirId } = this.repo;
       
       if (ver === this.activeVer) return;
-  
+
+      // just replace href
       this.$router.replace({
         name: 'explorer', 
         params: { dirId, path: qs.encode(this.path) },
@@ -181,30 +239,23 @@ export default {
     },
 
     handleRead() {
-      let item;
-
-      if (this.fileType) {
-        item = this.files[0];
-        this.$emit('read-file', item);
-      } else {
-        if (this.chapters.length) {
-          item = this.chapters[0]
-        } else {
-          item = this.images[0];
-        }
-        this.$emit('read-manga', item);
+      if (!this.item || this.verLoading) {
+        this.$notify({ title: 'No Content' });
+        return;
       }
+      this.$emit('item-click', this.item);
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-@import '../../../../assets/style/base';
+@import '@/assets/style/base';
 
 #metadata {
   margin-left: -15px;
   margin-right: -15px;
+
   @include media-breakpoint-up(md) {
     margin-left: 0;
     margin-right: 0;
@@ -253,7 +304,7 @@ export default {
 
     p {
       word-wrap: break-word;
-      word-break:break-all;     
+      word-break:break-all;
     }
   }
 
@@ -278,10 +329,8 @@ export default {
 .metadata-info {
   display: flex;
   align-items: center;
-  border-bottom: .5px solid #dedede;
   padding: 15px;
   font-size: 14px;
-  background: #fff;
 
   > .metadata-cover {
     width: 40%;
@@ -294,6 +343,8 @@ export default {
 
     .title {
       font-size: 1.2rem;
+      word-wrap: break-word;
+      word-break:break-all;
     }
 
     div {
@@ -349,7 +400,7 @@ export default {
     > .metadata-detail {
 
       .title {
-        font-size: 1.4rem;
+        font-size: 1.6rem;
       }
 
       div {
@@ -375,7 +426,7 @@ export default {
 
     > .metadata-detail {
       .title {
-        font-size: 1.6rem;
+        font-size: 1.8rem;
       }
 
       div {
@@ -388,9 +439,6 @@ export default {
 .metadata-actions {
   padding: .75rem 15px;
   margin: 0;
-  border-bottom: .5px solid #dedede;
-  color: #999;
-  background: #fff;
 
   a {
     font-size: 1.1rem;
@@ -400,7 +448,7 @@ export default {
   }
 
   a + a {
-    border-left: .5px solid #dedede;
+    // border-left: .5px solid #dedede;
   }
 
   .svg-icon {
@@ -471,6 +519,16 @@ export default {
   }
 }
 
+.metadata-loading {
+  position: absolute;
+  margin: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1040;
+}
+
 // Version
 // ==
 .metadata-versions {
@@ -501,6 +559,7 @@ export default {
     overflow: hidden;
   }
 
+  // 1/3
   .list-group-item {
     margin: .2rem;
     padding: .5rem 1rem;
@@ -509,24 +568,27 @@ export default {
     flex-shrink: 0;
   }
 
-  @include media-breakpoint-up(lg) {
+  // 1/4
+  @include media-breakpoint-up(md) {
     .list-group-item {
       width: calc(25% - .4rem);
+    }
+  }
+
+  // 1/6
+  @include media-breakpoint-up(xl) {
+    .list-group-item {
+      width: calc(16.66667% - .4rem);
     }
   }
 }
 
 .metadata-versions .list-group-item {
-  border-left: 3px solid #ddd !important;
-
   &:not(.version-active) {
     cursor: pointer;
   }
   
-  // TODO:
   &.version-active {
-    border-left-color: $primary !important;
-    color: $primary !important;
     font-weight: 500;
   }
 }

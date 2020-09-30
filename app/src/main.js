@@ -12,6 +12,7 @@ import { delay } from '@/helpers/promise';
 import feature from '@/helpers/feature';
 import platform from '@/helpers/platform';
 import EventEmitter from '@/helpers/eventemitter';
+import FastClick from '@/helpers/fastclick';
 
 // Store & Router (router is depend on store, so must after it)
 import store, { resetStore, loadSettingsState } from '@/store';
@@ -31,11 +32,17 @@ import Addressbar from '@/components/Addressbar';
 import Dropdown from '@/components/Dropdown';
 import VideoPlayer from '@/components/VideoPlayer';
 import Modal from '@/components/Modal';
+import Switcher from '@/components/Switcher';
+import Backdrop from '@/components/Backdrop';
+import Empty from '@/components/Empty';
 
 // Third part components
 import VueLazyload from 'vue-lazyload';
 import VueQriously from 'vue-qriously';
-import VueNotifications from 'vue-notification'
+import VueNotifications from 'vue-notification';
+import { Swiper, EffectFade, Lazy } from 'swiper';
+import VueAwesomeSwiper from 'vue-awesome-swiper';
+import 'swiper/swiper-bundle.css'; // If you use Swiper 6.0.0 or higher
 
 // Directives
 import loadingDirective from '@/directives/loading';
@@ -44,6 +51,7 @@ import clickOutSideDirective from '@/directives/click-out-side';
 // Filters
 import verNameFilter from '@/filters/verName';
 import dateFormatFilter from '@/filters/dateFormat';
+import stripVerFilter from '@/filters/stripVer';
 
 // Services
 import $Service from '@/services';
@@ -59,20 +67,24 @@ Vue.component('Addressbar', Addressbar);
 Vue.component('Dropdown', Dropdown);
 Vue.component('VideoPlayer', VideoPlayer);
 Vue.component('Modal', Modal);
+Vue.component('Switcher', Switcher);
+Vue.component('Backdrop', Backdrop);
+Vue.component('Empty', Empty);
 
 Vue.directive('loading', loadingDirective);
 Vue.directive('click-out-side', clickOutSideDirective);
 
 Vue.filter('verName', verNameFilter);
 Vue.filter('dateFormat', dateFormatFilter);
+Vue.filter('stripVer', stripVerFilter);
 
 Vue.use(VueQriously);
 Vue.use(VueLazyload, {
-  preLoad: 1.5,
-  attempt: 1,
+  preLoad: 2,
+  attempt: 2,
   observer: true, // when image in slot observer is need.
   adapter: {
-    loaded ({ el, bindType, naturalHeight, naturalWidth, $parent, src, loading, error, Init }) {
+    loaded({ el }) {
       // handle manga cover loaded
       if (el.classList.contains('cover-image')) {        
         el.parentNode.classList.remove('loading');
@@ -82,6 +94,10 @@ Vue.use(VueLazyload, {
   }
 });
 Vue.use(VueNotifications);
+Vue.use(VueAwesomeSwiper);
+
+Swiper.use([EffectFade, Lazy]);
+Vue.use(VueAwesomeSwiper);
 
 Vue.use($Service, { router, store });
 Vue.prototype.$platform = platform;
@@ -98,6 +114,8 @@ const REPO_KEY = '_REPO';
 bootstrapApp();
 
 function bootstrapApp() {
+  // ios will occur some problem
+  // FastClick.attach(document.body);
   let hideSplashScreen;
 
   // not show custom splash screen when lanuched form pwa
@@ -165,15 +183,9 @@ function bootstrapApp() {
     }
   });
 
-
-  // TODO: uppercase ??
   store.dispatch(appTypes.checkUser)
     // try to get user settings
-    .then(() => Promise.all([
-        store.dispatch(settingTypes.user.init),
-        store.dispatch(settingTypes.repo.init)  
-      ])
-    )
+    .then(() => store.dispatch(settingTypes.user.init))
     .then(checkCurrentRepo)
     .then(() => {
       renderApp();

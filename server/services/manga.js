@@ -17,16 +17,17 @@ const FileTypes = {
   MANGA: 'MANGA', 
   IMAGE: 'IMAGE',
   CHAPTER: 'CHAPTER',
+  CHAPTER_SP: 'CHAPTER_SP',
   VERSION: 'VERSION'
 };
 
 const LATEST_COUNT = 100;
-const RANDOM_COUNT = 50;
+const RANDOM_COUNT = 100;
 
 const MAX_INDEX_COUNT = 50000;
 const LAST_LOOP_COUNT = 8;
 
-const METADATA_FILENAME = 'metadata.json';
+const METADATA_FILENAMES = ['metadata.json', '.metadata.json'];
 const imgRE = /\.(jpe?g|png|webp|gif|bmp)$/i;
 const fileRE = /\.(mp4|pdf|zip)$/i;
 const coverRE = /^cover\./;
@@ -92,7 +93,7 @@ class MangaService extends Service {
           if (child.type === FileTypes.MANGA) {
             count++;
             callback(pick(child, [
-              'name', 'path', 'type', 'birthtime', 'mtime', 'cover', 
+              'name', 'path', 'type', 'birthtime', 'mtime', 'cover', 'fileType',
               'cover', 'width', 'height', 'verNames', 'chapterSize', 'metadata'
             ]));
           } else if (child.isDir && child.type === FileTypes.FILE) {
@@ -349,18 +350,21 @@ async function traverse({
       _hasFolder = false,
       _childExtnames = false;
 
-  const ignorePathFilter = createIgnorePathFilter(settings.ignorePath);
+  const ignorePath = settings && settings.ignorePath;
+  const ignorePathFilter = ignorePath && createIgnorePathFilter(ignorePath);
   const fixChildOptions = { parentName: escapeRegExp(name) };
 
   // Traverse sub directory
   if (isDir) {
     // try to get metadata
-    const metadataPath = pathFn.join(absPath, METADATA_FILENAME);
-    const hasMetadata = await fs.accessAsync(metadataPath);
+    let metadataPath, _showChapterCover = false;
 
-    let _showChapterCover = false;
-
-    if (hasMetadata) {
+    METADATA_FILENAMES.forEach(filename => {
+      const path = pathFn.join(absPath, filename);
+      if (fs.accessSync(path)) metadataPath = path;
+    });
+    
+    if (metadataPath) {
       metadata = await readMeta(metadataPath);
 
       if (typeof metadata.chapters === 'object' && metadata.chapters.cover) {
@@ -380,54 +384,77 @@ async function traverse({
     const _versionFiles = [];
     let _chapterFiles = [];
     let _chapterWithCoverFiles = [];
+    let _chapterSpFiles = [];
+    let _chapterSpWithCoverFiles = [];
+    
+    if (ignorePathFilter) {
+      files = files.filter(ignorePathFilter)
+    }
 
-    files
-      .filter(ignorePathFilter)
-      .forEach(file => {
-        const { base: name, ext } = pathFn.parse(file);
-        const childpath = pathFn.posix.join(path, file);
-        const subfileType = getFileType(ext);
+    files.forEach(file => {
+      const { base: name, ext } = pathFn.parse(file);
+      const childpath = pathFn.posix.join(path, file);
+      const subfileType = getFileType(ext);
 
-        let chapterName, ver;
-        fixChildOptions.filepath = pathFn.resolve(absPath, file);
+      let chapterName, ver;
+      fixChildOptions.filepath = pathFn.resolve(absPath, file);
 
-        // extname as one of versions (only display)
-        if (!_childExtnames && subfileType == 'video' || subfileType == 'pdf') {
-          _childExtnames = ext.slice(1);
-        }
+      // extname as one of versions (only display)
+      if (!_childExtnames && subfileType == 'video' || subfileType == 'pdf') {
+        _childExtnames = ext.slice(1);
+      }
 
-        if (ver = isVersion(file, fixChildOptions)) {
-          // simple versions as children
-          _versionFiles.push({
-            name, ver,
-            path: childpath,
-            type: FileTypes.VERSION,
-            fileType: subfileType
+      if (ver = isVersion(file, fixChildOptions)) {
+        // simple versions as children
+        _versionFiles.push({
+          name, ver,
+          path: childpath,
+          type: FileTypes.VERSION,
+          fileType: subfileType
+        });
+
+        version || (version = []);
+        if (version.indexOf(ver) === -1) {
+          version.push(ver);
+        }         
+      } else if (isChapterSp(file)) {
+        try {
+          let files = fs.readdirSync(pathFn.resolve(absPath, file));
+          files = files.map(file => {
+            return {
+              name: pathFn.basename(file),
+              chapterName: isChapter(file, fixChildOptions),
+              path: pathFn.posix.join(childpath, file),
+              type: FileTypes.CHAPTER_SP,
+            }
           });
 
-          version || (version = []);
-          if (version.indexOf(ver) === -1) {
-            version.push(ver);
-          }         
-        } else if (chapterName = isChapter(file, fixChildOptions)) {
-          const chapterNode = {
-            name, chapterName,
-            path: childpath,
-            type: FileTypes.CHAPTER,
-          };
-
           if (_showChapterCover) {
-            _chapterWithCoverFiles.push(chapterNode);
-          } else { 
-            _chapterFiles.push(chapterNode);
+            _chapterSpWithCoverFiles = files;
+          } else {
+            _chapterSpFiles = files;
           }
-          
-          chapterSize = (chapterSize || 0)+1;
-
-        } else {
-          _filterdFiles.push({ path: childpath });
+        } catch (err) {
         }
-      });
+      } else if (chapterName = isChapter(file, fixChildOptions)) {
+        const chapterNode = {
+          name, chapterName,
+          path: childpath,
+          type: FileTypes.CHAPTER,
+        };
+
+        if (_showChapterCover) {
+          _chapterWithCoverFiles.push(chapterNode);
+        } else { 
+          _chapterFiles.push(chapterNode);
+        }
+        
+        chapterSize = (chapterSize || 0)+1;
+
+      } else {
+        _filterdFiles.push({ path: childpath });
+      }
+    });
 
     // check current directory type is `MANGA` or `FILE`
     // - if directory has version or chapter then consider it as `MANGA` (_isManga)
@@ -440,6 +467,8 @@ async function traverse({
     const lastChars = ['最終', '最终'];
     _chapterFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames, lastChars));
     _chapterWithCoverFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames, lastChars));
+    _chapterSpFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames, lastChars));
+    _chapterSpWithCoverFiles.sort((a, b) => fs.filenameComparator(a.name, b.name, fixedTopNames, lastChars));
     _filterdFiles.sort((a, b) => fs.filenameComparator(
       pathFn.basename(a.path), // protect such as No.1000 (.1000 is not extname)
       pathFn.basename(b.path),
@@ -447,11 +476,13 @@ async function traverse({
       lastChars
     ));
 
-    // speical sort for chapters
+    // special sort for chapters
     const spConfig = get(metadata, 'chapters.sort');
     if (spConfig) {
       _chapterFiles = adjustChapters(_chapterFiles, spConfig);
       _chapterWithCoverFiles = adjustChapters(_chapterWithCoverFiles, spConfig);
+      _chapterSpFiles = adjustChapters(_chapterSpFiles, spConfig);
+      _chapterSpWithCoverFiles = adjustChapters(_chapterWithCoverFiles, spConfig)
     }
 
     if (maxDepth === 0) _filterdFiles = take(_filterdFiles, LAST_LOOP_COUNT);
@@ -460,7 +491,7 @@ async function traverse({
     const createTask = (node) => async () => {
       const { path } = node;
       const child = maxDepth > 0 ?
-        await traverse({ baseDir, path, maxDepth: maxDepth-1, onlyFile, settings}) : 
+        await traverse({ baseDir, path, maxDepth: maxDepth-1, onlyFile, settings }) : 
         await traverseLast({ baseDir, path });
 
       return child ? Object.assign(child, node) : child;
@@ -469,9 +500,11 @@ async function traverse({
     const tasks = _filterdFiles.map(createTask);
     const childNodes = await parallel$(tasks, 10);
 
-
     const chapterTasks = _chapterWithCoverFiles.map(createTask);
     const chapterNodes = await parallel$(chapterTasks, 10);
+
+    const chapterSpTasks = _chapterSpWithCoverFiles.map(createTask);
+    const chapterSpNodes = await parallel$(chapterSpTasks, 10);
 
     const filteredChildNodes = childNodes.filter((child, index) => {
       if (!child) return false;
@@ -510,19 +543,12 @@ async function traverse({
 
       children = _versionFiles
         .concat(_chapterFiles)
+        .concat(_chapterSpFiles)
         .concat(chapterNodes)
-        .concat(filteredChildNodes);
+        .concat(chapterSpNodes)
+        .concat(filteredChildNodes)
+        .filter(Boolean)
     }
-
-    // not need this ?? 'cover.jpg|png' will be sorted to the top.
-    // if not find cover try to find `cover.jpg` as cover
-    // if (maxDepth === 0 && !cover && filesLength > LAST_LOOP_COUNT) {
-    //   const hasCover = await fs.accessAsync(pathFn.join(absPath, COVER_FILENAME));
-      
-    //   if (hasCover) {
-    //     cover = pathFn.posix.join(path, COVER_FILENAME);
-    //   }
-    // }
   }
 
   // Last loop will not run after.
@@ -710,9 +736,14 @@ const isChapter = (name, { parentName, metadata, filepath }) => {
   return false;
 }
 
+const isChapterSp = (name) => {
+  if (name === '@sp') return true;
+  return false;
+}
+
 const isVersion = (name, { parentName } = {}) => {
-  if (name === parentName) {
-    return 'default'
+  if (new RegExp(`^${parentName}$`).test(name)) {
+    return 'default';
   }
 
   const basename = parentName ? `^${parentName}` : '';

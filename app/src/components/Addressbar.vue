@@ -104,7 +104,7 @@ export default {
 
   methods: {
     isLastNav(index) {
-      return index === this.navs_.length - 1;
+      return index === this.navs.length - 1;
     },
 
     refresh() {
@@ -114,7 +114,9 @@ export default {
 
       // scroll to right
       if (this.$feature.touch) {
-        this.$nextTick(() => this.$refs.mobile.scrollLeft = 9999);
+        this.$nextTick(() => {
+          this.$refs.mobile && (this.$refs.mobile.scrollLeft = 9999)
+        });
       }
     },
 

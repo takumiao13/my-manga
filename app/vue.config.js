@@ -128,17 +128,40 @@ module.exports = {
     svgRule.uses.clear()
     svgRule.exclude.add(/node_modules/)
     svgRule
+      .test(/icons\/.+?\.svg$/)
+      .oneOf('url')
+        .resourceQuery(/inline/)
+        .use('svg-inline-loader')
+          .loader('svg-inline-loader')
+          .options()
+          .end()
+        .end()
+      .oneOf('sprite')
+        .use('svg-sprite-loader')
+          .loader('svg-sprite-loader')
+          .options()
+          .end();
+      
+    
+    // inline svg loader
+    const svgInlineRule = config.module.rule('svg-inline');
+    svgInlineRule.exclude.add(/icons/)
+    svgInlineRule
       .test(/\.svg$/)
-      .use('svg-sprite-loader')
-      .loader('svg-sprite-loader')
-      .options();
-
-    const curRule = config.module.rule('cur');
-    curRule
-      .test(/\.cur$/)
-      .use('file-loader')
-      .loader('file-loader')
-      .options();
+      .oneOf('url')
+        .resourceQuery(/url/)
+        .use('svg-url-loader')
+          .loader('svg-url-loader')
+          .end()
+        .end()
+      .oneOf('external')
+        .use('file-loader')
+          .loader('file-loader')
+          .options({
+            name: 'assets/[name].[hash:8].[ext]',
+          })
+          .end()
+        .end();
   },
   pwa: {
     name: appName,

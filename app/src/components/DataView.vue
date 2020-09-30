@@ -1,21 +1,16 @@
 <template>
   <div class="data-view">
-    <div class="data-view-loading-mask" v-show="loading">
-      <spinner class="data-view-loading-spinner" tip="Loading" />
+    <div class="data-view-loading-mask" :class="{ open: loading }">
+      <Spinner class="data-view-loading-spinner" v-bind="spinner">
+        <slot name="spinner-tip" />
+      </Spinner>
     </div>
 
-    <slot></slot>
-
-    <div class="data-view-container" v-show="!loading && empty && !error">
-      <div class="mb-3">
-        <icon name="empty" size="48" />
-      </div>
-      NO ITEMS
-    </div>
+    <slot />
 
     <div class="data-view-container" v-show="!loading && error && !error.warn">
-      <div class="mb-3">
-        <icon :name="error_.icon" size="48" />
+      <div>
+        <Icon :name="error_.icon" size="48" />
       </div>
       <h4>{{ error_.name }}</h4>
       <p>{{ error_.message }}</p>
@@ -36,10 +31,10 @@ export default {
 
   props: {
     loading: Boolean,
-    
-    empty: Boolean,
-    
+
     error: Object,
+  
+    spinner: Object
   },
 
   computed: {
@@ -50,7 +45,7 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .data-view {
   position: relative;
 }
@@ -62,14 +57,32 @@ export default {
   right: 0;
   bottom: 0;
   left: 0;
-  transition: opacity .3s;
-}
+  z-index: -1;
+  opacity: 0;
+  transition-property: opacity;
 
-.data-view-loading-spinner {
-  position: absolute;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  .data-view-loading-spinner {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 0s;
+    transition-delay: 0s;
+  }
+
+   &.open {
+    opacity: 1;
+    z-index: 1040;
+    transition-duration: 0s;
+
+    .data-view-loading-spinner {
+      opacity: 1;
+      transition-duration: .2s;
+      transition-delay: .5s;
+    }
+  }
 }
 
 .data-view-container {

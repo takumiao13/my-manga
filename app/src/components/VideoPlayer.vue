@@ -28,12 +28,13 @@ export default {
     }
   },
 
-  // watch: {
-  //   options(newVal, oldVal) {
-  //     console.log('options', newVal, newVal === oldVal);
-  //     this.createPlayer(newVal);
-  //   }
-  // },
+  watch: {
+    options(newVal, oldVal) {
+      if (newVal.sources !== oldVal.sources) {
+        this.player && this.player.src(newVal.sources);
+      }
+    }
+  },
 
   methods: {
     createPlayer(options) {
@@ -51,6 +52,8 @@ export default {
             });
 
             //this.userActive(false);
+
+            self.$emit('ready', this);
 
             this.on('play', function() {
               self.$emit('play');

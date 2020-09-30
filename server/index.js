@@ -210,8 +210,8 @@ class Application extends EventEmitter {
     return await koaSend(...args)
   }
   
-  throwError(code) {
-    throw new CustomError(code)
+  throwError(code, err) {
+    throw new CustomError(code, err)
   }
 }
 

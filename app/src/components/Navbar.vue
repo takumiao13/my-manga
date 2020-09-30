@@ -22,7 +22,8 @@
         >
           <icon 
             v-if="btn.icon"
-            :name="btn.icon" 
+            :name="btn.icon"
+            :size="btn.iconSize || 16"
             :class="{ 'mr-2': btn.title }"
           />
           <span v-html="btn.title"></span>
@@ -60,7 +61,8 @@
         >
           <icon 
             v-if="btn.icon"
-            :name="btn.icon" 
+            :name="btn.icon"
+            :size="btn.iconSize || 16"
             :class="{ 'mr-2': btn.title }"
           />
           <span v-html="btn.title"></span>
@@ -117,7 +119,7 @@ export default {
         buttons = this.leftBtns;
       }
 
-      return buttons && buttons.map(btn => {
+      return buttons && buttons.filter(Boolean).map(btn => {
         btn = Object.assign({}, DEFAULT_BUTTON, btn);
         if (btn.dropdown && !btn.dropdown.props.alignment) {
           btn.dropdown.props.alignment = 'left';
@@ -134,7 +136,7 @@ export default {
         buttons = this.rightBtns;
       }
       
-      return buttons && buttons.map(btn => {
+      return buttons && buttons.filter(Boolean).map(btn => {
         btn = Object.assign({}, DEFAULT_BUTTON, btn);
         if (btn.dropdown && !btn.dropdown.props.alignment) {
           btn.dropdown.props.alignment = 'right';

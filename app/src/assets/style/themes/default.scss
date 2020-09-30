@@ -1,28 +1,36 @@
 $white:        #fff;
 $black:        #000;
-$light:        #f8f9fa;
-$light-100:    #eee;
-$light-200:    #ddd;
-$light-300:    #ccc;
-$light-400:    #999;
+
+// Base
+$app-primary:      $primary; // theme color
+
+$app-light:        #f8f9fa;
+$app-light-100:    #eee;
+$app-light-200:    #ddd;
+$app-light-300:    #ccc;
+
+$app-gray-100:     #999;
+$app-gray-200:     #666;
+$app-gray-300:     #333;
         
 // Variables
-$app-primary:     $primary;
-$app-main:        $white;
-$app-bg:          $light;
-$app-color:       $black;
-$app-sidebar-bg:  $light-100;
+$app-main:                  $white;
+$app-bg:                    $app-light;
+$app-color:                 $black;
 
-$app-light-bg:        $light-100;
-$app-lighter-bg:      $light-200;
-$app-cover-bg:        $light-100;
-$app-shadow-color:    $black;
-$app-border-color:    $light-200;
-$app-muted-color:     $light-400;
-$app-item-active-bg:  $light-200;
-$app-grid-active-bg:  $light-300;
-$app-item-hover-bg:   $light;
+$app-sidebar-bg:            $app-light-100;
+$app-sidebar-menubar-bg:    $app-light-200;
 
-$app-scrollbar-thumb:       $light-200;
-$app-scrollbar-thumb-hover: $light-300;
-$app-scrollbar-track:       $light-100;
+$app-light-bg:              $app-light-100;
+$app-lighter-bg:            $app-light-200;
+$app-cover-bg:              $app-light-100;
+$app-shadow-color:          $black;
+$app-border-color:          $app-light-200;
+$app-muted-color:           $app-gray-100;
+$app-item-active-bg:        $app-light-200;
+$app-grid-active-bg:        $app-light-300;
+$app-item-hover-bg:         $app-light;
+
+$app-scrollbar-thumb:       $app-light-200;
+$app-scrollbar-thumb-hover: $app-light-300;
+$app-scrollbar-track:       $app-light-100;

@@ -1,5 +1,5 @@
 <template>
-  <div class="repos">
+  <div id="repos" class="repos">
     <div class="topbar">
       <navbar class="d-sm-none" :title="title" :left-btns="leftBtns" />
     </div>
@@ -25,7 +25,7 @@
       </div>
 
       <p class="my-3 text-muted" style="font-size: 80%;">
-        REPOS ({{ repos.length }})
+        REPOS - {{ repos.length }}
       </p>
 
       
@@ -42,16 +42,16 @@
               class="btn" 
               @click="handleRemoveRepo($event, repo)"
             >
-              <icon name="trash" />
+              <Icon name="trash" />
             </button>
           </div>
 
-          <icon 
+          <Icon 
             v-if="repo.dirId === repoId"
             name="check"
             class="mr-3"
           />
-          <icon 
+          <Icon 
             v-else-if="!repo.accessed"
             name="ban"
             class="mr-3"
@@ -80,7 +80,7 @@
             <div class="repo-item-inner">
               <div 
                 class="repo-item-cover"
-                v-for="src in latestCovers(repo)"
+                v-for="src in ??"
                 :key="src"  
               >
                 <img :src="src" />
@@ -124,7 +124,7 @@ export default {
     leftBtns() {
       return this.$router.canGoBack() ? [{
         icon: 'arrow-left',
-        click: this.handleBack
+        click: this.back
       }] : null;
     }
   },
@@ -138,22 +138,14 @@ export default {
   },
 
   methods: {
-    repoItem(repo) {
-      return repo
-    },
-
-    latestCovers(repo) {
-      const { latest, dirId } = repo;
-      return latest
-        .filter(item => item.cover)
-        .map(item => this.$service.image.makeSrc({
-          path: item.cover, 
-          dirId,
-          width: item.width,
-          height: item.height,
-          thumb: true
-        }))
-        .slice(0, 3);
+    back() {
+      const prevHref = window.location.href;
+      this.$router.go(-1);
+      setTimeout(() => {
+        if (prevHref === window.location.href) {
+          this.$router.go(1);
+        }
+      }, 16);
     },
 
     handleSelectRepo() {
@@ -166,24 +158,15 @@ export default {
       // 1.not from error page
       // 2.repo is not changed 
       // 3.can go back
-      // then we just back it
-      if (repo.dirId === this.repoId) {
-        // when come from repo click
-        if (this.$router.canGoBack()) {
-          console.log('repo back');
-          this.$router.go(-1);
-          return;
 
-        // when come from browser back
-        } else if (this.$router.delta()) {
-          console.log('repo forward');
-          this.$router.go(1);
-          return;
-        }
+      // then we just back it
+      if (repo.dirId === this.repoId && this.$router.canGoBack()) {
+        this.back();
+
+      // we should reset store to change repo
+      } else {
+        EventEmitter.$emit('store.reset', repo);
       }
-    
-      // we should reset store to change repo 
-      EventEmitter.$emit('store.reset', repo);
     },
 
     handleAddRepo(event, paths) {
@@ -208,20 +191,16 @@ export default {
       if (index > -1) {
         this.$store.dispatch(types[scope].UNSET, payload)
           .then(() => {
-            // remove done; tip later
+            // remove done
           })
       }
-    },
-
-    handleBack() {
-      this.$router.go(-1);
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-@import '../../assets/style/base';
+@import '@/assets/style/base';
 
 .page-header {
   margin: 3rem 0 2rem 0;

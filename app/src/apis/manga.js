@@ -23,6 +23,7 @@ function _transformResponse(res) {
     cover,
     files: group.FILE || [],
     chapters: (group.CHAPTER || []).map(_attachPlaceholder),
+    chaptersSp: (group.CHAPTER_SP || []).map(_attachPlaceholder),
     mangas: (group.MANGA || []).map(_attachPlaceholder),
     images: group.IMAGE || [],
     versions

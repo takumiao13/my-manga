@@ -25,7 +25,6 @@ module.exports = () => async (ctx, next) => {
       ctx.status = err.status || 500;
       ctx.body = err.message;
       ctx.logger('app').error(err);
-      console.log(err);
     }
   }
 }

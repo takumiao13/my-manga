@@ -1,14 +1,23 @@
 <template>
-  <div id="viewer">
-    <div :class="['topbar viewer-topbar fixed-top', { open: locking }]">
+  <div>
+    <div 
+      :class="[
+        'topbar viewer-topbar fixed-top', 
+        { open: locking }
+      ]"
+    >
       <navbar :left-btns="leftBtns" :right-btns="rightBtns" />
     </div>
 
     <div class="viewer-container">
       <div class="viewer-viewport">
+        <Loading :visible="pending" />
+
         <video-player
           v-if="inited"
+          ref="videoPlayer"
           :options="options"
+          @ready="handleReady"
           @play="handlePlay"
           @pause="handlePause"
           @active="handleActive"
@@ -16,39 +25,59 @@
         />
       </div>
     </div>
+
+    <ListDrawer
+      :visible="chapterListVisible"
+      :list="parts"
+      item-key="name"
+      :active-key="name"
+      @change="handlePartChange"
+      @close="chapterListVisible = false"
+    />
   </div>
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex';
+import { mapState, mapGetters, mapMutations, mapActions } from 'vuex';
 import qs from '@/helpers/querystring';
+import { last } from '@/helpers/utils';
 import screenfull from 'screenfull';
+import ListDrawer from '../components/ListDrawer';
+import Loading from '../components/Loading';
+import FullscreenToggle from './FullscreenToggle';
 
 export default {
+  components: {
+    ListDrawer,
+    Loading,
+  },
 
   data() {
     return {
       inited: false,
       paused: true,
-      locking: true,
-      isFullscreen: false
+      chapterListVisible: false,
     }
   },
   
   computed: {
     ...mapState('app', { appError: 'error' }),
 
-    ...mapState('viewer', [ 'name', 'path', 'cover' ]),
+    ...mapState('viewer', [ 'name', 'source', 'cover', 'parts', 'fullscreen', 'locking' ]),
+
+    ...mapGetters('viewer', [ 'pending' ]),
+
+    ...mapGetters('app', [ 'repo' ]),
     
     options() {
       return this.inited ? {
-        sources: [ this.$service.video.makeSrc(this.path, true) ],
+        sources: [ this.$service.video.makeSrc(this.source, true) ],
         poster: this.$service.image.makeSrc({
           path: this.cover,
           escape: true
         }),
         controls: true,
-        autoplay: false,
+        autoplay: true,
         preload: 'auto',
         fluid: true,
         //playbackRates: [0.5, 1, 1.5, 2],
@@ -63,30 +92,73 @@ export default {
       return [{
         icon: 'arrow-left',
         tip: 'Back',
-        title: this.name,
+        title: this.pending ? '' : this.name,
         click: this.handleBack,
         className: 'text-truncate viewer-title'
       }];
     },
 
     rightBtns() {
-      return [{  
-        icon: this.isFullscreen ? 'compress' : 'expand',
-        tip: 'Fullscreen',
-        click: () => this.fullscreenToggle()
-      }]
+      return [
+        this.parts.length > 1 ? {
+          icon: 'list-alt',
+          tip: 'parts',
+          click: () => this.chapterListVisible = true
+        } : null,
+        {
+          icon: 'level-up-alt',
+          tip: 'Detail',
+          click: () => this.handleDetail()
+        }
+      ]
+    }
+  },
+
+  watch: {
+    fullscreen(val) {
+      screenfull[val ? 'request' : 'exit']();
     }
   },
 
   methods: {
     ...mapActions('viewer', ['fetchVideo']),
 
-    fullscreenToggle() {
-      screenfull.toggle();
-      this.isFullscreen = !this.isFullscreen;
-    },
+    ...mapMutations('viewer', [
+      'setSettings',
+      'setAutoPlaying',
+      'setLocking',
+      'setFullscreen'
+    ]),
 
     // events
+    handlePlay() {
+      this.paused = false;
+    },
+
+    handlePause() {
+      this.paused = true;
+      this.setLocking(true);
+    },
+
+    handleActive() {
+      this.setLocking(true);
+    },
+
+    handleInactive() {
+      if (!this.paused) {
+        //this.locking = false;
+        this.setLocking(false);
+      }
+    },
+
+    handlePartChange(item) {
+      this.$router.replace({
+        name: 'viewer',
+        params: this.$route.params,
+        query: Object.assign({}, this.$route.query, { name: item.name })
+      }).then(() => this.chapterListVisible = false);
+    },
+
     handleBack() {
       if (this.$router._routerHistory.length === 1) {
         const { dirId } = this.$router.history.current.params;
@@ -99,23 +171,43 @@ export default {
       }
     },
 
-    handlePlay() {
-      this.paused = false;
-    },
+    handleDetail() {
+      const { dirId } = this.repo;
+      const { ver } = this.$router.history.current.query;
+      let path  = qs.decode(this.$router.history.current.params.path);
 
-    handlePause() {
-      this.paused = true;
-      this.locking = true;
-    },
+      path = ver
+        ? path.split('/').slice(0, -1).join('/')
+        : path;
 
-    handleActive() {
-      this.locking = true;
-    },
+      const prevMangaListFullpath = `/repo/${dirId}/manga/${encodeURIComponent(path)}`
+      const mayBeBack = last(this.$router._routerHistory).startsWith(prevMangaListFullpath);
 
-    handleInactive() {
-      if (!this.paused) {
-        this.locking = false;
+      if (mayBeBack) {
+        this.$router.go(-1);
+      } else {
+        this.$router.replace({
+          name: 'explorer',
+          params: { 
+            dirId, 
+            path: qs.encode(path)
+          },
+          query: {
+            type: 'manga',
+            ver
+          }
+        });
       }
+    },
+
+    handleReady(videoPlayer) {
+      const controlBar = videoPlayer.getChild('ControlBar'); 
+      // fullscreen button
+      const fullscreenToggleButton = new FullscreenToggle(videoPlayer);
+      fullscreenToggleButton.el().style.marginLeft = 'auto';
+      fullscreenToggleButton.on('tap', () => this.setFullscreen());
+
+      controlBar.addChild(fullscreenToggleButton);
     }
   },
 
@@ -129,26 +221,23 @@ export default {
     this.$on('update', (route) => {
       const { dirId, path } = route.params;
       const { ver, name } = route.query;
+
       this.fetchVideo({ dirId, path: qs.decode(path), ver, name })
         .then(() => {
-          // TODO: tmp use inited to support async init videojs
           this.inited = true;
         });
     });
-    
   }
 }
 </script>
 
 <style lang="scss">
-@import '../../../assets/style/base';
+@import '@/assets/style/base';
 
 .viewer-viewport {
   cursor: pointer;
   position: relative;
   min-height: 100vh;
-  padding-top: 3rem;
-  padding-bottom: 3rem;
 
   display: flex;
   justify-content: center;
@@ -174,6 +263,11 @@ export default {
   left: 0 !important;
   height: 100% !important;
   padding-top: 0 !important;
+
+
+  &.vjs-error .vjs-error-display .vjs-modal-dialog-content {
+    top: 3rem;
+  }
 
   .vjs-poster {
     top: 3rem !important;

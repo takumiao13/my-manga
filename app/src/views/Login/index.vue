@@ -1,5 +1,5 @@
 <template>
-  <div class="login-container">
+  <div id="app.login" class="login-container">
     <div class="login-box">
     <icon class="logo-icon" name="logo" size="80" />
     <h3>Please Login</h3>
@@ -86,10 +86,9 @@ export default {
 
         $form.submitted = true;
         this.login(this.form)
-          .then(() => Promise.all([
-            this.$store.dispatch(settingTypes.user.init),
-            this.$store.dispatch(settingTypes.repo.init)
-          ]))
+          .then(() => {
+            return this.$store.dispatch(settingTypes.user.init)
+          })
           .then(() => {
             this.setError(null);
             this.$router.push({ name: 'home' });
@@ -106,7 +105,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../assets/style/base';
+@import '@/assets/style/base';
 
 .login-container {
   position: fixed;
@@ -130,9 +129,7 @@ export default {
   @include media-breakpoint-up(sm) {
     width: 450px;
     min-height: 500px;
-    border: 1px solid #ddd;
     padding: 48px 40px 64px;
-    background: #fff;
   }
 }
 
@@ -140,7 +137,6 @@ export default {
   display: block;
   margin: 0 auto;
   margin-bottom: 1.5rem;
-  color: $primary;
 }
 
 h3 {

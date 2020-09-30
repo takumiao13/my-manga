@@ -54,7 +54,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import '../../../assets/style/base';
+@import '@/assets/style/base';
 
 .viewer-seekbar-tip {
   max-width: 100px;

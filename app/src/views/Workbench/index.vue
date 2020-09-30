@@ -11,7 +11,11 @@
         </div>
 
         <!-- Backdrop -->
-        <div id="workbench.backdrop" class="backdrop" @click="toggleAside(false)"></div>
+        <div
+          id="workbench.backdrop"
+          class="backdrop" 
+          @click="toggleAside(false)"
+        ></div>        
       </div>
     </div>
   </div>
@@ -48,22 +52,12 @@ export default {
   beforeRouteUpdate(to, from, next) {
     this.setActivity(to.query.activity);
     next();
-  },
-
-  created() {
-    this._removeListener = this.$service.media.addListener(evt => {
-      this.setSize(evt.$active);
-    });
-  },
-
-  destroyed() {
-    this._removeListener();
-  } 
+  }
 }
 </script>
 
 <style lang="scss" scoped>
-@import '../../assets/style/base';
+@import '@/assets/style/base';
 
 .main {
   flex: 0 1 100%;
@@ -84,7 +78,7 @@ export default {
 </style>
 
 <style lang="scss">
-@import '../../assets/style/base';
+@import '@/assets/style/base';
 
 .aside-open {
   overflow-y: hidden !important; // hide body scroll

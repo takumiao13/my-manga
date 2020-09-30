@@ -7,13 +7,13 @@
             v-if="viewMode == 'grid'"
             name="th"
             size="18"
-            @click.native="$emit('viewModeChange', 'list')"
+            @click.native="$emit('view-mode-change', 'list')"
           />
           <icon 
             v-else-if="viewMode == 'list'"
             name="th-list"
             size="18" 
-            @click.native="$emit('viewModeChange', 'grid')"
+            @click.native="$emit('view-mode-change', 'grid')"
           />
         </div>
         FILES - {{ list.length }} items
@@ -28,7 +28,7 @@
       <div 
         :class="{ 
           active: item.path === activePath, 
-          'col-4 col-sm-3 col-xl-2 area-item': viewMode == 'grid',
+          'col-4 col-sm-3 col-lg-2 area-item': viewMode == 'grid',
           'list-group-item list-group-item-action': viewMode == 'list'
         }"
 
@@ -38,7 +38,7 @@
       >
         <div v-show="viewMode == 'grid'" class="area-item-inner">
           <div>
-            <icon :name="icon(item)" style="color: #bbb;" />
+            <Icon :name="icon(item)" style="color: #bbb;" />
           </div>
         </div>
         
@@ -47,7 +47,7 @@
         </div>
 
         <div v-show="viewMode == 'list'" class="text-truncate">
-          <icon :name="icon(item)" size="18" />
+          <Icon :name="icon(item)" size="18" />
           &nbsp; {{ item.name }} 
         </div>
       </div>
@@ -72,7 +72,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../../../../assets/style/base';
+@import '@/assets/style/base';
+
 .file-area {
   .row {
     margin-left: -.5rem;
@@ -80,12 +81,14 @@ export default {
   }
   
   // 1/8
-  // .area-item {    
-  //   @include media-breakpoint-up(xl) {
-  //     flex: 0 0 12.5%;
-  //     max-width: 12.5%;
-  //   }
-  // }
+  .area-item {
+    border-radius: .3rem;
+
+    @include media-breakpoint-up(xl) {
+      flex: 0 0 12.5%;
+      max-width: 12.5%;
+    }
+  }
 
   // like fake cover
   .area-item-inner {
@@ -93,6 +96,7 @@ export default {
     position: relative;
     border-radius: .25rem;
     padding: 0px 0px 100%;
+    cursor: pointer;
 
     > div {
       position: absolute;
@@ -108,6 +112,14 @@ export default {
         height: 35%;
       }
     }
+  }
+
+  .caption {
+    max-height: 44px;
+    word-wrap: break-word;
+    word-break: break-all;
+    overflow: hidden;
+    line-height: 1.6;
   }
 }
 </style>

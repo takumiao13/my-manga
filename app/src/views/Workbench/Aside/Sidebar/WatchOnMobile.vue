@@ -93,9 +93,7 @@ export default {
   justify-content: center;
 
   .qrcode {
-    background: #fff;
     padding: .5rem;
-    border: .5px solid #ddd;
     height: 158px;
   }
 }

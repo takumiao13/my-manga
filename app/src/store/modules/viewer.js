@@ -1,8 +1,10 @@
 import Vue from 'vue';
+import * as minimatch from 'minimatch';
 import { safeAssign, isDef, find } from '@/helpers/utils';
+import mangaAPI from '@/apis/manga';
+import consts from '@/consts';
 import { createRequestStatus } from '../helpers';
 import { NAMESPACE as APP_NAMESPACE } from './app'
-import mangaAPI from '@/apis/manga';
 
 // Namespace
 export const NAMESPACE = 'viewer';
@@ -13,8 +15,7 @@ const SET_PAGE = 'setPage';
 const SET_SETTINGS = 'setSettings';
 const SET_LOCKING = 'setLocking';
 const SET_FULLSCREEN = 'setFullscreen';
-const SET_SPEED = 'setSpeed';
-const SET_AUTO_SCROLLING = 'setAutoScrolling';
+const SET_AUTO_PLAYING = 'setAutoPlaying';
 
 const statusHelper = createRequestStatus('status');
 
@@ -25,6 +26,9 @@ const initialState = {
   verNames: [],
   images: [],
   chapters: [],
+
+  source: '', //video only
+  parts: [], // video only
 
   ch: '', // original chapter name
   chIndex: 0,
@@ -38,17 +42,21 @@ const initialState = {
   locking: true,
 
   // mode state
-  mode: 'scroll',
-  autoScrolling: false, // replace later
-  speed: 100,
+  autoPlaying: false, // use `autoPlaying` replace later
 
   // settings state
   settings: {
     zoom: 'width',
-    gaps: true,
     pagerInfo: true,
-    handMode: 'right',
+    hand: 'right',
+    // scroll only
+    gaps: true,
+    scrollSpeed: 100,
+    // swipe only
+    effect: 'slide',
+    playInterval: 2000
   },
+
   ...statusHelper.state()
 };
 
@@ -60,6 +68,10 @@ const createModule = (state = { ...initialState }) => ({
   getters: {
     pending(state) {
       return statusHelper.is.pending(state);
+    },
+
+    success(state) {
+      return statusHelper.is.success(state);
     },
   
     count(state) {
@@ -75,99 +87,76 @@ const createModule = (state = { ...initialState }) => ({
     },
 
     settings(state, getters, allState, allGetters) {
-      let { gaps } = state.settings;
       const { path } = state;
-      const repoState = allGetters[`${APP_NAMESPACE}/repo`];  // find nested state
-      const obj = repoState.viewer || {};
+      const repoState = allGetters[`${APP_NAMESPACE}/repo`]; // find nested state
+      const viewerSettings = repoState.viewer || {};
+      const mergedSettings = { ...viewerSettings.options || {}, ...state.settings };
 
-      // handle settings gaps
-      if (obj.gaps) {
-        let rest;
-        gaps = obj.gaps['*'] || gaps;
+      // not change override settings.json default mode
+      if (!mergedSettings.mode) {
+        mergedSettings.mode = consts.VIEWER_MODE.SCROLL;
+      }
 
-        // match gaps path
-        Object.keys(obj.gaps).forEach(p => {
-          if (path.indexOf(p) === 0) {
-            let r = path.slice(p).length;
-            if (!rest || r < rest) {
-              rest = r;
-              gaps = obj.gaps[p];
-            }
+      // override default settings
+      if (viewerSettings.overrides) {
+        viewerSettings.overrides.forEach(item => {
+          if (minimatch(path, item.path)) {
+            Object.assign(mergedSettings, item.options || {});
+            mergedSettings.force = true; // cannot changed mode
           }
         });
       }
 
-      return Object.assign({}, state.settings, { gaps })
+      // the final viewer settings
+      return mergedSettings;
     }
   },
 
   actions: {
-    fetchManga({ commit, state }, payload = {}) {
-      const { dirId, path, ch, page } = payload;
-      const promiseArray = [];
-      const pathResStub = () => {};
+    fetchManga({ commit }, payload = {}) {
+      let { ch, page } = payload;
+      let name, path, images, chapters, verNames, cover;
 
-      const pathPromise = state.path !== path ? 
-        mangaAPI.list({ dirId, path }) : 
-        pathResStub;
-  
-      promiseArray.push(pathPromise);
+      const params = {
+        dirId: payload.dirId,
+        path: payload.path
+      };
 
- 
-      // fetch chapters images every time
-      // TODO: should check is not need fetch again
-      if (ch) {
-        const chPromise = mangaAPI.list({ 
-          dirId, 
-          path: `${path}/${ch}` 
-        }); 
-        promiseArray.push(chPromise);
-      }
-  
       // loading
       statusHelper.pending(commit);
-      
-      // fetch images and chapter parallelly
-      Promise.all(promiseArray).then(([res1, res2]) => {
-        let name = state.name, 
-            path = state.path, 
-            chapters, 
-            images,
-            verNames,
-            cover;
-  
-        // handle no chapters
-        if (res2 === void 0) {
-          if (res1 !== pathResStub) {
-            name = res1.name;
-            path = res1.path;
-            images = res1.images;
-            chapters = res1.chapters;
-            cover = res1.cover;
-            verNames = res1.verNames
+
+      return mangaAPI.list(params)
+        .then(res => {
+          name = res.name;
+          path = res.path;
+          images = res.images;
+          chapters = res.chapters;
+          verNames = res.verNames;
+          cover = res.cover;
+
+          const chapterSize = res.chapterSize;
+
+          // auto ch
+          if (ch || chapterSize) {
+            ch = ch || chapters[0].name;
+            return mangaAPI.list({ 
+              dirId: payload.dirId, 
+              path: `${path}/${ch}` 
+            });
           }
+        })
+        .then(res => {
+          if (res) images = res.images;
           
-        // handle chapters
-        } else {
-          if (res1 !== pathResStub) {
-            name = res1.name;
-            path = res1.path;
-            chapters = res1.chapters;
-            cover = res1.cover;
-            verNames = res1.verNames;
-          }
-  
-          images = res2.images;
-        }
-  
-        // try to remove name prefix
-        const chName = ch.replace(`${name} - `, '');
-        commit(SET_MANGA, { name, path, cover, images, chapters, chName, verNames });
-        commit(SET_PAGE, { page, ch });
-        Vue.nextTick(() => statusHelper.success(commit));
-      }).catch(error => {
-        statusHelper.error(commit, { error });
-      });
+          // try to remove name prefix
+          const chName = ch.replace(`${name} - `, '');
+          commit(SET_MANGA, { name, path, cover, images, chapters, chName, verNames });
+          commit(SET_PAGE, { page, ch });
+          Vue.nextTick(() => statusHelper.success(commit));
+        })
+        .catch(error => {
+          statusHelper.error(commit, { error });
+        });
     },
 
     fetchVideo({ commit }, payload = {}) {
@@ -175,19 +164,22 @@ const createModule = (state = { ...initialState }) => ({
 
       statusHelper.pending(commit);
       return mangaAPI.list({ dirId, path }).then(res => {
-        const { name, cover, children, verNames } = res;
+        const { path, cover, children, verNames } = res;
         // find video from list
         // - version
         // - name (parts of video)
-        const findOptions = ver ? { ver } : { name: payload.name };
+        const parts = children.filter(item => item.fileType === 'video');
+        const findOptions = { name: payload.name || parts[0].name };
         const video = find(children, findOptions);
 
         commit(SET_MANGA, {
-          name, 
-          verNames,
-          path: video.path,
+          path,
+          name: video.name, 
+          source: video.path,
           cover: cover || '', // overwrite cover
-          activeVer: ver
+          activeVer: ver,
+          verNames,
+          parts
         });
 
         // should update status after state mutated 
@@ -217,11 +209,6 @@ const createModule = (state = { ...initialState }) => ({
 
     prevPage({ dispatch }) {
       return dispatch('gotoPage', { page: state.page - 1 });
-    },
-
-    autoScroll({ commit }, payload) {
-      commit(SET_LOCKING, false);
-      commit(SET_AUTO_SCROLLING, payload);
     }
   },
 
@@ -243,35 +230,21 @@ const createModule = (state = { ...initialState }) => ({
     },
 
     [SET_SETTINGS](state, payload) {
-      state.settings = safeAssign(state.settings, payload);
+      state.settings = { ...state.settings, ...payload };
     },
 
-    [SET_AUTO_SCROLLING](state, payload) {
-      const autoScrolling = isDef(payload) ? 
+    [SET_AUTO_PLAYING](state, payload) {
+      const autoPlaying = isDef(payload) ? 
         !!payload :
-        !state.autoScrolling;
+        !state.autoPlaying;
 
-      state.autoScrolling = autoScrolling;
-    },
-
-    [SET_SPEED](state, payload) {
-      const val = payload;
-      if (state.speed === 50 && val < 0) return;
-      if (state.speed === 200 && val > 0) return;
-
-      // reset speed
-      if (val === 0) {
-        state.speed = 100;
-      } else {
-        state.speed += val;
-      }
+      state.autoPlaying = autoPlaying;
     },
 
     [SET_LOCKING](state, payload) {
       const locking = isDef(payload) ?
         !!payload :
         !state.locking;
-
       state.locking = locking;
     },
 

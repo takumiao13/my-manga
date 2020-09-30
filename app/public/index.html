@@ -11,12 +11,17 @@
   <% if (htmlWebpackPlugin.options.ENV.APP_MODE !== 'prod') { %>
     ;(function () {
       var appMode = '<%= htmlWebpackPlugin.options.ENV.APP_MODE %>';
+      var nodeEnv = '<%= NODE_ENV %>';
       var src = '//cdn.jsdelivr.net/npm/eruda';
       if (!'ontouchstart' in document.documentElement) {
         return;
       }
       
-      if (appMode === 'rc' || (appMode === 'dev' && /debug=1/.test(window.location))) {
+      if (
+        nodeEnv === 'development' 
+        || appMode === 'rc' 
+        || (appMode === 'dev' && /debug=1/.test(window.location))
+      ) {
         document.write('<scr' + 'ipt src="' + src + '"></scr' + 'ipt>');
         document.write('<scr' + 'ipt>eruda.init();</scr' + 'ipt>');
       }     
