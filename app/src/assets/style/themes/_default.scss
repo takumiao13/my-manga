@@ -1,0 +1,38 @@
+$default-theme: (        
+  "primary":                 $primary,
+  "base":                    #fff,
+  
+  "shadow-color":            #000,
+  "border-color":            #ddd,
+  "muted-color":             #999,
+
+  "body-bg":                 #f8f9fa,
+  "body-color":              #000,
+
+  "error-icon-color":        #999,
+  "error-code-color":        #999, 
+  
+  "light-bg":                #eee,
+  "lighter-bg":              #ddd,
+
+  "sidebar-bg":              #eee,
+  "sidebar-menubar-bg":      #ddd,
+
+  "version-label-color":     #fff,
+  "version-label-bg":        #333,
+
+  "cover-bg":                #eee,
+  "cover-color":             #ccc,
+
+  "grid-active-bg":          #ccc,
+
+  "list-item-color":         #000,
+  "list-item-bg":            #fff,
+  "list-item-active-bg":     #ddd,
+  "list-item-hover-bg":      #f8f9fa,
+  "list-item-badge-color":   #fff,
+
+  "scrollbar-thumb-bg":      #ddd,
+  "scrollbar-thumb-hover-bg":#ccc,
+  "scrollbar-track-bg":      #eee,
+)

@@ -1,0 +1,38 @@
+$dark-theme: (        
+  "primary":                 $primary,
+  "base":                    #333,
+  
+  "shadow-color":            #fff,
+  "border-color":            #444,
+  "muted-color":             #ddd,
+
+  "body-bg":                 #1e1f1c,
+  "body-color":              #fff,
+
+  "error-icon-color":        #ddd,
+  "error-code-color":        #ddd, 
+  
+  "light-bg":                #272822,
+  "lighter-bg":              #333,
+
+  "sidebar-bg":              #333,
+  "sidebar-menubar-bg":      #272822,
+
+  "version-label-color":     #fff,
+  "version-label-bg":        #333,
+
+  "cover-bg":                #666,
+  "cover-color":             #ccc,
+
+  "grid-active-bg":          #ccc,
+  
+  "list-item-color":         #fff,
+  "list-item-bg":            #333,
+  "list-item-active-bg":     #000,
+  "list-item-hover-bg":      #1e1f1c,
+  "list-item-badge-color":   #fff,
+
+  "scrollbar-thumb-bg":      #666,
+  "scrollbar-thumb-hover-bg":#999,
+  "scrollbar-track-bg":      #1e1f1c,
+)

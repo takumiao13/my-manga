@@ -34,6 +34,14 @@
     </a>
 
     <a
+      :title="theme === $consts.THEME.DEFAULT ? 'Dark Mode': 'Light Mode'"
+      class="menubar-btn"
+      @click="handleToggleTheme"
+    >
+      <Icon :name="theme === $consts.THEME.DEFAULT ? 'moon' : 'sun'" />
+    </a>
+
+    <a
       title="Watch on Mobile"
       :class="['menubar-btn', { active: isActive('mobile') }]"
       @click="toggleActivity('mobile')"
@@ -54,7 +62,7 @@ import { pick } from '@/helpers/utils';
 
 export default {
   computed: {
-    ...mapState('app', ['asideOpen', 'activity']),
+    ...mapState('app', ['asideOpen', 'theme', 'activity']),
 
     ...mapState('settings/user', {
       canChangeRepos: (state) => !!state.data
@@ -62,7 +70,7 @@ export default {
   },
   
   methods: {
-    ...mapMutations('app', ['toggleAside', 'toggleSidebar', 'setActivity']),
+    ...mapMutations('app', ['toggleAside', 'toggleSidebar', 'setTheme', 'setActivity']),
 
     isActive(activity) {
       return activity === this.activity
@@ -85,6 +93,14 @@ export default {
         this.toggleAside(false);
       } else {
         this.toggleSidebar();
+      }
+    },
+
+    handleToggleTheme() {
+      if (this.theme === this.$consts.THEME.DEFAULT) {
+        this.setTheme(this.$consts.THEME.DARK);
+      } else if (this.theme === this.$consts.THEME.DARK) {
+        this.setTheme(this.$consts.THEME.DEFAULT);
       }
     },
 

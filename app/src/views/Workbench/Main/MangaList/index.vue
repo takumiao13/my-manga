@@ -410,7 +410,7 @@ export default {
           query: { ver, type }
         });
 
-      // handle click from chapter、gallery、single manga
+      // handle click from latest、chapter、gallery、single manga
       } else {
         const ch = item.type.startsWith('CHAPTER') ? item.name : undefined;
         let path = this.isManga
@@ -658,7 +658,7 @@ export default {
       border-top-width: 0px;
     }
 
-    @include media-breakpoint-up(sm) {
+    @include media-breakpoint-up(md) {
       margin-left: 0;
       margin-right: 0;
     }

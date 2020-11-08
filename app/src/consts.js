@@ -45,7 +45,12 @@ const KEYBOARD_ACTION = {
 const VIEWER_MODE = {
   SCROLL: 'scroll',
   SWIPE: 'swipe',
-}
+};
+
+const THEME = {
+  DEFAULT: 'default',
+  DARK: 'dark',
+};
 
 const consts = {
   LATEST_PATH,
@@ -53,7 +58,8 @@ const consts = {
   MANGA_GRID_SIZE,
   KEY_CODE,
   KEYBOARD_ACTION,
-  VIEWER_MODE
-}
+  VIEWER_MODE,
+  THEME,
+};
 
 export default consts;

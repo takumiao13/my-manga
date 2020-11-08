@@ -380,7 +380,7 @@ export default {
   }
 
   @include media-breakpoint-up(md) {
-    background: none;
+    background: none !important;
     padding-top: 30px;
     padding-bottom: 30px;
     padding-left: 0;
@@ -447,10 +447,6 @@ export default {
     padding: 0 .25rem;
   }
 
-  a + a {
-    // border-left: .5px solid #dedede;
-  }
-
   .svg-icon {
     width: 20px;
     height: 20px;
@@ -459,7 +455,7 @@ export default {
   }
 
   @include media-breakpoint-up(md) {
-    background: none;
+    background: none !important;
   }
 }
 

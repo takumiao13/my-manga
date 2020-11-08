@@ -81,7 +81,7 @@ export default {
 @import '@/assets/style/base';
 
 .aside-open {
-  overflow-y: hidden !important; // hide body scroll
+  // overflow-y: hidden !important; // hide body scroll
   width: 100%;
   height: 100%;
   position: relative; // fixed will lost `scrollTop`

@@ -23,7 +23,7 @@ export default async function title(ctx, next) {
 		title = ctx.to.meta.title || 'MyManga';
 	}
 
-	if (process.env.APP_MODE) {
+	if (process.env.APP_MODE && process.env.APP_MODE !== 'prod') {
 		title = `[${process.env.APP_MODE}] ${title}`;
 	}
 

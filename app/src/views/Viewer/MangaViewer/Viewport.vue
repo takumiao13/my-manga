@@ -2,7 +2,7 @@
   <div class="viewer-container" :class="{ 'viewer-locking': shouldLock }">
     <div class="viewer-viewport-left" @click.stop="handleLeft" />
     <div class="viewer-viewport" @click.stop="$emit('click')">
-      <slot class="viewer-mode" /> 
+      <slot class="viewer-mode" />
     </div>
     <div class="viewer-viewport-right" @click.stop="handleRight" />
   </div>
@@ -10,37 +10,40 @@
 
 <script>
 export default {
-  name: 'Viewport',
+  name: "Viewport",
 
-  props: [ 'hand', 'autoPlaying', 'locking' ],
+  props: ["hand", "autoPlaying", "locking"],
 
   computed: {
     shouldLock() {
       // TODO:
       // lock viewport disable prev and next ??
       // use css to implement ??
-      return (this.autoPlaying && !this.locking) || (!this.autoPlaying && this.locking);
-    }
+      return (
+        (this.autoPlaying && !this.locking) ||
+        (!this.autoPlaying && this.locking)
+      );
+    },
   },
 
   methods: {
     handleLeft() {
       if (this.shouldLock) {
-        this.$emit('click');
+        this.$emit("click");
         return;
       }
-      this.$emit(this.hand === 'right' ? 'prev' : 'next');
+      this.$emit(this.hand === "right" ? "prev" : "next");
     },
 
     handleRight() {
       if (this.shouldLock) {
-        this.$emit('click');
+        this.$emit("click");
         return;
       }
-      this.$emit(this.hand === 'right' ? 'next' : 'prev');
-    }
-  }
-}
+      this.$emit(this.hand === "right" ? "next" : "prev");
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>
@@ -66,7 +69,7 @@ export default {
   position: relative;
   min-height: 100vh;
   user-select: none
-  
+
   // locked
   &:after {
     content: none;
@@ -134,11 +137,10 @@ export default {
     width: calc(50% -  500px);
   }
 }
-
 </style>
 
 <style lang="scss">
-@import '@/assets/style/base';
+@import "@/assets/style/base";
 
 .viewer-mode {
   width: 100%;
@@ -161,7 +163,7 @@ export default {
 
 .viewer-swipe-mode {
   .viewer-mode {
-    height: calc(100vh - 3rem);
+    height: calc(100vh - 6rem);
   }
 
   @include media-breakpoint-down(sm) {

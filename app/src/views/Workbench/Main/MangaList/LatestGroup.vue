@@ -14,7 +14,7 @@
         <a  
           title="View more" 
           href="javascript:void 0;"
-          @click="$emit('more', { isDir: true, path: $consts.LATEST_PATH })" 
+          @click="$emit('more', { type: 'FILE', path: $consts.LATEST_PATH })" 
         >
           LATEST MANGA &rarr;
         </a>

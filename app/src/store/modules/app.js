@@ -17,6 +17,7 @@ const SET_USER       = 'setUser';
 const SET_ACTIVITY   = 'setActivity';
 const SET_SIZE       = 'setSize';
 const SET_ERROR      = 'setError';
+const SET_THEME      = 'setTheme';
 const SET_PWA_INSTALL_PROMPT = 'setPwaInstallPrompt';
 
 const ClassNames = {
@@ -48,6 +49,7 @@ export default {
     size: '',
     activity: '', // activity tab
     error: null,
+    theme: 'default',
     pwaInstallPrompt: null,
     user: {
       token: window.localStorage.getItem(TOKEN_KEY)
@@ -152,6 +154,22 @@ export default {
       state.error = payload === null ? 
         null : 
         Object.assign({}, DEFAULT_ERROR, payload || {});
+    },
+
+    /**
+     * 
+     * @param {*} state 
+     * @param {'default' | 'dark'} payload 
+     */
+    [SET_THEME](state, payload = 'default') {
+      const doc = window.document;
+      // reflow  to fix scroll-bar not update immediately      
+      doc.body.style.display = 'none';
+      doc.body.offsetHeight;
+      doc.body.style.display = '';
+      
+      doc.documentElement.setAttribute('theme', payload);
+      state.theme = payload;
     },
 
     /**

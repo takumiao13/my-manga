@@ -1,0 +1,26 @@
+
+@import "./_default.scss";
+@import "./_dark.scss";
+
+$themes: (
+  default: $default-theme,
+  dark: $dark-theme,
+);
+
+@mixin themed() {
+  @each $theme, $map in $themes {
+    [theme="#{$theme}"] & {
+      $theme-map: () !global;
+      @each $key, $submap in $map {
+        $value: map-get(map-get($themes, $theme), '#{$key}');
+        $theme-map: map-merge($theme-map, ($key: $value)) !global;
+      }
+      @content;
+      $theme-map: null !global;
+    }
+  }
+}
+
+@function t($key) {
+  @return map-get($theme-map, $key);
+}

@@ -1,26 +1,40 @@
 // App
 // ==
-[id="app"] {
-  background: $app-bg !important;
-  color: $app-color !important;
+
+body {
+  @include themed() {
+    color: t("body-color") !important;
+    background: t("body-bg") !important;
+  }
 }
 
 [id="app.error"] {
-  .error-icon,
+  .error-icon {
+    @include themed() {
+      color: t("error-icon-color") !important;
+    }
+  }
+
   .error-code {
-    color: $app-gray-100;
+    @include themed() {
+      color: t("error-code-color") !important;
+    }
   }
 }
 
 [id="app.login"] {
   .logo-icon {
-    color: $app-primary;
+    @include themed() {
+      color: t("primary") !important;
+    }
   }
 
   .login-box {    
     @include media-breakpoint-up(sm) {
-      border: .5px solid $app-border-color;
-      background: $app-main;
+      @include themed() {
+        border: .5px solid t("border-color");
+        background: t("base");
+      }
     }
   }
 }
@@ -28,340 +42,377 @@
 // ## repos
 [id="repos"] {
   .topbar > .navbar {
-    background: $app-main !important;
-    box-shadow: 0 1px 2px rgba($app-shadow-color, .1);
+    @include themed() {
+      background: t("base") !important;
+      box-shadow: 0 1px 2px rgba(t("shadow-color"), .1);
+    }
     z-index: 1030;
   }
 }
 
 // ## workbench.aside
 [id="workbench.aside"] {
-  background: $app-sidebar-bg !important;
+  @include themed() {
+    background: t("sidebar-bg") !important;
+  }
 
   .topbar > .navbar {
-    background: $app-sidebar-bg !important;
-    box-shadow: 0 1px 2px rgba($app-shadow-color, .1);
+    @include themed() {
+      background: t("sidebar-bg") !important;
+      box-shadow: 0 1px 2px rgba(t("shadow-color"), .1);
+    }
+
     z-index: 1030;
   }
 
   .a2hs-logo {
-    box-shadow: 0 1px 1px rgba($app-shadow-color, .4);
+    @include themed() {
+      box-shadow: 0 1px 1px rgba(t("shadow-color"), .4);
+    }
   }
 
   .aside-open & {
-    @include media-breakpoint-down(sm) {
-      box-shadow: 3px 0 3px rgba($app-shadow-color, .1);
+    @include media-breakpoint-down(sm) {    
+      @include themed() {
+        box-shadow: 3px 0 3px rgba(t("shadow-color"), .1);
+      }
     }
   }  
 }
 
+// ## workbench.aside.sidebar
+[id="workbench.aside.sidebar"] {
+  @include themed() {
+    border-right: 1px solid t("border-color");
+  }
+}
+
 // ## workbench.aside.sidebar.explorer
 [id="workbench.aside.sidebar.explorer"] {
-  .explorer-repo-name {
-    background: $app-lighter-bg;
-    box-shadow: 0 1px 2px rgba($app-shadow-color, .1);
-
-    > span:hover {
-      font-size: bold;
-      color: $app-primary;
-    }
-  }
-
-  .explorer-latest,
-  .explorer-rand,
-  .list-nested .list-group .list-group-item  {
-    &.active {
-      background: $app-lighter-bg;
-      color: $app-color;
-    }
-
-    &:hover {
-      background: $app-bg;
-    }
-
-    &.active:hover {
-      background: darken($app-lighter-bg, 5%);
-    }
-  }
-
-  .list-nested .manga-group-item {
-    .list-group .list-group-item {
-      background: $white;
-      border-bottom: .5px solid $app-border-color;
-
-      &:hover {
-        background: $app-item-hover-bg;
+  @include themed() {
+    .explorer-repo-name {
+      background: t("lighter-bg");
+      box-shadow: 0 1px 2px rgba(t("shadow-color"), .1);
+      
+      > span:hover {
+        font-size: bold;
+        color: t("primary");
       }
     }
 
-    .manga-group-btn {
-      border: .5px solid $app-muted-color;
+    .explorer-latest,
+    .explorer-rand,
+    .list-nested .list-group .list-group-item  {
+      &.active {
+        background: t("lighter-bg");
+        color: t("body-color");
+      }
+
+      &:hover {
+        background: t("body-bg");
+      }
+
+      &.active:hover {
+        background: darken(t("lighter-bg"), 5%);
+      }
+    }
+
+    .list-nested .manga-group-item {
+      .list-group .list-group-item {
+        background: t("body-bg");
+        border-bottom: .5px solid t("border-color");
+
+        &:hover {
+          background: t("list-item-hover-bg");
+        }
+      }
+
+      .manga-group-btn {
+        border: .5px solid t("muted-color");
+      }
     }
   }
 }
 
 // ## workbench.aside.sidebar.watchOnMobile
 [id="workbench.aside.sidebar.watchOnMobile"] {
-  .qrcode-wrapper .qrcode {
-    background: $app-main;
-    border: .5px solid $app-border-color;
+  @include themed() {
+    .qrcode-wrapper .qrcode {
+      background: $white;
+      border: .5px solid t("border-color");
+    }
   }
 }
 
 // ## workbench.aside.menubar
 [id="workbench.aside.menubar"] {
-  background: $app-sidebar-menubar-bg;
+  @include themed() {
+    background: t("sidebar-menubar-bg");
 
-  .menubar-btn.active {
-    &::after {
-      background: $app-primary !important;
+    .menubar-btn.active {
+      &::after {
+        background: t("primary") !important;
+      }
     }
   }
 }
 
 // ## workbench.main.manga
 [id="workbench.main.manga"] {
-  .header > .navbar {
-    background: $app-main !important;
-    box-shadow: 0 1px 2px rgba($app-shadow-color, .1);
-    z-index: 1030;
+  @include themed() {
+    .header > .navbar {
+      background: t("base") !important;
+      box-shadow: 0 1px 2px rgba(t("shadow-color"), .1);
+      z-index: 1030;
 
-    &.no-shadow {
-      box-shadow: none;
-    }
-
-    & + .addressbar {
-      box-shadow: 0 1px 2px rgba($app-shadow-color, .1);
-      z-index: 1020;
-    }
-  }
-
-  // metadata
-  .metadata-info,
-  .metadata-actions {
-    background: $app-main;
-    border-bottom: .5px solid $app-border-color;
-  }
-
-  .metadata-actions {
-    color: $app-muted-color;
-  }
-
-  .metadata-versions .list-group-item {
-    border-left: 3px solid $app-border-color !important;
-  
-    &.version-active {
-      border-left-color: $app-primary !important;
-      color: $app-primary !important;
-    }
-  }
-
-  .area-container {
-    background: $app-bg !important;
-  }
-
-  .area-header {
-    color: $app-muted-color;
-    background: $app-bg !important;
-  }
-
-  .area-header-inner {
-    border-color: $app-border-color !important;
-  }
-
-  .area-header a {
-    color: $app-muted-color;
-
-    &:hover {
-      color: $app-primary;
-    }
-  }
-
-  // manga item style
-  .manga-item {
-    .cover {
-      border-bottom: 0;
-    }
-
-    .badge {   
-      border: .5px solid $app-muted-color;
-      color: $app-muted-color;
-    }
-
-    .manga-status {
-      color: $app-primary;
-    }
-
-    .manga-version-labels {  
-      ul {
-        box-shadow: 0px 0px 2px $app-border-color;   
+      &.no-shadow {
+        box-shadow: none;
       }
-  
-      li {
-        color: $app-main;
-        background-color: rgba($app-gray-300, .85);
-        border-bottom: .5px solid $app-gray-200;
 
-        &::after {
-          border-right: 2px solid $app-primary;
+      & + .addressbar {
+        box-shadow: 0 1px 2px rgba(t("shadow-color"), .1);
+        z-index: 1020;
+      }
+    }
+
+    // metadata
+    .metadata-info,
+    .metadata-actions {
+      background: t("base");
+      border-bottom: .5px solid t("border-color");
+    }
+
+    .metadata-actions {
+      color: t("muted-color");
+    }
+
+    .metadata-versions .list-group-item {
+      border-left: 3px solid t("border-color") !important;
+    
+      &.version-active {
+        border-left-color: t("primary") !important;
+        color: t("primary") !important;
+      }
+    }
+
+    .area-container {
+      background: t("body-bg") !important;
+    }
+
+    .area-header {
+      color: t("muted-color");
+      background: t("body-bg") !important;
+    }
+
+    .area-header-inner {
+      border-color: t("border-color") !important;
+    }
+
+    .area-header a {
+      color: t("muted-color");
+
+      &:hover {
+        color: t("primary");
+      }
+    }
+
+    // manga item style
+    .manga-item {
+      .cover {
+        border-bottom: 0;
+      }
+
+      .badge {   
+        border: .5px solid t("muted-color");
+        color: t("muted-color");
+      }
+
+      .manga-status {
+        color: t("primary");
+      }
+
+      .manga-version-labels {  
+        ul {
+          box-shadow: 0px 0px 2px t("border-color");   
+        }
+    
+        li {
+          color: t("version-label-color");
+          background-color: rgba(t("version-label-bg"), .85);
+          border-bottom: .5px solid lighten(t("version-label-bg"), 20%);
+
+          &::after {
+            border-right: 2px solid t("primary");
+          }
+        }
+      
+        > ul > li:hover { 
+          background-color: t("primary"); 
         }
       }
-    
-      > ul > li:hover { 
-        background-color: $app-primary; 
-      }
-    }
-  }
-
-  .cover {
-    //border: .5px solid $app-border-color;
-
-    img,
-    .cover-placeholder {
-      background: $app-cover-bg;
-      color: #ccc;
-    }
-  }
-
-  .manga-area,
-  .chapter-area,
-  .gallery-area {
-    .row {
-      border-color: $app-border-color;
-    }
-  }
-
-  .file-area {
-    .area-item-inner {
-      background: $app-light-bg;
-      box-shadow: 0 4px 8px -4px rgba($app-shadow-color, .4);         
     }
 
-    .area-item:hover {
-      .area-item-inner { 
-        filter: brightness(90%);
+    .cover {
+
+      img,
+      .cover-placeholder {
+        background: t("cover-bg");
+        color: t("cover-color");
       }
     }
 
-    .area-item.active {
+    .manga-area,
+    .chapter-area,
+    .gallery-area {
+      .row {
+        border-color: t("border-color");
+      }
+    }
+
+    .file-area {
       .area-item-inner {
-        background: $app-light-bg;
-      }  
-    }
-  }
-
-  .manga-area,
-  .chapter-area {
-    .manga-item {
-      .cover-inner {
-        box-shadow: 0 4px 8px -4px rgba($app-shadow-color, .2);
-      } 
-    }
-
-    .list-group-item:hover {
-      .badge {
-        color: $app-primary;
-        border-color: $app-primary;
+        background: t("cover-bg");
+        box-shadow: 0 4px 8px -4px rgba(t("shadow-color"), .4);         
       }
-    }
 
-    .list-group-item.active {
-      .badge {
-        background-color: $app-primary;
-        color: $white;
-        border-color: $app-primary;
-      }
-    }
-
-    .area-item:hover {
-      .cover {        
-        img,
-        .cover-placeholder {
+      .area-item:hover {
+        .area-item-inner { 
           filter: brightness(90%);
         }
       }
-    }
 
-    .area-item.active {
-      border-color: lighten($app-primary, 20%);
-      background-color: rgba($app-primary, .1);
-    }
-  }
-
-  .gallery-area {
-    .row {
-      background: $app-main;
-    }
-  }
-
-  .list-group {
-    .list-group-item {
-      &.active {
-        color: $app-color;
-        background: $app-item-active-bg;
-        border-color: $app-border-color;
+      .area-item.active {
+        .area-item-inner {
+          background: t("cover-bg");
+        }  
       }
     }
-  }
 
-  .addressbar {
-    background: $app-main;
-  
-    .address-item:not(.muted) {
-      &:hover {
-        background: $app-border-color;
+    .manga-area,
+    .chapter-area {
+      .manga-item {
+        .cover-inner {
+          box-shadow: 0 4px 8px -4px rgba(t("shadow-color"), .2);
+        } 
+      }
+
+      .list-group-item:hover {
+        .badge {
+          color: t("primary");
+          border-color: t("primary");
+        }
+      }
+
+      .list-group-item.active {
+        .badge {
+          color: t("list-item-badge-color");
+          background-color: t("primary");
+          border-color: t("primary");
+        }
+      }
+
+      .area-item:hover {
+        .cover {        
+          img,
+          .cover-placeholder {
+            filter: brightness(90%);
+          }
+        }
+      }
+
+      .area-item.active {
+        border-color: lighten(t("primary"), 20%);
+        background-color: rgba(t("primary"), .1);
       }
     }
+
+    .gallery-area {
+      .row {
+        background: t("base");
+      }
+    }
+
+    .list-group {
+      .list-group-item {
+        &.active {
+          color: t("body-color");
+          background: t("list-item-active-bg");
+          border-color: t("border-color");
+        }
+      }
+    }
+
+    .addressbar {
+      background: t("base");
     
-    .address-separator {
-      color: $app-color;
+      .address-item:not(.muted) {
+        &:hover {
+          background: t("border-color");
+        }
+      }
+      
+      .address-separator {
+        color: t("body-color");
+      }
     }
-  }
 
-  .manga-version-loading,
-  .metadata-loading,
-  .data-view-loading-mask {
-    background-color: $app-bg;
+    .manga-version-loading,
+    .metadata-loading,
+    .data-view-loading-mask {
+      background-color: t("body-bg");
+    }
   }
 }
 
 // Common
 // ==
 .list-group .list-group-item {
-  border-radius: 0;
-  border-color: $app-border-color;
+  @include themed() {
+    border-radius: 0;
+    border-color: t("border-color");
+    background-color: t("list-item-bg");
+    color: t("list-item-color");
 
-  &.disabled {
-    background: $app-light-bg;
+    &:hover {
+      background-color: t("list-item-hover-bg");
+    }
+
+    &.disabled {
+      background: t("light-bg");
+    }
   }
 }
 
 .text-muted {
-  color: $app-muted-color !important
+  @include themed() {
+    color: t("muted-color") !important
+  }
 }
 
 // ## common.placeholder.color
 ::placeholder {
-  color: $app-light-300 !important;
+  color: #333 !important;
   font-size: .85em;
 }
 
+
 // ## common.scrollbar.track
 ::-webkit-scrollbar-track {
-  background-color: $app-scrollbar-track;
-}
-
-// ## common.scrollbar.thumb
-::-webkit-scrollbar-thumb {
-  background-color: $app-scrollbar-track;
+  @include themed() {
+    background-color: t("scrollbar-track-bg");
+  }
 }
 
 :hover::-webkit-scrollbar-thumb {
-  background-color: $app-scrollbar-thumb;
+  @include themed() {
+    background-color: t("scrollbar-thumb-hover-bg");
+  }
 }
 
-body::-webkit-scrollbar-thumb {
-  background-color: $app-scrollbar-thumb !important;
+::-webkit-scrollbar-thumb {
+  @include themed() {
+    background-color: t("scrollbar-thumb-bg") !important;
+  }
 }
 
 
@@ -394,7 +445,7 @@ body.viewer-active {
   .viewer-topbar .navbar,
   .viewer-toolbar .navbar {
     background: $viewer-toolbar-bg !important;
-    box-shadow: 0px 2px 4px 0px rgba($app-shadow-color, 0.3);
+    box-shadow: 0px 2px 4px 0px rgba(#000, 0.3);
   }
 
   .viewer-loading {
@@ -417,9 +468,9 @@ body.viewer-active {
   .dropdown-menu {
     background: $viewer-toolbar-bg !important;
     color: $viewer-color !important;
-    box-shadow: 0 2px 4px -1px rgba($app-shadow-color, 0.2), 
-                0 4px 5px 0 rgba($app-shadow-color, 0.14), 
-                0 1px 10px 0 rgba($app-shadow-color, 0.12);
+    box-shadow: 0 2px 4px -1px rgba(#000, 0.2), 
+                0 4px 5px 0 rgba(#000, 0.14), 
+                0 1px 10px 0 rgba(#000, 0.12);
 
     .dropdown-item:hover {
       background: rgba($white, .1);      
@@ -430,15 +481,15 @@ body.viewer-active {
     background: $viewer-toolbar-bg !important;
     color: #ccc !important;
     border-color: #ccc !important;
-    box-shadow: 0 2px 4px -1px rgba($app-shadow-color, 0.2), 
-                0 4px 5px 0 rgba($app-shadow-color, 0.14), 
-                0 1px 10px 0 rgba($app-shadow-color, 0.12);
+    box-shadow: 0 2px 4px -1px rgba(#000, 0.2), 
+                0 4px 5px 0 rgba(#000, 0.14), 
+                0 1px 10px 0 rgba(#000, 0.12);
   }
   
   .viewer-chapter-list {
     background: $viewer-toolbar-bg !important;
     color: #ccc !important;
-    box-shadow: -2px 0 4px rgba($app-shadow-color, 0.2);
+    box-shadow: -2px 0 4px rgba(#000, 0.2);
 
     header {
       background-color: #333;
@@ -460,7 +511,9 @@ body.viewer-active {
       }
 
       &:hover {
-        color: $app-primary;
+        @include themed() {
+          color: t("primary");
+        }
       }
     }
   }
@@ -469,9 +522,9 @@ body.viewer-active {
     background: rgba($viewer-toolbar-bg, .8) !important;
 
     .list-group {
-      box-shadow: 0 2px 4px -1px rgba($app-shadow-color, 0.2), 
-                  0 4px 5px 0 rgba($app-shadow-color, 0.14), 
-                  0 1px 10px 0 rgba($app-shadow-color, 0.12);
+      box-shadow: 0 2px 4px -1px rgba(#000, 0.2), 
+                  0 4px 5px 0 rgba(#000, 0.14), 
+                  0 1px 10px 0 rgba(#000, 0.12);
     }
 
     .list-group-item {
@@ -479,7 +532,9 @@ body.viewer-active {
       border-color: #555;
 
       &:hover {
-        color: $app-primary;
+        @include themed() {
+          color: t("primary");
+        }
       }
     }
   }
