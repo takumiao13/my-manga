@@ -59,7 +59,7 @@
     "log4js": "^6.3.0",
     "lokijs": "^1.5.8",
     "lru-cache": "^5.1.1",
-    "nanoid": "^2.1.0",
+    "nanoid": "^3.1.31",
     "open": "^6.4.0",
     "portfinder": "^1.0.20",
     "promise-async-flow": "^0.1.3"
